@@ -70,4 +70,134 @@ Uint32 getpixel(SDL_Surface *surface, int x, int y)
         return 0;       /* shouldn't happen, but avoids warnings */
     }
 }
+
+void Translation(int (*Msrc)[3], int (*Mdst)[3], int cant_pixel, int *trans)
+{
+	int i;
+ 	for(i=0; i< cant_pixel; i++)
+	   	{
+	   		Mdst[i][0] = Msrc[i][0] + trans[0];
+	   		Mdst[i][1] = Msrc[i][1] + trans[1];
+	   		Mdst[i][2] = Msrc[i][2] + trans[2];
+	    }
+}
+
+void RotationX(int (*Mdst)[3], int (*Msrc)[3], int angulo, int cant_pixel)  
+{ 		
+	int i;
+	for(i=0; i< cant_pixel; i++)
+	{
+	   	Mdst[i][0] = Msrc[i][0];
+	   	Mdst[i][1] = Msrc[i][1]*cos(angulo) - sin(angulo)*Msrc[i][2];
+	   	Mdst[i][2] = Msrc[i][1]*sin(angulo) + cos(angulo)*Msrc[i][2];
+	}
+}
+
+void Coordto2d(int (*Msrc)[3], int (*Mdst)[2], int cant_pixel)
+{	   	
+	int j;	
+	for(j = 0; j < cant_pixel; j++)
+	{
+		Mdst[j][0] =(Msrc[j][0]-Msrc[j][1])/sqrt(2);
+		Mdst[j][1]=(Msrc[j][0]+2*Msrc[j][2]+Msrc[j][1])/sqrt(6);
+	}
+}
+
+void formar_cubo(int (*cubo)[3], int distancia)
+{
+   	cubo[0][0] = 0;
+   	cubo[0][1] = 0;
+   	cubo[0][2] = 0;
+   	cubo[1][0] = distancia;
+   	cubo[1][1] = 0;
+   	cubo[1][2] = 0;
+   	cubo[2][0] = distancia;
+   	cubo[2][1] = 0;
+   	cubo[2][2] = distancia;
+   	cubo[3][0] = 0;
+   	cubo[3][1] = 0;
+   	cubo[3][2] = distancia;
+
+   	int indice, i, j;
+   	for( indice = 4; indice < 8; indice++ )
+   	{
+   		cubo[indice][0] = cubo[indice -4][0];
+   		cubo[indice][1] = cubo[indice -4][1] + distancia;
+   		cubo[indice][2] = cubo[indice - 4][2];
+   	}
+   	for (i = 0; i < 4; i++)
+   	{
+   		for( j = 0; j < distancia - 1; j++)
+   		{
+   			switch(i) {
+   				case 0 :
+   					cubo[indice][0] = j+1;
+					cubo[indice][1] = 0;
+					cubo[indice][2] = 0;
+					cubo[indice + distancia -1][0] = j+1;
+					cubo[indice + distancia -1][1] = distancia;
+					cubo[indice + distancia -1][2] = 0; 
+					indice++;
+					break;
+				case 1 :
+   					cubo[indice][0] = distancia;
+					cubo[indice][1] = 0;
+					cubo[indice][2] = j+1;
+					cubo[indice + distancia -1][0] = distancia;
+					cubo[indice + distancia -1][1] = distancia;
+					cubo[indice + distancia -1][2] = j+1;
+					indice++; 
+					break;
+				case 2 :
+   					cubo[indice][0] = j+1;
+					cubo[indice][1] = 0;
+					cubo[indice][2] = distancia;
+					cubo[indice + distancia -1][0] = j+1;
+					cubo[indice + distancia -1][1] = distancia;
+					cubo[indice + distancia -1][2] = distancia; 
+					indice++;
+					break;				
+				case 3 :
+   					cubo[indice][0] = 0;
+					cubo[indice][1] = 0;
+					cubo[indice][2] = j+1;
+					cubo[indice + distancia -1][0] = 0;
+					cubo[indice + distancia -1][1] = distancia;
+					cubo[indice + distancia -1][2] = j+1; 
+					indice++;
+					break;	
+			}
+   		}	
+   		indice += distancia - 1;
+   	}	
+
+   	for (i = 0; i < 2; i++)
+   	{
+   		for( j = 0; j < distancia - 1; j++)
+   		{
+   			switch(i) {
+   				case 0 :
+   					cubo[indice][0] = 0;
+					cubo[indice][1] = j+1;
+					cubo[indice][2] = 0;
+					cubo[indice + distancia -1][0] = 0;
+					cubo[indice + distancia -1][1] = j+1;
+					cubo[indice + distancia -1][2] = distancia; 
+					indice++;
+					break;
+				case 1 :
+   					cubo[indice][0] = distancia;
+					cubo[indice][1] = j+1;
+					cubo[indice][2] = 0;
+					cubo[indice + distancia -1][0] = distancia;
+					cubo[indice + distancia -1][1] = j+1;
+					cubo[indice + distancia -1][2] = distancia; 
+					indice++;
+					break;	
+			}
+   		}
+   		indice += distancia - 1;	
+   	}
+}
 #endif
+
