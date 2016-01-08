@@ -6,20 +6,15 @@
 typedef float Vec4[4];
 typedef float Vec3[3];
 typedef float Vec2[2];
+typedef int Pixel[2];
 typedef float Mat4[4][4];
 
-float Dot3Prod(Vec4 v1, Vec4 v2)
+float Dot3Prod(Vec3 v1, Vec3 v2)
 {
-	float r = 0;
-	int i;
-
-	for(i = 0; i < 4; i++)
-		r += v1[i] * v2[i];
-
-	return r;
+	return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
 }
 
-void Cross3Prod(Vec4 v1, Vec4 v2, Vec4 r)
+void Cross3Prod(Vec3 v1, Vec3 v2, Vec3 r)
 {
 	r[0] = v1[1] * v2[2] - v1[2] * v2[1];
 	r[1] = v1[2] * v2[0] - v1[0] * v2[2];
@@ -63,8 +58,6 @@ void Mat4Product(Mat4 m1, Mat4 m2, Mat4 res)
 //vector fila
 void Vec4Mat4Product(Vec4 v, Mat4 m, Vec4 r)
 {
-	int i;
-	int j;
 	r[0] = v[0] * m[0][0] + v[1] * m[1][0] + v[2] * m[2][0] + v[3] * m[3][0];
 	r[1] = v[0] * m[0][1] + v[1] * m[1][1] + v[2] * m[2][1] + v[3] * m[3][1];
 	r[2] = v[0] * m[0][2] + v[1] * m[1][2] + v[2] * m[2][2] + v[3] * m[3][2];
@@ -75,14 +68,17 @@ void CreateViewMatrix(Mat4 m, Vec3 cameraTarget, Vec3 cameraPos, Vec3 up)
 {
 	Vec3 w;   //eje z de la camara
 	Sub3(cameraTarget, cameraPos, w);
+	//printf("resta w: %f %f %f\n", w[0], w[1], w[2]);
 	//Normalize3(w);
 
 	Vec3 u;   //eje x de la camara
-	Cross3Prod(up, u, w);
+	Cross3Prod(up, w, u);
+	//printf("cross up: %f %f %f\n", u[0], u[1], u[2]);
 	//Normalize3(u);
 
 	Vec3 v;   //eje y de la camara
 	Cross3Prod(w, u, v);
+	//printf("cross v: %f %f %f\n", v[0], v[1], v[2]);
 
 	m[0][0] = u[0];		m[0][1] = v[0];		m[0][2] = w[0];		m[0][3] = 0;
 	m[1][0] = u[1];		m[1][1] = v[1];		m[1][2] = w[1];		m[1][3] = 0;
@@ -107,6 +103,22 @@ void CreateProjectionMatrix(Mat4 m, float nearPlane, float farPlane, float field
 	m[2][0] = m[2][1] = 0;
 	m[3][2] = -nearPlane * farPlane / (farPlane - nearPlane);
 	m[3][0] = m[3][1] = m[3][3] = 0;
+}
+
+void CreateRotationXMatrix(Mat4 m, float ang)
+{
+	m[0][0] = 1;	m[0][1] = 0;	m[0][2] = 0;	m[0][3] = 0;
+	m[1][0] = 0;	m[1][1] = cosf(ang);	m[1][2] = sinf(ang);	m[1][3] = 0;
+	m[2][0] = 0;	m[2][1] = -sinf(ang);	m[2][2] = cosf(ang);	m[2][3] = 0;
+	m[3][0] = 0;	m[3][1] = 0;	m[3][2] = 0;	m[3][3] = 1;
+}
+
+void CreateRotationYMatrix(Mat4 m, float ang)
+{
+	m[0][0] = cosf(ang);	m[0][1] = 0;	m[0][2] = -sinf(ang);	m[0][3] = 0;
+	m[1][0] = 0;	m[1][1] = 1;	m[1][2] = 0;	m[1][3] = 0;
+	m[2][0] = sinf(ang);	m[2][1] = 0;	m[2][2] = cosf(ang);	m[2][3] = 0;
+	m[3][0] = 0;	m[3][1] = 0;	m[3][2] = 0;	m[3][3] = 1;
 }
 
 void DisplayMatrix(Mat4 m)
