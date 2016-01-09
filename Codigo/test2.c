@@ -26,18 +26,30 @@ bool init()
     return true;
 }
 
+//PASOS:
+//1. Crear la matriz view (v) y projection (p)
+//2. Crear los vertices del modelo 3D
+//3. Crear la matriz de world (w)
+//4. En el loop del render, multiplicar cada vertice del modelo por wvp. Posteriormente dividir por z (o -z) las coordenadas x e y
+//5. Ahora falta mapear las coordenadas x e y de cada punto, a pixeles. Para esto: x = (x + width / 2) / width y lo mismo para y con height.
+//6. El ultimo paso para convertir a pixeles es hacer el redondeo de las coordenadas x e y multiplicadas por width y height. Ademas hay que
+//   invertir la coordenada y: y = floor((1- y) * height), x = floor(x * width) 
 
 int main( int argc, char* args[] )
 {
     bool quit = false;
     SDL_Event e;
 
-    Mat4 world, view, proj, wvp, wv;
+    Mat4 world, view, proj, wvp;
     Vec3 up = { 0, 1, 0 };
-    Vec3 target = { 0.4f, 0.3f, 0.3f };
-    Vec3 pos = { 0, 0, -4 };
+    Vec3 target = { 0, 0, -1 };
+    Vec3 pos = { 0, 0, 3 };
     CreateViewMatrix(view, target, pos, up);
-    CreateProjectionMatrix(proj, 0.001f, 1.0f, 0.25f * M_PI, SCREEN_WIDTH / SCREEN_HEIGHT);
+    CreateProjectionMatrix(proj, 0.001f, 1.0f, 0.78f, SCREEN_WIDTH / SCREEN_HEIGHT);
+    Vec3 posCube = { 3, 0, 0 };
+    CreateTranslationMatrix(world, posCube);
+    Mat4Product(world, view, view);
+    Mat4Product(view, proj, wvp);
     //DisplayMatrix(world);
     //DisplayMatrix(view);
     //DisplayMatrix(proj);
@@ -48,47 +60,16 @@ int main( int argc, char* args[] )
     {
     	screenSurface = SDL_GetWindowSurface( window );
 		
-
-        float cubo[24][4] = {
-           {-1.0, -1.0,  1.0, 1.0f},
-   {1.0, -1.0,  1.0, 1.0f},
-   {1.0,  1.0,  1.0, 1.0f},
-  {-1.0,  1.0,  1.0, 1.0f},
-  
-  // Back face
-  {-1.0, -1.0, -1.0, 1.0f},
-  {-1.0,  1.0, -1.0, 1.0f},
-  {1.0,  1.0, -1.0, 1.0f},
-   {1.0, -1.0, -1.0, 1.0f},
-  
-  // Top face
-  {-1.0,  1.0, -1.0, 1.0f},
-  {-1.0,  1.0,  1.0, 1.0f},
-   {1.0,  1.0,  1.0, 1.0f},
-   {1.0,  1.0, -1.0, 1.0f},
-  
-  // Bottom face
-  {-1.0, -1.0, -1.0, 1.0f},
-   {1.0, -1.0, -1.0, 1.0f},
-   {1.0, -1.0,  1.0, 1.0f},
-  {-1.0, -1.0,  1.0, 1.0f},
-  
-  // Right face
-   {1.0, -1.0, -1.0, 1.0f},
-   {1.0,  1.0, -1.0, 1.0f},
-   {1.0,  1.0,  1.0, 1.0f},
-   {1.0, -1.0,  1.0, 1.0f},
-  
-  // Left face
-  {-1.0, -1.0, -1.0, 1.0f},
-  {-1.0, -1.0,  1.0, 1.0f},
-  {-1.0,  1.0,  1.0, 1.0f},
-  {-1.0,  1.0, -1.0, 1.0f}
+        float cubo[8][4] = {
+           {-1, 1, 1, 1},
+           {1, 1, 1, 1},
+           {-1, -1, 1, 1},
+           {-1, -1, -1, 1},
+           {-1, 1, -1, 1},
+           {1, 1, -1, 1},
+           {1, -1, 1, 1},
+           {1, -1, -1, 1}
         };
-
-        float cubo2D[24][4];
-        int j;
-        
 
 		while(!quit)
 		{
@@ -98,26 +79,19 @@ int main( int argc, char* args[] )
 					quit = true;
 			}
 
-            SDL_FillRect( screenSurface, NULL, SDL_MapRGB( screenSurface->format, 0x00, 0x00, 0x00 ) );
+            SDL_FillRect(screenSurface, NULL, SDL_MapRGB( screenSurface->format, 0x00, 0x00, 0x00 ));
 
-            CreateRotationYMatrix(world, a);
-            Mat4Product(world, view, wv);
-            Mat4Product(wv, proj, wvp);
-
-            a+=0.001f;
-
-            for(j = 0; j < 24; j++)
+            int j;
+            for(j = 0; j < 8; j++)
             {
-                Vec4Mat4Product(cubo[j], wvp, cubo2D[j]);
-                cubo2D[j][0] = (cubo2D[j][0] / -cubo[j][3] + SCREEN_WIDTH / 2); 
-                cubo2D[j][1] = (cubo2D[j][1] / -cubo[j][3] + SCREEN_HEIGHT / 2);
+                Vec4 res;
+                Vec4Mat4Product(cubo[j], wvp, res);
+                float x = ((res[0] / (-cubo[j][2])) + SCREEN_WIDTH / 2) / SCREEN_WIDTH; 
+                float y = ((res[1] / (-cubo[j][2])) + SCREEN_HEIGHT / 2) / SCREEN_HEIGHT;
                 
-                putpixel(screenSurface, cubo2D[j][0], cubo2D[j][1], 0xFF0000);
-                if(a == 0.001f)
-                printf("%f %f %f %f\n", cubo2D[j][0], cubo2D[j][1], cubo2D[j][2], cubo2D[j][3]);
+                putpixel(screenSurface, floor(x * SCREEN_WIDTH), floor((1 - y) * SCREEN_HEIGHT), 0xFF0000);
             }
 
-	        
 	        SDL_UpdateWindowSurface( window );
     	}
     }
