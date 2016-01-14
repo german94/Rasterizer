@@ -4,10 +4,10 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 {
 	FILE* file = fopen(path, "r");
 
-	initVec3DynamicArray(outVertices, 0);
-	initVec2DynamicArray(outUvs, 0);
-	initVec3DynamicArray(outNormals, 0);
-	initUInt3DynamicArray(outFaces, 0);
+	initVec3DynamicArray(outVertices, 1);
+	initVec2DynamicArray(outUvs, 1);
+	initVec3DynamicArray(outNormals, 1);
+	initUInt3DynamicArray(outFaces, 1);
 
 	if(file == NULL)
 	{
@@ -29,22 +29,25 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 			Vec3 vertex;
 			fscanf(file, "%f %f %f\n", &vertex[0], &vertex[1], &vertex[2]);
 			insertVec3DynamicArray(outVertices, vertex);
+			//printf("mostrando used: %f %f %f\n", outVertices->array[outVertices->used -1][0], outVertices->array[outVertices->used -1][1], outVertices->array[outVertices->used -1][2]);
 		}
 		else if(strcmp(lineHeader, "vt") == 0)
 		{
 			Vec2 uv;
 			fscanf(file, "%f %f\n", &uv[0], &uv[1]);
 			insertVec2DynamicArray(outUvs, uv);
+			//printf("mostrando used: %f %f\n", outUvs->array[outUvs->used -1][0], outUvs->array[outUvs->used -1][1]);
 		}
 		else if(strcmp(lineHeader, "vn") == 0)
 		{
 			Vec3 normal;
 			fscanf(file, "%f %f %f\n", &normal[0], &normal[1], &normal[2]);
 			insertVec3DynamicArray(outNormals, normal);
+			//printf("mostrando used: %f %f %f\n", outNormals->array[outNormals->used -1][0], outNormals->array[outNormals->used -1][1], outNormals->array[outNormals->used -1][2]);
 		}
 		else if(strcmp(lineHeader, "f") == 0)
 		{
-			uint3 vertexIndex[3], uvIndex[3], normalIndex[3];
+			uint3 vertexIndex, uvIndex, normalIndex;
 			int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], 
 				&vertexIndex[1], &uvIndex[1], &normalIndex[1], 
 				&vertexIndex[2], &uvIndex[2], &normalIndex[2]);
@@ -56,6 +59,7 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 			}
 
 			insertUInt3DynamicArray(outFaces, vertexIndex);
+			printf("mostrando used: %d %d %d\n", outFaces->array[outFaces->used -1][0], outFaces->array[outFaces->used -1][1], outFaces->array[outFaces->used -1][2]);
 		}
 	}
 }

@@ -57,6 +57,12 @@ int main( int argc, char* args[] )
     if(init())
     {
     	screenSurface = SDL_GetWindowSurface( window );
+
+        Vec3DynamicArray Vertices, normals;
+        UInt3DynamicArray faces;
+        Vec2DynamicArray uvs;
+        LoadModel("model.obj", &Vertices, &uvs, &normals, &faces);
+        printf("vertices: %d, %d, %d", Vertices.array[0][0], Vertices.array[0][1]);
 		
     	int numVertices = 8; 
       float vertices[8][3] = {
@@ -115,30 +121,30 @@ int main( int argc, char* args[] )
 
           a+=0.001f;
       	int i, x0, x1, y0, y1;
-		for(j = 0; j < 12; j++)
+		for(j = 0; j < faces.used; j++)
     	{
 
     		for(i = 0; i < 2; i++)
     		{
     			Vec4 res;
-	            Vec3Mat4Product(vertices[lineas[j][i]], wvp, res);
+	            Vec3Mat4Product(Vertices.array[faces.array[j][i]], wvp, res);
 	            x0 = (res[0]/res[3])*SCREEN_WIDTH*0.5 + SCREEN_WIDTH*0.5 ;
 				y0 = (res[1]/res[3])*SCREEN_HEIGHT*0.5 + SCREEN_HEIGHT*0.5; 
 	  		 	
 				//SDL_FillRect( screenSurface, &srcrect, SDL_MapRGB( screenSurface->format, 0xFF, 0x00, 0x00 ) );
-				Vec3Mat4Product(vertices[lineas[j][i+1]], wvp, res);
-				x1 = (res[0]/res[3])*SCREEN_WIDTH*0.5 + SCREEN_WIDTH*0.5 ;
+				Vec3Mat4Product(Vertices.array[faces.array[j][i+1]], wvp, res);
+				x1 = (res[0]/res[3])*SCREEN_WIDTH*0.5 + SCREEN_WIDTH*0.5;
 				y1 = (res[1]/res[3])*SCREEN_HEIGHT*0.5 + SCREEN_HEIGHT*0.5;
 	
 				DrawBline(  x0,  x1,  y0,  y1, screenSurface);
     		}
     		Vec4 res;
 
-            Vec3Mat4Product(vertices[lineas[j][2]], wvp, res);
+            Vec3Mat4Product(Vertices.array[faces.array[j][2]], wvp, res);
             x0 = (res[0]/res[3])*SCREEN_WIDTH*0.5 + SCREEN_WIDTH*0.5 ;
 			y0 = (res[1]/res[3])*SCREEN_HEIGHT*0.5 + SCREEN_HEIGHT*0.5; 
   		 	
-			Vec3Mat4Product(vertices[lineas[j][0]], wvp, res);
+			Vec3Mat4Product(Vertices.array[faces.array[j][0]], wvp, res);
 			x1 = (res[0]/res[3])*SCREEN_WIDTH*0.5 + SCREEN_WIDTH*0.5 ;
 			y1 = (res[1]/res[3])*SCREEN_HEIGHT*0.5 + SCREEN_HEIGHT*0.5;
 
