@@ -5,7 +5,7 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 	FILE* file = fopen(path, "r");
 
 	initVec3DynamicArray(outVertices, 1);
-	initVec2DynamicArray(outUvs, 1);
+	initVec2DynamicArray(outUvs, 0);
 	initVec3DynamicArray(outNormals, 1);
 	initUInt3DynamicArray(outFaces, 1);
 
@@ -33,6 +33,7 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 		}
 		else if(strcmp(lineHeader, "vt") == 0)
 		{
+			if(outUvs->size ==0) {initVec2DynamicArray(outUvs, 1);}
 			Vec2 uv;
 			fscanf(file, "%f %f\n", &uv[0], &uv[1]);
 			insertVec2DynamicArray(outUvs, uv);
@@ -47,19 +48,45 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 		}
 		else if(strcmp(lineHeader, "f") == 0)
 		{
-			uint3 vertexIndex, uvIndex, normalIndex;
-			int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], 
+			if(outUvs->size != 0 )
+			{
+				uint3 vertexIndex, uvIndex, normalIndex;
+				int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], 
 				&vertexIndex[1], &uvIndex[1], &normalIndex[1], 
 				&vertexIndex[2], &uvIndex[2], &normalIndex[2]);
-
-			if(matches != 9)
+				vertexIndex[0]--;
+				vertexIndex[1]--;
+				vertexIndex[2]--;
+			
+				if(matches != 9)
+				{
+					printf("Formato incompatible.\n");
+					return false;
+				}
+			
+				insertUInt3DynamicArray(outFaces, vertexIndex);
+				printf("mostrando used: %d %d %d\n", outFaces->array[outFaces->used -1][0], outFaces->array[outFaces->used -1][1], outFaces->array[outFaces->used -1][2]);	
+			}
+			else
 			{
-				printf("Formato incompatible.\n");
-				return false;
+				uint3 vertexIndex, normalIndex;
+				int matches = fscanf(file, "%d//%d %d//%d %d//%d\n", &vertexIndex[0], &normalIndex[0], 
+				&vertexIndex[1], &normalIndex[1], 
+				&vertexIndex[2], &normalIndex[2]);
+				vertexIndex[0]--;
+				vertexIndex[1]--;
+				vertexIndex[2]--;
+			
+				if(matches != 6)
+				{
+					printf("Formato incompatible.\n");
+					return false;
+				}
+			
+				insertUInt3DynamicArray(outFaces, vertexIndex);
+				printf("mostrando used: %d %d %d\n", outFaces->array[outFaces->used -1][0], outFaces->array[outFaces->used -1][1], outFaces->array[outFaces->used -1][2]);
 			}
 
-			insertUInt3DynamicArray(outFaces, vertexIndex);
-			printf("mostrando used: %d %d %d\n", outFaces->array[outFaces->used -1][0], outFaces->array[outFaces->used -1][1], outFaces->array[outFaces->used -1][2]);
 		}
 	}
 }
