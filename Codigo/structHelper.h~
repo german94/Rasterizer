@@ -1,0 +1,59 @@
+#ifndef DEF_STRUCT_HELPER_H_
+#define DEF_STRUCT_HELPER_H_
+
+#include <stdio.h>
+#include "mathHelper.h"
+
+/////////////////////////////////////////////////////////////////
+//                     int3 dynamic array                      //
+/////////////////////////////////////////////////////////////////
+typedef struct {
+  uint3 *array;
+  size_t used;
+  size_t size;
+} UInt3DynamicArray;
+
+void initUInt3DynamicArray(UInt3DynamicArray *a, size_t initialSize);
+void insertUint3DynamicArray(UInt3DynamicArray *a, uint3 element);
+void freeint3DynamicArray(UInt3DynamicArray *a);
+
+/////////////////////////////////////////////////////////////////
+//                     Vec3 dynamic array                      //
+/////////////////////////////////////////////////////////////////
+typedef struct {
+  Vec3 *array;
+  size_t used;
+  size_t size;
+} Vec3DynamicArray;
+void initVec3DynamicArray(Vec3DynamicArray *a, size_t initialSize);
+void insertVec3DynamicArray(Vec3DynamicArray *a, Vec3 element);
+void freeVec3DynamicArray(Vec3DynamicArray *a);
+
+
+/////////////////////////////////////////////////////////////////
+//                     Vec2 dynamic array                      //
+/////////////////////////////////////////////////////////////////
+typedef struct {
+  Vec2 *array;
+  size_t used;
+  size_t size;
+} Vec2DynamicArray;
+
+void initVec2DynamicArray(Vec2DynamicArray *a, size_t initialSize);
+void insertVec2DynamicArray(Vec2DynamicArray *a, Vec2 element);
+void freeVec2DynamicArray(Vec2DynamicArray *a);
+
+/////////////////////////////////////////////////////////////////
+//                     uint dynamic array                      //
+/////////////////////////////////////////////////////////////////
+typedef struct {
+  uint *array;
+  size_t used;
+  size_t size;
+} UintDynamicArray;
+
+void initUintDynamicArray(UintDynamicArray *a, size_t initialSize);
+void insertUintDynamicArray(UintDynamicArray *a, uint element);
+void freeUintDynamicArray(UintDynamicArray *a);
+
+#endif

@@ -1,5 +1,6 @@
 #include "sdlHelper.h"
 #include "mathHelper.h"
+#include "vertexdata.h"
 #include "modelLoader.h"
 
 
@@ -102,18 +103,18 @@ int main( int argc, char* args[] )
 					quit = true;
 			}
 
-          SDL_FillRect( screenSurface, NULL, SDL_MapRGB( screenSurface->format, 0x00, 0x00, 0x00 ) );
+      SDL_FillRect( screenSurface, NULL, SDL_MapRGB( screenSurface->format, 0x00, 0x00, 0x00 ) );
 
-          Mat4 world1;
+      Mat4 world1;
 
-          CreateRotationYMatrix(world1, a);
+      CreateRotationYMatrix(world1, a);
 
-          Mat4Product(world1, t, world);
+      Mat4Product(world1, t, world);
 
-          Mat4Product(world,view, wv);
-          Mat4Product(wv, proj, wvp);
+      Mat4Product(world,view, wv);
+      Mat4Product(wv, proj, wvp);
 
-          a+=0.001f;
+      a+=0.001f;
       	int i, x0, x1, y0, y1;
 		for(j = 0; j < 12; j++)
     	{
