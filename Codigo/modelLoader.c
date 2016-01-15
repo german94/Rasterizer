@@ -52,6 +52,10 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 				&vertexIndex[1], &uvIndex[1], &normalIndex[1], 
 				&vertexIndex[2], &uvIndex[2], &normalIndex[2]);
 
+			vertexIndex[0]--;
+			vertexIndex[1]--;
+			vertexIndex[2]--;
+
 			if(matches != 9)
 			{
 				printf("Formato incompatible.\n");
@@ -61,5 +65,39 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 			insertUInt3DynamicArray(outFaces, vertexIndex);
 			printf("mostrando used: %d %d %d\n", outFaces->array[outFaces->used -1][0], outFaces->array[outFaces->used -1][1], outFaces->array[outFaces->used -1][2]);
 		}
+	}
+}
+
+void RenderModel(Vec3DynamicArray* vertices, UInt3DynamicArray* faces, Vec2DynamicArray* uvs, Mat4 wvp, uint swidth, uint sheight, SDL_Surface* screenSurface)
+{
+	int i, j, x0, x1, y0, y1;
+
+	for(j = 0; j < faces->used; j++)
+	{
+		for(i = 0; i < 2; i++)
+		{
+			Vec4 res;
+            Vec3Mat4Product(vertices->array[faces->array[j][i]], wvp, res);
+            x0 = (res[0]/res[3])*swidth*0.5 + swidth*0.5 ;
+			y0 = (res[1]/res[3])*sheight*0.5 + sheight*0.5; 
+  		 	
+			Vec3Mat4Product(vertices->array[faces->array[j][i+1]], wvp, res);
+			x1 = (res[0]/res[3])*swidth*0.5 + swidth*0.5;
+			y1 = (res[1]/res[3])*sheight*0.5 + sheight*0.5;
+
+			DrawBline(  x0,  x1,  y0,  y1, screenSurface);
+		}
+
+		Vec4 res;
+
+        Vec3Mat4Product(vertices->array[faces->array[j][2]], wvp, res);
+        x0 = (res[0]/res[3])*swidth*0.5 + swidth*0.5 ;
+		y0 = (res[1]/res[3])*sheight*0.5 + sheight*0.5; 
+		 	
+		Vec3Mat4Product(vertices->array[faces->array[j][0]], wvp, res);
+		x1 = (res[0]/res[3])*swidth*0.5 + swidth*0.5 ;
+		y1 = (res[1]/res[3])*sheight*0.5 + sheight*0.5;
+
+		DrawBline(  x0,  x1,  y0,  y1, screenSurface);
 	}
 }

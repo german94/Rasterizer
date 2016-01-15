@@ -104,8 +104,8 @@ void DrawBline( int x0, int x1, int y0, int y1, SDL_Surface* screenSurface)
     int sy = (y0 < y1) ? 1 : -1;
     int err = dx - dy;
     SDL_Rect srcrect;
-    srcrect.h = 3;
-    srcrect.w = 3;
+    srcrect.h = 1;
+    srcrect.w = 1;
     while (true) {
         //DrawPoint(new Vector2(x0, y0));
         srcrect.x = x0;
