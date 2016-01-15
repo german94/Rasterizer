@@ -29,7 +29,6 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 			Vec3 vertex;
 			fscanf(file, "%f %f %f\n", &vertex[0], &vertex[1], &vertex[2]);
 			insertVec3DynamicArray(outVertices, vertex);
-			//printf("mostrando used: %f %f %f\n", outVertices->array[outVertices->used -1][0], outVertices->array[outVertices->used -1][1], outVertices->array[outVertices->used -1][2]);
 		}
 		else if(strcmp(lineHeader, "vt") == 0)
 		{
@@ -37,14 +36,12 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 			Vec2 uv;
 			fscanf(file, "%f %f\n", &uv[0], &uv[1]);
 			insertVec2DynamicArray(outUvs, uv);
-			//printf("mostrando used: %f %f\n", outUvs->array[outUvs->used -1][0], outUvs->array[outUvs->used -1][1]);
 		}
 		else if(strcmp(lineHeader, "vn") == 0)
 		{
 			Vec3 normal;
 			fscanf(file, "%f %f %f\n", &normal[0], &normal[1], &normal[2]);
 			insertVec3DynamicArray(outNormals, normal);
-			//printf("mostrando used: %f %f %f\n", outNormals->array[outNormals->used -1][0], outNormals->array[outNormals->used -1][1], outNormals->array[outNormals->used -1][2]);
 		}
 		else if(strcmp(lineHeader, "f") == 0)
 		{
@@ -65,7 +62,6 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 				}
 			
 				insertUInt3DynamicArray(outFaces, vertexIndex);
-				printf("mostrando used: %d %d %d\n", outFaces->array[outFaces->used -1][0], outFaces->array[outFaces->used -1][1], outFaces->array[outFaces->used -1][2]);	
 			}
 			else
 			{
@@ -84,7 +80,6 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 				}
 			
 				insertUInt3DynamicArray(outFaces, vertexIndex);
-				printf("mostrando used: %d %d %d\n", outFaces->array[outFaces->used -1][0], outFaces->array[outFaces->used -1][1], outFaces->array[outFaces->used -1][2]);
 			}
 
 		}
