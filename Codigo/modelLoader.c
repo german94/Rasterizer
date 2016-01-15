@@ -5,7 +5,7 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 	FILE* file = fopen(path, "r");
 
 	initVec3DynamicArray(outVertices, 1);
-	initVec2DynamicArray(outUvs, 0);
+	initVec2DynamicArray(outUvs, 1);
 	initVec3DynamicArray(outNormals, 1);
 	initUInt3DynamicArray(outFaces, 1);
 
