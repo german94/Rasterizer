@@ -131,18 +131,18 @@ void RenderFilledModel(Vec3DynamicArray* vertices, UInt3DynamicArray* faces, Vec
 		CopyVec3(vertexB, vertices->array[faces->array[j][1]]);
 		CopyVec3(vertexC, vertices->array[faces->array[j][2]]);
 
-		Vec4 res;
+		Vec4 res1, res2, res3;
 
-        Vec3Mat4Product(vertexA, wvp, res);
-        Vec3 v1 = { (res[0]/res[3])*swidth*0.5 + swidth*0.5, (res[1]/res[3])*sheight*0.5 + sheight*0.5, res[2] / res[3] }; 
+        Vec3Mat4Product(vertexA, wvp, res1);
+        Vec3 v1 = { (res1[0]/res1[3])*swidth*0.5 + swidth*0.5, (res1[1]/res1[3])*sheight*0.5 + sheight*0.5, res1[2] / res1[3] }; 
 		 	
-		Vec3Mat4Product(vertexB, wvp, res);
-		Vec3 v2 = { (res[0]/res[3])*swidth*0.5 + swidth*0.5, (res[1]/res[3])*sheight*0.5 + sheight*0.5, res[2] / res[3] };
+		Vec3Mat4Product(vertexB, wvp, res2);
+		Vec3 v2 = { (res2[0]/res2[3])*swidth*0.5 + swidth*0.5, (res2[1]/res2[3])*sheight*0.5 + sheight*0.5, res2[2] / res2[3] };
 
-        Vec3Mat4Product(vertexC, wvp, res);
-        Vec3 v3 = { (res[0]/res[3])*swidth*0.5 + swidth*0.5, (res[1]/res[3])*sheight*0.5 + sheight*0.5, res[2] / res[3] };
+        Vec3Mat4Product(vertexC, wvp, res3);
+        Vec3 v3 = { (res3[0]/res3[3])*swidth*0.5 + swidth*0.5, (res3[1]/res3[3])*sheight*0.5 + sheight*0.5, res3[2] / res3[3] };
 
-        Uint32 color =(j % faces->used);
+        Uint32 color =j % faces->used;
 		DrawTriangle(v1, v2, v3, color, swidth, sheight, sf, depthBuffer);
 	}
 }

@@ -4,7 +4,7 @@ void putpixel(SDL_Surface *surface, int x, int y, float z, Uint32 pixel, int swi
 {
     int index = x + y * swidth;
 
-    if(depthBuffer[index] > z)
+    if(depthBuffer[index] < z)
         return;
 
     depthBuffer[index] = z;
@@ -270,7 +270,7 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Uint32 color, int SW, int SH, SDL_S
     if (p1[1] > p2[1])
     {
         Vec3 temp;
-        CopyVec3(temp);
+        CopyVec3(temp, p2);
         CopyVec3(p2, p1);
         CopyVec3(p1, temp);
     }

@@ -6,7 +6,10 @@
 #include "mathHelper.h"
 
 typedef int bool;
-//typedef unsigned int uint;
+
+
+//Vector ops:
+void CopyVec3(Vec3, Vec3);
 
 /////////////////////////////////////////////////////////////////
 //                     uint3 dynamic array                     //

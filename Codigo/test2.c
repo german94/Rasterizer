@@ -34,7 +34,7 @@ initDepthBuffer(float* depthBuffer, int e)
 {
     int i;
     for(i = 0; i < e; i++)
-        depthBuffer[e] = FLT_MAX;
+        depthBuffer[i] = FLT_MAX;
 }
 
 
