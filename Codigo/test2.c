@@ -1,6 +1,7 @@
 #include "sdlHelper.h"
 #include "mathHelper.h"
 #include "modelLoader.h"
+#include <float.h>
 
 
 const int SCREEN_WIDTH = 800;
@@ -29,6 +30,13 @@ bool init()
     return true;
 }
 
+initDepthBuffer(float* depthBuffer, int e)
+{
+    int i;
+    for(i = 0; i < e; i++)
+        depthBuffer[e] = FLT_MAX;
+}
+
 
 int main( int argc, char* args[] )
 {
@@ -50,6 +58,9 @@ int main( int argc, char* args[] )
     CreateProjectionMatrix(proj, near, far, angleOfView, SCREEN_WIDTH / SCREEN_HEIGHT);
 
     float a = 0;
+
+    float depthBuffer[SCREEN_WIDTH * SCREEN_HEIGHT];
+    initDepthBuffer(depthBuffer, SCREEN_WIDTH * SCREEN_HEIGHT);
 
     if(init())
     {
@@ -75,7 +86,7 @@ int main( int argc, char* args[] )
             Mat4Product(world,view, wv);
             Mat4Product(wv, proj, wvp);
             a+=0.001f;
-            RenderModel(&Vertices, &faces, &uvs, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface); 
+            RenderFilledModel(&Vertices, &faces, &uvs, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer); 
 
             SDL_UpdateWindowSurface( window );
         }

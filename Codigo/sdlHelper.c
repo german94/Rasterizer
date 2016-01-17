@@ -1,7 +1,14 @@
 #include "sdlHelper.h"
 
-void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
+void putpixel(SDL_Surface *surface, int x, int y, float z, Uint32 pixel, int swidth, int sheight, float* depthBuffer)
 {
+    int index = x + y * swidth;
+
+    if(depthBuffer[index] > z)
+        return;
+
+    depthBuffer[index] = z;
+
     int bpp = surface->format->BytesPerPixel;
     /* Here p is the address to the pixel we want to set */
     Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
@@ -214,4 +221,92 @@ void formar_cubo(int (*cubo)[3], int distancia)
    		}
    		indice += distancia - 1;	
    	}
+}
+
+void DrawPoint(int x, int y, float z, float* depthBuffer, int SW, int SH, SDL_Surface* sf, Uint32 color)
+{
+    if(x >= 0 && y >= 0 && x < SW && y <SH)
+        putpixel(sf, x, y, z, color, SW, SH, depthBuffer);
+}
+
+void ProcessScanLine(int y, Vec3 pa, Vec3 pb, Vec3 pc, Vec3 pd, Uint32 color, int SW, int SH, SDL_Surface* sf, float* depthBuffer)
+{
+    float gradient1 = pa[1] != pb[1] ? (y - pa[1]) / (pb[1] - pa[1]) : 1;
+    float gradient2 = pc[1] != pd[1] ? (y - pc[1]) / (pd[1] - pc[1]) : 1;
+
+    int sx = (int)Interpolate(pa[0], pb[0], gradient1);
+    int ex = (int)Interpolate(pc[0], pd[0], gradient2);
+
+    float z1 = (int)Interpolate(pa[2], pb[2], gradient1);
+    float z2 = (int)Interpolate(pc[2], pd[2], gradient2);
+
+    int x;
+    for(x = sx; x < ex; x++)
+    {
+        float gradient = (x - sx) / (float)(ex - sx);
+        float z = Interpolate(z1, z2, gradient);
+        DrawPoint(x, y, z, depthBuffer, SW, SH, sf, color);
+    }
+}
+
+void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Uint32 color, int SW, int SH, SDL_Surface* sf, float* depthBuffer)
+{
+    if (p1[1] > p2[1])
+    {
+        Vec3 temp;
+        CopyVec3(temp, p2);
+        CopyVec3(p2, p1);
+        CopyVec3(p1, temp);
+    }
+
+    if (p2[1] > p3[1])
+    {
+        Vec3 temp;
+        CopyVec3(temp, p2);
+        CopyVec3(p2, p3);
+        CopyVec3(p3, temp);
+    }
+
+    if (p1[1] > p2[1])
+    {
+        Vec3 temp;
+        CopyVec3(temp);
+        CopyVec3(p2, p1);
+        CopyVec3(p1, temp);
+    }
+
+    float dP1P2, dP1P3;
+
+    if (p2[1] - p1[1] > 0)
+        dP1P2 = (p2[0] - p1[0]) / (p2[1] - p1[1]);
+    else
+        dP1P2 = 0;
+
+    if (p3[1] - p1[1] > 0)
+        dP1P3 = (p3[0] - p1[0]) / (p3[1] - p1[1]);
+    else
+        dP1P3 = 0;
+
+    if (dP1P2 > dP1P3)
+    {
+        int y;
+        for (y = (int)p1[1]; y <= (int)p3[1]; y++)
+        {
+            if (y < p2[1])
+                ProcessScanLine(y, p1, p3, p1, p2, color, SW, SH, sf, depthBuffer);
+            else
+                ProcessScanLine(y, p1, p3, p2, p3, color, SW, SH, sf, depthBuffer);
+        }
+    }
+    else
+    {
+        int y;
+        for (y = (int)p1[1]; y <= (int)p3[1]; y++)
+        {
+            if (y < p2[1])
+                ProcessScanLine(y, p1, p2, p1, p3, color, SW, SH, sf, depthBuffer);
+            else
+                ProcessScanLine(y, p2, p3, p1, p3, color, SW, SH, sf, depthBuffer);
+        }
+    }
 }

@@ -6,6 +6,7 @@
 #include "mathHelper.h"
 
 typedef int bool;
+//typedef unsigned int uint;
 
 /////////////////////////////////////////////////////////////////
 //                     uint3 dynamic array                     //

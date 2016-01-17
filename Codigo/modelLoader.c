@@ -119,3 +119,30 @@ void RenderModel(Vec3DynamicArray* vertices, UInt3DynamicArray* faces, Vec2Dynam
 		DrawBline(  x0,  x1,  y0,  y1, screenSurface);
 	}
 }
+
+void RenderFilledModel(Vec3DynamicArray* vertices, UInt3DynamicArray* faces, Vec2DynamicArray* uvs, Mat4 wvp, uint swidth, uint sheight, SDL_Surface* sf, float* depthBuffer)
+{
+	int i, j, x0, x1, y0, y1;
+
+	for(j = 0; j < faces->used; j++)
+	{
+		Vec3 vertexA, vertexB, vertexC;
+		CopyVec3(vertexA, vertices->array[faces->array[j][0]]);
+		CopyVec3(vertexB, vertices->array[faces->array[j][1]]);
+		CopyVec3(vertexC, vertices->array[faces->array[j][2]]);
+
+		Vec4 res;
+
+        Vec3Mat4Product(vertexA, wvp, res);
+        Vec3 v1 = { (res[0]/res[3])*swidth*0.5 + swidth*0.5, (res[1]/res[3])*sheight*0.5 + sheight*0.5, res[2] / res[3] }; 
+		 	
+		Vec3Mat4Product(vertexB, wvp, res);
+		Vec3 v2 = { (res[0]/res[3])*swidth*0.5 + swidth*0.5, (res[1]/res[3])*sheight*0.5 + sheight*0.5, res[2] / res[3] };
+
+        Vec3Mat4Product(vertexC, wvp, res);
+        Vec3 v3 = { (res[0]/res[3])*swidth*0.5 + swidth*0.5, (res[1]/res[3])*sheight*0.5 + sheight*0.5, res[2] / res[3] };
+
+        Uint32 color =(j % faces->used);
+		DrawTriangle(v1, v2, v3, color, swidth, sheight, sf, depthBuffer);
+	}
+}
