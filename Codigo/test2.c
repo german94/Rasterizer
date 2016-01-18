@@ -2,16 +2,20 @@
 #include "mathHelper.h"
 #include "modelLoader.h"
 #include <float.h>
-
-
+ 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 
 SDL_Window* window = NULL;
 SDL_Surface* screenSurface = NULL;
 
-int mini(int a, int b){ if (a < b) {return a;} else {return b;} }
-
+void initDepthBuffer(float *depthBuffer, int e)
+{
+	int i;
+	for (i = 0; i < e; ++i)
+		depthBuffer[i] = FLT_MAX;
+}	 	
+	
 bool init()
 {
 	if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
@@ -30,20 +34,14 @@ bool init()
     return true;
 }
 
-initDepthBuffer(float* depthBuffer, int e)
-{
-    int i;
-    for(i = 0; i < e; i++)
-        depthBuffer[i] = FLT_MAX;
-}
-
 
 int main( int argc, char* args[] )
 {
+
     bool quit = false;
     SDL_Event e;
 
-    Mat4 world, view, wvp, wv, proj;
+    Mat4 view, proj, worldToCamera;
 
     float angleOfView = 0.78; 
     float near = 0.1; 
@@ -51,16 +49,13 @@ int main( int argc, char* args[] )
 
     Vec3 up = { 0, 1, 0 };
     Vec3 target = { 0, 0, -1 };
-    Vec3 pos = { 0, 0, 8};
+    Vec3 pos = { 0, 0, 3};
 
     CreateViewMatrix(view, target, pos, up);
-
-    CreateProjectionMatrix(proj, near, far, angleOfView, SCREEN_WIDTH / SCREEN_HEIGHT);
+   
+    CreateProjectionMatrix(proj, near, far, angleOfView, 1.0f);
 
     float a = 0;
-
-    float depthBuffer[SCREEN_WIDTH * SCREEN_HEIGHT];
-    initDepthBuffer(depthBuffer, SCREEN_WIDTH * SCREEN_HEIGHT);
 
     if(init())
     {
@@ -69,28 +64,50 @@ int main( int argc, char* args[] )
         Vec3DynamicArray Vertices, normals;
         UInt3DynamicArray faces;
         Vec2DynamicArray uvs;
-        LoadModel("modelMonkey.obj", &Vertices, &uvs, &normals, &faces);
+        LoadModel("model.obj", &Vertices, &uvs, &normals, &faces);
+		
+        int j, i;
 
-    	while(!quit)
-    	{
-            while(SDL_PollEvent(&e) != 0)
-            {
-            	if(e.type == SDL_QUIT)
-            		quit = true;
-            }
+        Mat4 t;
+	
+		t[0][0] = 1;	t[0][1] = 0;	t[0][2] = 0;	t[0][3] = 0;
+		t[1][0] = 0;	t[1][1] = -1;	t[1][2] = 0;	t[1][3] = 0;
+		t[2][0] = 0;	t[2][1] = 0;	t[2][2] = 1;	t[2][3] = 0;
+		t[3][0] = 0;	t[3][1] = 0;	t[3][2] = 10;	t[3][3] = 1;
+
+        float depthBuffer[SCREEN_WIDTH*SCREEN_HEIGHT];
+      
+		while(!quit)
+		{
+			while(SDL_PollEvent(&e) != 0)
+			{
+				if(e.type == SDL_QUIT)
+					quit = true;
+			}
+			
+			initDepthBuffer(depthBuffer, SCREEN_WIDTH*SCREEN_HEIGHT);
 
             SDL_FillRect( screenSurface, NULL, SDL_MapRGB( screenSurface->format, 0x00, 0x00, 0x00 ) );
 
-            CreateRotationYMatrix(world, a);
+            Mat4 world1, world, wv, wvp;
+
+            CreateRotationYMatrix(world1, a);
+
+            Mat4Product(world1, t, world);
 
             Mat4Product(world,view, wv);
+            
             Mat4Product(wv, proj, wvp);
+
             a+=0.001f;
+      	
+            int x0, x1, y0, y1;
+
             RenderFilledModel(&Vertices, &faces, &uvs, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer); 
 
-            SDL_UpdateWindowSurface( window );
-        }
-    }
+        	SDL_UpdateWindowSurface( window );
+    	}
+  	}
 
     SDL_DestroyWindow( window );
 
@@ -98,3 +115,5 @@ int main( int argc, char* args[] )
 
     return 0;
 }
+
+

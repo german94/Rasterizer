@@ -79,6 +79,7 @@ void CreateViewMatrix(Mat4 m, Vec3 cameraTarget, Vec3 cameraPos, Vec3 up)
 	m[3][3] = 1;
 }
 
+
 /*
 void CreateViewMatrix(Mat4 m, Vec3 cameraTarget, Vec3 cameraPos, Vec3 up)
 {
@@ -106,8 +107,9 @@ void CreateViewMatrix(Mat4 m, Vec3 cameraTarget, Vec3 cameraPos, Vec3 up)
 	m[3][1] = 0;
 	m[3][2] = 0;
 	m[3][3] = 1;
-}*/
-//ejemplo aspectRatio: 800/600
+}
+*/
+//ejelo aspectRatio: 800/600
 //ejemplo de fieldOfView: PI / 4 (el angulo de vision la camara)
 void CreateProjectionMatrix(Mat4 m, float nearPlane, float farPlane, float fieldOfView, float aspectRatio)
 {
@@ -152,22 +154,5 @@ void DisplayMatrix(Mat4 m)
 		m[1][0], m[1][1], m[1][2], m[1][3], m[2][0], m[2][1], m[2][2], m[2][3], m[3][0], m[3][1], m[3][2], m[3][3]);
 }
 
-float Max(float a, float b)
-{
-	return (a > b) ? a : b;
-}
 
-float Min(float a, float b)
-{
-	return (a < b) ? a : b;
-}
 
-float Clamp(float value, float min/* = 0*/, float max/* = 1*/)
-{
-	return Max(min, Min(value, max));
-}
-
-float Interpolate(float min, float max, float gradient)
-{
-	return min + (max - min) * Clamp(gradient, 0, 1);
-}

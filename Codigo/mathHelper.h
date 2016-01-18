@@ -25,7 +25,5 @@ void CreateRotationXMatrix(Mat4 m, float ang);
 void CreateRotationYMatrix(Mat4 m, float ang);
 void CreateRotationZMatrix(Mat4 m, float ang);
 void DisplayMatrix(Mat4 m);
-float Clamp(float, float, float);
-float Interpolate(float, float, float);
 
 #endif

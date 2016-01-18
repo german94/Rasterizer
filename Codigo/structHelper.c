@@ -1,7 +1,6 @@
 #include "structHelper.h"
 
-//Vector ops:
-void CopyVec3(Vec3 v1, Vec3 v2)
+void CopyVec3(Vec4 v1, Vec4 v2)
 {
     v1[0] = v2[0];
     v1[1] = v2[1];

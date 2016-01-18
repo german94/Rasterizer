@@ -1,13 +1,16 @@
 #include "modelLoader.h"
+#include <float.h>
+
 
 bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outUvs, Vec3DynamicArray* outNormals, UInt3DynamicArray* outFaces)
 {
 	FILE* file = fopen(path, "r");
 
 	initVec3DynamicArray(outVertices, 1);
-	initVec2DynamicArray(outUvs, 1);
+	initVec2DynamicArray(outUvs, 0);
 	initVec3DynamicArray(outNormals, 1);
 	initUInt3DynamicArray(outFaces, 1);
+	int texture = 0;
 
 	if(file == NULL)
 	{
@@ -86,63 +89,39 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 	}
 }
 
-void RenderModel(Vec3DynamicArray* vertices, UInt3DynamicArray* faces, Vec2DynamicArray* uvs, Mat4 wvp, uint swidth, uint sheight, SDL_Surface* screenSurface)
+
+void RenderFilledModel(Vec3DynamicArray* vertices, UInt3DynamicArray* faces, Vec2DynamicArray* uvs, Mat4 wvp, int swidth, int sheight, SDL_Surface* sf, float* depthBuffer)
 {
 	int i, j, x0, x1, y0, y1;
 
 	for(j = 0; j < faces->used; j++)
-	{
-		for(i = 0; i < 2; i++)
-		{
-			Vec4 res;
-            Vec3Mat4Product(vertices->array[faces->array[j][i]], wvp, res);
-            x0 = (res[0]/res[3])*swidth*0.5 + swidth*0.5 ;
-			y0 = (res[1]/res[3])*sheight*0.5 + sheight*0.5; 
-  		 	
-			Vec3Mat4Product(vertices->array[faces->array[j][i+1]], wvp, res);
-			x1 = (res[0]/res[3])*swidth*0.5 + swidth*0.5;
-			y1 = (res[1]/res[3])*sheight*0.5 + sheight*0.5;
+    {   
+        		
+	    Vec4 res1, res2, res3;
 
-			DrawBline(  x0,  x1,  y0,  y1, screenSurface);
-		}
-
-		Vec4 res;
-
-        Vec3Mat4Product(vertices->array[faces->array[j][2]], wvp, res);
-        x0 = (res[0]/res[3])*swidth*0.5 + swidth*0.5 ;
-		y0 = (res[1]/res[3])*sheight*0.5 + sheight*0.5; 
-		 	
-		Vec3Mat4Product(vertices->array[faces->array[j][0]], wvp, res);
-		x1 = (res[0]/res[3])*swidth*0.5 + swidth*0.5 ;
-		y1 = (res[1]/res[3])*sheight*0.5 + sheight*0.5;
-
-		DrawBline(  x0,  x1,  y0,  y1, screenSurface);
-	}
-}
-
-void RenderFilledModel(Vec3DynamicArray* vertices, UInt3DynamicArray* faces, Vec2DynamicArray* uvs, Mat4 wvp, uint swidth, uint sheight, SDL_Surface* sf, float* depthBuffer)
-{
-	int i, j, x0, x1, y0, y1;
-
-	for(j = 0; j < faces->used; j++)
-	{
-		Vec3 vertexA, vertexB, vertexC;
+	    Vec3 vertexA, vertexB, vertexC;
 		CopyVec3(vertexA, vertices->array[faces->array[j][0]]);
 		CopyVec3(vertexB, vertices->array[faces->array[j][1]]);
 		CopyVec3(vertexC, vertices->array[faces->array[j][2]]);
 
-		Vec4 res1, res2, res3;
+	    Vec3Mat4Product(vertexA, wvp, res1);
+	    Vec3 v1, v2, v3;
+	    v1[0] = (res1[0]/res1[3])*swidth/**0.5*/ + swidth*0.5 ;
+	    v1[1] = (res1[1]/res1[3])*sheight/**0.5*/+ sheight*0.5; 
+	    v1[2] = res1[2] / res1[3];
 
-        Vec3Mat4Product(vertexA, wvp, res1);
-        Vec3 v1 = { (res1[0]/res1[3])*swidth*0.5 + swidth*0.5, (res1[1]/res1[3])*sheight*0.5 + sheight*0.5, res1[2] / res1[3] }; 
-		 	
-		Vec3Mat4Product(vertexB, wvp, res2);
-		Vec3 v2 = { (res2[0]/res2[3])*swidth*0.5 + swidth*0.5, (res2[1]/res2[3])*sheight*0.5 + sheight*0.5, res2[2] / res2[3] };
+	    Vec3Mat4Product(vertexB, wvp, res2);
+	    v2[0] = (res2[0]/res2[3])*swidth/**0.5*/ + swidth*0.5 ;
+	    v2[1] = (res2[1]/res2[3])*sheight/**0.5*/ + sheight*0.5; 
+	    v2[2] = res2[2] / res2[3];
 
-        Vec3Mat4Product(vertexC, wvp, res3);
-        Vec3 v3 = { (res3[0]/res3[3])*swidth*0.5 + swidth*0.5, (res3[1]/res3[3])*sheight*0.5 + sheight*0.5, res3[2] / res3[3] };
+	    Vec3Mat4Product(vertexC, wvp, res3);
+	    v3[0] = (res3[0]/res3[3])*swidth/**0.5*/ + swidth*0.5 ;
+	    v3[1] = (res3[1]/res3[3])*sheight/**0.5*/ + sheight*0.5; 
+	 	v3[2] = res3[2] / res3[3];
 
-        Uint32 color =j % faces->used;
+	   // Uint32 color =(j % faces->used);
+		Uint32 color = (0.25f + (j % faces->used) * 0.75f / faces->used)*255;
 		DrawTriangle(v1, v2, v3, color, swidth, sheight, sf, depthBuffer);
 	}
 }
