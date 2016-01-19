@@ -1,9 +1,13 @@
 #include "sdlHelper.h"
 //#include "mathHelper.h"
 
-void putpixel(SDL_Surface *surface, int x, int y, float z, Uint32 pixel, int swidth, int sheight, float* depthBuffer)
+void putpixel(SDL_Surface *surface, int x, int y, float z, Vec3 color, int swidth, int sheight, float* depthBuffer, float ndotl)
 {
 	
+    Uint32 color1 = color[0]*ndotl*255.0f;
+    Uint32 color2 = color[1]*ndotl*255.0f;
+    Uint32 color3 = color[2]*ndotl*255.0f;
+
 	int index = x + y*swidth;
 	if(depthBuffer[index] > z)
 	{
@@ -14,27 +18,33 @@ void putpixel(SDL_Surface *surface, int x, int y, float z, Uint32 pixel, int swi
 
 	    switch(bpp) {
 	    case 1:
-	        *p = pixel;
+	        *p = color1;
 	        break;
 
 	    case 2:
-	        *(Uint16 *)p = pixel;
+	        *(Uint16 *)p = color1;
 	        break;
 
 	    case 3:
 	        if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
-	            p[0] = (pixel >> 16) & 0xff;
-	            p[1] = (pixel >> 8) & 0xff;
-	            p[2] = pixel & 0xff;
+	           // p[0] = (pixel >> 16) & 0xff;
+	           // p[1] = (pixel >> 8) & 0xff;
+	           // p[2] = pixel & 0xff;
+                p[0] =  color1 & 0xff;
+                p[1] =  color2 & 0xff;
+                p[2] =  color3 & 0xff;
 	        } else {
-	            p[0] = pixel & 0xff;
-	            p[1] = (pixel >> 8) & 0xff;
-	            p[2] = (pixel >> 16) & 0xff;
+	           // p[0] = pixel & 0xff;
+	          //  p[1] = (pixel >> 8) & 0xff;
+	          //  p[2] = (pixel >> 16) & 0xff;
+                p[0] = color3 & 0xff;
+                p[1] = color2 & 0xff;
+                p[2] = color1 & 0xff;
 	        }
 	        break;
 
 	    case 4:
-	        *(Uint32 *)p = pixel;
+	        *(Uint32 *)p = color1;
 	        break;
 	    }
 	}
@@ -95,10 +105,10 @@ void DrawBline( int x0, int x1, int y0, int y1, SDL_Surface* screenSurface)
 }
 
 
-void DrawPoint(int x, int y, float z, float* depthBuffer, int SW, int SH, SDL_Surface* sf, Uint32 color)
+void DrawPoint(int x, int y, float z, float* depthBuffer, int SW, int SH, SDL_Surface* sf, Vec3 color, float ndotl)
 {
     if(x >= 0 && y >= 0 && x < SW && y <SH)
-        putpixel(sf, x, y, z, color, SW, SH, depthBuffer);
+        putpixel(sf, x, y, z, color, SW, SH, depthBuffer, ndotl);
 }
 
 
@@ -124,7 +134,22 @@ float Interpolate(float min, float max, float gradient)
 	return min + (max - min) * Clamp(gradient);
 }
 
-void ProcessScanLine(int y, Vec3 pa, Vec3 pb, Vec3 pc, Vec3 pd, Uint32 color, int SW, int SH, SDL_Surface* sf, float* depthBuffer)
+
+float ComputeNDotL(Vec3 centerPoint, Vec3 vnFace, Vec3 lightPos) 
+{
+  Vec3 lightDirection;
+
+  Sub3(lightPos, centerPoint, lightDirection);
+
+  Normalize3(vnFace);
+  
+  Normalize3(lightDirection);
+
+  return Max(0, Dot3Prod(vnFace, lightDirection));
+}
+
+
+void ProcessScanLine(int y, Vec3 pa, Vec3 pb, Vec3 pc, Vec3 pd, Vec3 color, int SW, int SH, SDL_Surface* sf, float* depthBuffer, float ndotla, float ndotlb, float ndotlc, float ndotld)
 {
     // Thanks to current Y, we can compute the gradient to compute others values like
     // the starting X (sx) and ending X (ex) to draw between
@@ -139,28 +164,37 @@ void ProcessScanLine(int y, Vec3 pa, Vec3 pb, Vec3 pc, Vec3 pd, Uint32 color, in
     float z1 = Interpolate(pa[2], pb[2], gradient1);
     float z2 = Interpolate(pc[2], pd[2], gradient2);
 
+    float snl = Interpolate(ndotla, ndotlb, gradient1);
+    float enl = Interpolate(ndotlc, ndotld, gradient2);
+
     int x;
     for (x = sx ; x < ex; x++)
     {
   		float gradient = (x - sx) / (float)(ex - sx);
         float z = Interpolate(z1, z2, gradient);
-        DrawPoint(x, y, z, depthBuffer, SW, SH, sf, color);
+        float ndotl = Interpolate(snl, enl, gradient);
+
+        DrawPoint(x, y, z, depthBuffer, SW, SH, sf, color, ndotl);
     }
 }
 
-
-void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Uint32 color, int SW, int SH, SDL_Surface* sf, float* depthBuffer)
+void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 p1w, Vec3 p2w, Vec3 p3w, Vec3 color, int SW, int SH, SDL_Surface* sf, float* depthBuffer)
 {
-  
     // Sorting the points in order to always have this order on screen p1, p2 & p3
     // with p1 always up (thus having the Y the lowest possible to be near the top screen)
     // then p2 between p1 & p3
-    Vec3 temp;
+    Vec3 temp, tempn, tempw;
     if (p1[1] > p2[1])
     {
      	CopyVec3(temp, p2);
      	CopyVec3(p2, p1);
      	CopyVec3(p1, temp);
+        CopyVec3(tempn, p2n);
+        CopyVec3(p2n, p1n);
+        CopyVec3(p1n, tempn);
+        CopyVec3(tempw, p2w);
+        CopyVec3(p2w, p1w);
+        CopyVec3(p1w, tempw);
     }
 
     if (p2[1] > p3[1])
@@ -168,6 +202,12 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Uint32 color, int SW, int SH, SDL_S
      	CopyVec3(temp, p2);
      	CopyVec3(p2, p3);
      	CopyVec3(p3, temp);
+        CopyVec3(tempn, p2n);
+        CopyVec3(p2n, p3n);
+        CopyVec3(p3n, tempn);
+        CopyVec3(tempw, p2w);
+        CopyVec3(p2w, p3w);
+        CopyVec3(p3w, tempw);
     }
 
     if (p1[1] > p2[1])
@@ -175,7 +215,20 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Uint32 color, int SW, int SH, SDL_S
      	CopyVec3(temp, p2);
      	CopyVec3(p2, p1);
      	CopyVec3(p1, temp);
+        CopyVec3(tempn, p2n);
+        CopyVec3(p2n, p1n);
+        CopyVec3(p1n, tempn);
+        CopyVec3(tempw, p2w);
+        CopyVec3(p2w, p1w);
+        CopyVec3(p1w, tempw);
     }
+
+    Vec3 lightPos;
+    lightPos[0] = 0; lightPos[1] = 0; lightPos[2] = 20;
+
+    float nl1 = ComputeNDotL(p1w, p1n, lightPos);
+    float nl2 = ComputeNDotL(p2w, p2n, lightPos);
+    float nl3 = ComputeNDotL(p3w, p3n, lightPos);
 
     // inverse slopes
     float dP1P2, dP1P3;
@@ -201,9 +254,21 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Uint32 color, int SW, int SH, SDL_S
         	for ( y = (int)p1[1]; y <= (int)p3[1]; y++)
         	{
         		if (y < p2[1])
-            		ProcessScanLine(y, p1, p3, p1, p2, color, SW, SH, sf, depthBuffer);
+                {
+                    float ndotla = nl1;
+                    float ndotlb = nl3;
+                    float ndotlc = nl1;
+                    float ndotld = nl2;
+                    ProcessScanLine(y, p1, p3, p1, p2, color, SW, SH, sf, depthBuffer, ndotla, ndotlb, ndotlc, ndotld);
+                }    
             	else
-            		ProcessScanLine(y, p1, p3, p2, p3, color, SW, SH, sf, depthBuffer);
+            	{
+                    float ndotla = nl1;
+                    float ndotlb = nl3;
+                    float ndotlc = nl2;
+                    float ndotld = nl3;
+                    ProcessScanLine(y, p1, p3, p2, p3, color, SW, SH, sf, depthBuffer, ndotla, ndotlb, ndotlc, ndotld);
+                }	
         	}
 		}
     	else
@@ -212,9 +277,21 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Uint32 color, int SW, int SH, SDL_S
         	for (y = (int)p1[1]; y <= (int)p3[1]; y++)
         	{
             	if (y < p2[1])
-            		ProcessScanLine(y, p1, p2, p1, p3, color, SW, SH, sf, depthBuffer);
+        		{
+                    float ndotla = nl1;
+                    float ndotlb = nl2;
+                    float ndotlc = nl1;
+                    float ndotld = nl3;
+                    ProcessScanLine(y, p1, p2, p1, p3, color, SW, SH, sf, depthBuffer, ndotla, ndotlb, ndotlc, ndotld);
+                }
             	else
-            		ProcessScanLine(y, p2, p3, p1, p3, color, SW, SH, sf, depthBuffer);
+        		{
+                    float ndotla = nl2;
+                    float ndotlb = nl3;
+                    float ndotlc = nl1;
+                    float ndotld = nl3;
+                    ProcessScanLine(y, p2, p3, p1, p3, color, SW, SH, sf, depthBuffer, ndotla, ndotlb, ndotlc, ndotld);
+                }
         	}
     	}
     }
@@ -226,9 +303,21 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Uint32 color, int SW, int SH, SDL_S
         	for ( y = (int)p1[1]; y <= (int)p3[1]; y++)
         	{
         		if (y < p2[1])
-            		ProcessScanLine(y, p1, p3, p1, p2, color, SW, SH, sf, depthBuffer);
+            		{
+                        float ndotla = nl1;
+                        float ndotlb = nl3;
+                        float ndotlc = nl1;
+                        float ndotld = nl2;
+                        ProcessScanLine(y, p1, p3, p1, p2, color, SW, SH, sf, depthBuffer, ndotla, ndotlb, ndotlc, ndotld);
+                    }
         		else
-            		ProcessScanLine(y, p1, p3, p2, p3, color, SW, SH, sf, depthBuffer);
+            		{
+                        float ndotla = nl1;
+                        float ndotlb = nl3;
+                        float ndotlc = nl2;
+                        float ndotld = nl3;
+                        ProcessScanLine(y, p1, p3, p2, p3, color, SW, SH, sf, depthBuffer, ndotla, ndotlb, ndotlc, ndotld);
+                    }
         	}
         }
     	else
@@ -237,9 +326,21 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Uint32 color, int SW, int SH, SDL_S
         	for (y = (int)p1[1]; y <= (int)p3[1]; y++)
         	{
         		if (y < p2[1])
-            		ProcessScanLine(y, p1, p2, p1, p3, color, SW, SH, sf, depthBuffer);
+            		{
+                        float ndotla = nl1;
+                        float ndotlb = nl2;
+                        float ndotlc = nl1;
+                        float ndotld = nl3;
+                        ProcessScanLine(y, p1, p2, p1, p3, color, SW, SH, sf, depthBuffer, ndotla, ndotlb, ndotlc, ndotld);
+                    }
         		else
-              		ProcessScanLine(y, p2, p3, p1, p3, color, SW, SH, sf, depthBuffer);
+              		{
+                        float ndotla = nl2;
+                        float ndotlb = nl3;
+                        float ndotlc = nl1;
+                        float ndotld = nl3;
+                        ProcessScanLine(y, p2, p3, p1, p3, color, SW, SH, sf, depthBuffer, ndotla, ndotlb, ndotlc, ndotld);
+                    }
         	}
         }
     } 

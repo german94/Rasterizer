@@ -57,6 +57,10 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 				vertexIndex[0]--;
 				vertexIndex[1]--;
 				vertexIndex[2]--;
+				normalIndex[0]--;
+				normalIndex[1]--;
+				normalIndex[2]--;
+					
 			
 				if(matches != 9)
 				{
@@ -75,6 +79,9 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 				vertexIndex[0]--;
 				vertexIndex[1]--;
 				vertexIndex[2]--;
+				normalIndex[0]--;
+				normalIndex[1]--;
+				normalIndex[2]--;
 			
 				if(matches != 6)
 				{
@@ -90,14 +97,17 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 }
 
 
-void RenderFilledModel(Vec3DynamicArray* vertices, UInt3DynamicArray* faces, Vec2DynamicArray* uvs, Mat4 wvp, int swidth, int sheight, SDL_Surface* sf, float* depthBuffer)
+void RenderFilledModel(Vec3DynamicArray* vertices, UInt3DynamicArray* faces, Vec2DynamicArray* uvs, Vec3DynamicArray* normals, Mat4 wvp, int swidth, int sheight, SDL_Surface* sf, float* depthBuffer, Mat4 world)
 {
 	int i, j, x0, x1, y0, y1;
 
 	for(j = 0; j < faces->used; j++)
     {   
         		
-	    Vec4 res1, res2, res3;
+	   
+	    Vec4 res1, res2, res3, res1n, res2n, res3n, res1w, res2w, res3w;
+	    Vec3 v1, v2, v3, v1n, v2n, v3n, v1w, v2w, v3w;
+
 
 	    Vec3 vertexA, vertexB, vertexC;
 		CopyVec3(vertexA, vertices->array[faces->array[j][0]]);
@@ -105,7 +115,6 @@ void RenderFilledModel(Vec3DynamicArray* vertices, UInt3DynamicArray* faces, Vec
 		CopyVec3(vertexC, vertices->array[faces->array[j][2]]);
 
 	    Vec3Mat4Product(vertexA, wvp, res1);
-	    Vec3 v1, v2, v3;
 	    v1[0] = (res1[0]/res1[3])*swidth/**0.5*/ + swidth*0.5 ;
 	    v1[1] = (res1[1]/res1[3])*sheight/**0.5*/+ sheight*0.5; 
 	    v1[2] = res1[2] / res1[3];
@@ -120,8 +129,35 @@ void RenderFilledModel(Vec3DynamicArray* vertices, UInt3DynamicArray* faces, Vec
 	    v3[1] = (res3[1]/res3[3])*sheight/**0.5*/ + sheight*0.5; 
 	 	v3[2] = res3[2] / res3[3];
 
+	 	///////////////////////////
+ 		Vec3Mat4Product(vertices->array[faces->array[j][0]], world, res1w);
+ 		v1w[0] = res1w[0]; v1w[1] = res1w[1]; v1w[2] = res1w[2];
+
+        Vec3Mat4Product(vertices->array[faces->array[j][1]], world, res2w);
+		v2w[0] = res2w[0]; v2w[1] = res2w[1]; v2w[2] = res2w[2];
+
+        Vec3Mat4Product(vertices->array[faces->array[j][2]], world, res3w);
+        v3w[0] = res3w[0]; v3w[1] = res3w[1]; v3w[2] = res3w[2];        ////////////
+
+        ////////////////////////////
+        Vec3Mat4Product(normals->array[faces->array[j][0]], world, res1n);
+        v1n[0] = res1n[0]; v1n[1] = res1n[1]; v1n[2] = res1n[2];        ////////////
+
+        Vec3Mat4Product(normals->array[faces->array[j][1]], world, res2n);
+		v2n[0] = res2n[0]; v2n[1] = res2n[1]; v2n[2] = res2n[2]; 
+
+        Vec3Mat4Product(normals->array[faces->array[j][2]], world, res3n);
+		v3n[0] = res3n[0]; v3n[1] = res3n[1]; v3n[2] = res3n[2];  
+
 	   // Uint32 color =(j % faces->used);
-		Uint32 color = (0.25f + (j % faces->used) * 0.75f / faces->used)*255;
-		DrawTriangle(v1, v2, v3, color, swidth, sheight, sf, depthBuffer);
+		Vec3 color;
+		color[0] = 0.25f + (j % faces->used) * 0.75f / faces->used;
+		color[1] = color[0];
+		color[2] = color[0];
+	//	printf("%s\n", "color original");
+//		printf("%f, %f, %f\n", color[0], color[1], color[2]);
+		//sleep(1);
+
+		DrawTriangle(v1, v2, v3, v1n, v2n, v3n, v1w, v2w, v3w, color, swidth, sheight, sf, depthBuffer);
 	}
 }

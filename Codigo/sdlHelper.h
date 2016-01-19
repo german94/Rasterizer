@@ -6,7 +6,7 @@
 #include "mathHelper.h"
 
 
-void putpixel(SDL_Surface *surface, int x, int y, float z, Uint32 pixel, int swidth, int sheight, float* depthBuffer);
+void putpixel(SDL_Surface *surface, int x, int y, float z, Vec3 pixel, int swidth, int sheight, float* depthBuffer, float ndot);
 Uint32 getpixel(SDL_Surface *surface, int x, int y);
 void Translation(int (*Msrc)[3], int (*Mdst)[3], int cant_pixel, int *trans);
 void RotationX(int (*Mdst)[3], int (*Msrc)[3], int angulo, int cant_pixel);

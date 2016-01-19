@@ -72,8 +72,8 @@ int main( int argc, char* args[] )
 	
 		t[0][0] = 1;	t[0][1] = 0;	t[0][2] = 0;	t[0][3] = 0;
 		t[1][0] = 0;	t[1][1] = -1;	t[1][2] = 0;	t[1][3] = 0;
-		t[2][0] = 0;	t[2][1] = 0;	t[2][2] = 1;	t[2][3] = 0;
-		t[3][0] = 0;	t[3][1] = 0;	t[3][2] = 10;	t[3][3] = 1;
+		t[2][0] = 0;	t[2][1] = 0;	t[2][2] = -1;	t[2][3] = 0;
+		t[3][0] = 0;	t[3][1] = 0;	t[3][2] = 20;	t[3][3] = 1;
 
         float depthBuffer[SCREEN_WIDTH*SCREEN_HEIGHT];
       
@@ -103,7 +103,7 @@ int main( int argc, char* args[] )
       	
             int x0, x1, y0, y1;
 
-            RenderFilledModel(&Vertices, &faces, &uvs, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer); 
+            RenderFilledModel(&Vertices, &faces, &uvs, &normals, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, world); 
 
         	SDL_UpdateWindowSurface( window );
     	}
