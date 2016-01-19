@@ -2,19 +2,23 @@
 #include <float.h>
 
 
-bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outUvs, Vec3DynamicArray* outNormals, UInt3DynamicArray* outFaces)
+bool LoadModel(char* path, VertexDynamicArray* outVertices, UInt3DynamicArray* outFaces)
 {
+	Vec2DynamicArray outUvs;
+	outUvs.size = 0;
+	Vec3DynamicArray outNormals;
+
+	initVec3DynamicArray(&outNormals, 1);
+	initVertexDynamicArray(outVertices, 1);
+	initUInt3DynamicArray(outFaces, 1);
+
 	FILE* file = fopen(path, "r");
 
-	initVec3DynamicArray(outVertices, 1);
-	initVec2DynamicArray(outUvs, 0);
-	initVec3DynamicArray(outNormals, 1);
-	initUInt3DynamicArray(outFaces, 1);
 	int texture = 0;
 
 	if(file == NULL)
 	{
-		printf("Error al cargar el archivo.\n");
+		printf("Error al cargar elsadasd archivo.\n");
 		return false;
 	}
 
@@ -29,31 +33,43 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 
 		if(strcmp(lineHeader, "v") == 0)
 		{
-			Vec3 vertex;
-			fscanf(file, "%f %f %f\n", &vertex[0], &vertex[1], &vertex[2]);
-			insertVec3DynamicArray(outVertices, vertex);
+			Vertex v;
+			ZeroVec(v.normal, 3);
+			ZeroVec(v.wcoordinates, 3);
+			ZeroVec(v.texCoordinates, 2);
+			fscanf(file, "%f %f %f\n", &v.coordinates[0], &v.coordinates[1], &v.coordinates[2]);
+			insertVertexDynamicArray(outVertices, &v);
 		}
 		else if(strcmp(lineHeader, "vt") == 0)
 		{
-			if(outUvs->size ==0) {initVec2DynamicArray(outUvs, 1);}
+			if(outUvs.size ==0) 
+				initVec2DynamicArray(&outUvs, 1);
+
 			Vec2 uv;
 			fscanf(file, "%f %f\n", &uv[0], &uv[1]);
-			insertVec2DynamicArray(outUvs, uv);
+			insertVec2DynamicArray(&outUvs, uv);
 		}
 		else if(strcmp(lineHeader, "vn") == 0)
 		{
 			Vec3 normal;
 			fscanf(file, "%f %f %f\n", &normal[0], &normal[1], &normal[2]);
-			insertVec3DynamicArray(outNormals, normal);
+			insertVec3DynamicArray(&outNormals, normal);
 		}
 		else if(strcmp(lineHeader, "f") == 0)
 		{
-			if(outUvs->size != 0 )
+			if(outUvs.size != 0 )
 			{
 				uint3 vertexIndex, uvIndex, normalIndex;
 				int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], 
 				&vertexIndex[1], &uvIndex[1], &normalIndex[1], 
 				&vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+
+				if(matches != 9)
+				{
+					printf("Formato incompatible.\n");
+					return false;
+				}
+
 				vertexIndex[0]--;
 				vertexIndex[1]--;
 				vertexIndex[2]--;
@@ -61,13 +77,14 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 				normalIndex[1]--;
 				normalIndex[2]--;
 					
-			
-				if(matches != 9)
-				{
-					printf("Formato incompatible.\n");
-					return false;
-				}
-			
+				CopyVec(outVertices->array[vertexIndex[0]].normal, outNormals.array[normalIndex[0]], 3);
+				CopyVec(outVertices->array[vertexIndex[1]].normal, outNormals.array[normalIndex[1]], 3);
+				CopyVec(outVertices->array[vertexIndex[2]].normal, outNormals.array[normalIndex[2]], 3);
+
+				CopyVec(outVertices->array[vertexIndex[0]].texCoordinates, outUvs.array[uvIndex[0]], 2);
+				CopyVec(outVertices->array[vertexIndex[1]].texCoordinates, outUvs.array[uvIndex[1]], 2);
+				CopyVec(outVertices->array[vertexIndex[2]].texCoordinates, outUvs.array[uvIndex[2]], 2);
+						
 				insertUInt3DynamicArray(outFaces, vertexIndex);
 			}
 			else
@@ -76,43 +93,50 @@ bool LoadModel(char* path, Vec3DynamicArray* outVertices, Vec2DynamicArray* outU
 				int matches = fscanf(file, "%d//%d %d//%d %d//%d\n", &vertexIndex[0], &normalIndex[0], 
 				&vertexIndex[1], &normalIndex[1], 
 				&vertexIndex[2], &normalIndex[2]);
+
+				if(matches != 6)
+				{
+					printf("Formato incompatible.\n");
+					return false;
+				}
+
 				vertexIndex[0]--;
 				vertexIndex[1]--;
 				vertexIndex[2]--;
 				normalIndex[0]--;
 				normalIndex[1]--;
 				normalIndex[2]--;
-			
-				if(matches != 6)
-				{
-					printf("Formato incompatible.\n");
-					return false;
-				}
+
+				CopyVec(outVertices->array[vertexIndex[0]].normal, outNormals.array[normalIndex[0]], 3);
+				CopyVec(outVertices->array[vertexIndex[1]].normal, outNormals.array[normalIndex[1]], 3);
+				CopyVec(outVertices->array[vertexIndex[2]].normal, outNormals.array[normalIndex[2]], 3);
 			
 				insertUInt3DynamicArray(outFaces, vertexIndex);
 			}
-
 		}
 	}
+
+	if(outNormals.size != 0)
+		freeVec3DynamicArray(&outNormals);
+
+	if(outUvs.size != 0)
+		freeVec2DynamicArray(&outUvs);
 }
 
 
-void RenderFilledModel(Vec3DynamicArray* vertices, UInt3DynamicArray* faces, Vec2DynamicArray* uvs, Vec3DynamicArray* normals, Mat4 wvp, int swidth, int sheight, SDL_Surface* sf, float* depthBuffer, Mat4 world)
+void RenderFilledModel(VertexDynamicArray* vertices, UInt3DynamicArray* faces, Mat4 wvp, int swidth, int sheight, SDL_Surface* sf, float* depthBuffer, Mat4 world)
 {
 	int i, j, x0, x1, y0, y1;
 
 	for(j = 0; j < faces->used; j++)
-    {   
-        		
-	   
+    {   	   
 	    Vec4 res1, res2, res3, res1n, res2n, res3n, res1w, res2w, res3w;
 	    Vec3 v1, v2, v3, v1n, v2n, v3n, v1w, v2w, v3w;
 
-
 	    Vec3 vertexA, vertexB, vertexC;
-		CopyVec3(vertexA, vertices->array[faces->array[j][0]]);
-		CopyVec3(vertexB, vertices->array[faces->array[j][1]]);
-		CopyVec3(vertexC, vertices->array[faces->array[j][2]]);
+		CopyVec(vertexA, vertices->array[faces->array[j][0]].coordinates, 3);
+		CopyVec(vertexB, vertices->array[faces->array[j][1]].coordinates, 3);
+		CopyVec(vertexC, vertices->array[faces->array[j][2]].coordinates, 3);
 
 	    Vec3Mat4Product(vertexA, wvp, res1);
 	    v1[0] = (res1[0]/res1[3])*swidth/**0.5*/ + swidth*0.5 ;
@@ -130,23 +154,23 @@ void RenderFilledModel(Vec3DynamicArray* vertices, UInt3DynamicArray* faces, Vec
 	 	v3[2] = res3[2] / res3[3];
 
 	 	///////////////////////////
- 		Vec3Mat4Product(vertices->array[faces->array[j][0]], world, res1w);
+ 		Vec3Mat4Product(vertices->array[faces->array[j][0]].coordinates, world, res1w);
  		v1w[0] = res1w[0]; v1w[1] = res1w[1]; v1w[2] = res1w[2];
 
-        Vec3Mat4Product(vertices->array[faces->array[j][1]], world, res2w);
+        Vec3Mat4Product(vertices->array[faces->array[j][1]].coordinates, world, res2w);
 		v2w[0] = res2w[0]; v2w[1] = res2w[1]; v2w[2] = res2w[2];
 
-        Vec3Mat4Product(vertices->array[faces->array[j][2]], world, res3w);
+        Vec3Mat4Product(vertices->array[faces->array[j][2]].coordinates, world, res3w);
         v3w[0] = res3w[0]; v3w[1] = res3w[1]; v3w[2] = res3w[2];        ////////////
 
         ////////////////////////////
-        Vec3Mat4Product(normals->array[faces->array[j][0]], world, res1n);
+        Vec3Mat4Product(vertices->array[faces->array[j][0]].normal, world, res1n);
         v1n[0] = res1n[0]; v1n[1] = res1n[1]; v1n[2] = res1n[2];        ////////////
 
-        Vec3Mat4Product(normals->array[faces->array[j][1]], world, res2n);
+        Vec3Mat4Product(vertices->array[faces->array[j][1]].normal, world, res2n);
 		v2n[0] = res2n[0]; v2n[1] = res2n[1]; v2n[2] = res2n[2]; 
 
-        Vec3Mat4Product(normals->array[faces->array[j][2]], world, res3n);
+        Vec3Mat4Product(vertices->array[faces->array[j][2]].normal, world, res3n);
 		v3n[0] = res3n[0]; v3n[1] = res3n[1]; v3n[2] = res3n[2];  
 
 	   // Uint32 color =(j % faces->used);

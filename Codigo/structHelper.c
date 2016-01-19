@@ -1,10 +1,17 @@
 #include "structHelper.h"
 
-void CopyVec3(Vec4 v1, Vec4 v2)
+void CopyVec(float* v1, float* v2, int dimension)
 {
-    v1[0] = v2[0];
-    v1[1] = v2[1];
-    v1[2] = v2[2];
+    int i;
+    for(i = 0; i < dimension; i++)
+        v1[i] = v2[i];
+}
+
+void ZeroVec(float* v, int d)
+{
+    int i;
+    for(i = 0; i < d; i++)
+        v[i] = 0;
 }
 
 /////////////////////////////////////////////////////////////////
@@ -91,6 +98,37 @@ void insertVec2DynamicArray(Vec2DynamicArray *a, Vec2 element)
 }
 
 void freeVec2DynamicArray(Vec2DynamicArray *a) 
+{
+  free(a->array);
+  a->array = NULL;
+  a->used = a->size = 0;
+}
+
+/////////////////////////////////////////////////////////////////
+//                     Vertex dynamic array                    //
+/////////////////////////////////////////////////////////////////
+void initVertexDynamicArray(VertexDynamicArray* a, size_t initialSize)
+{
+  a->array = (Vertex *)malloc(initialSize * sizeof(Vertex));
+  a->used = 0;
+  a->size = initialSize;
+}
+void insertVertexDynamicArray(VertexDynamicArray* a, Vertex* v)
+{
+  if (a->used == a->size) {
+    a->size *= 2;
+    a->array = (Vertex *)realloc(a->array, a->size * sizeof(Vertex));
+  }
+
+  CopyVec(a->array[a->used].coordinates, v->coordinates, 3);
+  CopyVec(a->array[a->used].wcoordinates, v->wcoordinates, 3);
+  CopyVec(a->array[a->used].normal, v->normal, 3);
+  CopyVec(a->array[a->used].texCoordinates, v->texCoordinates, 2);
+
+  a->used++;
+}
+
+void freeVertexDynamicArray(VertexDynamicArray* a)
 {
   free(a->array);
   a->array = NULL;

@@ -61,10 +61,10 @@ int main( int argc, char* args[] )
     {
     	screenSurface = SDL_GetWindowSurface( window );
 
-        Vec3DynamicArray Vertices, normals;
+        VertexDynamicArray Vertices;
         UInt3DynamicArray faces;
-        Vec2DynamicArray uvs;
-        LoadModel("model.obj", &Vertices, &uvs, &normals, &faces);
+
+        LoadModel("modelMonkey.obj", &Vertices, &faces);
 		
         int j, i;
 
@@ -99,11 +99,11 @@ int main( int argc, char* args[] )
             
             Mat4Product(wv, proj, wvp);
 
-            a+=0.001f;
+            a+=0.01f;
       	
             int x0, x1, y0, y1;
 
-            RenderFilledModel(&Vertices, &faces, &uvs, &normals, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, world); 
+            RenderFilledModel(&Vertices, &faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, world); 
 
         	SDL_UpdateWindowSurface( window );
     	}
@@ -115,5 +115,3 @@ int main( int argc, char* args[] )
 
     return 0;
 }
-
-

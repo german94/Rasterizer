@@ -149,13 +149,20 @@ float ComputeNDotL(Vec3 centerPoint, Vec3 vnFace, Vec3 lightPos)
 }
 
 
-void ProcessScanLine(int y, Vec3 pa, Vec3 pb, Vec3 pc, Vec3 pd, Vec3 color, int SW, int SH, SDL_Surface* sf, float* depthBuffer, float ndotla, float ndotlb, float ndotlc, float ndotld)
+void ProcessScanLine(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, Vec3 color, int SW, int SH, SDL_Surface* sf, float* depthBuffer, ScanLineData* data)
 {
     // Thanks to current Y, we can compute the gradient to compute others values like
     // the starting X (sx) and ending X (ex) to draw between
     // if pa.Y == pb.Y or pc.Y == pd.Y, gradient is forced to 1
-    float gradient1 = pa[1] != pb[1] ? (y - pa[1]) / (pb[1] - pa[1]) : 1;
-    float gradient2 = pc[1] != pd[1] ? (y - pc[1]) / (pd[1] - pc[1]) : 1;
+
+    Vec3 pa, pb, pc, pd;
+    CopyVec(pa, va->coordinates, 3);
+    CopyVec(pb, vb->coordinates, 3);
+    CopyVec(pc, vc->coordinates, 3);
+    CopyVec(pd, vd->coordinates, 3);
+
+    float gradient1 = pa[1] != pb[1] ? (data->currentY - pa[1]) / (pb[1] - pa[1]) : 1;
+    float gradient2 = pc[1] != pd[1] ? (data->currentY - pc[1]) / (pd[1] - pc[1]) : 1;
             
     int sx = (int)Interpolate(pa[0], pb[0], gradient1);
     int ex = (int)Interpolate(pc[0], pd[0], gradient2);
@@ -164,8 +171,8 @@ void ProcessScanLine(int y, Vec3 pa, Vec3 pb, Vec3 pc, Vec3 pd, Vec3 color, int 
     float z1 = Interpolate(pa[2], pb[2], gradient1);
     float z2 = Interpolate(pc[2], pd[2], gradient2);
 
-    float snl = Interpolate(ndotla, ndotlb, gradient1);
-    float enl = Interpolate(ndotlc, ndotld, gradient2);
+    float snl = Interpolate(data->ndotla, data->ndotlb, gradient1);
+    float enl = Interpolate(data->ndotlc, data->ndotld, gradient2);
 
     int x;
     for (x = sx ; x < ex; x++)
@@ -174,7 +181,7 @@ void ProcessScanLine(int y, Vec3 pa, Vec3 pb, Vec3 pc, Vec3 pd, Vec3 color, int 
         float z = Interpolate(z1, z2, gradient);
         float ndotl = Interpolate(snl, enl, gradient);
 
-        DrawPoint(x, y, z, depthBuffer, SW, SH, sf, color, ndotl);
+        DrawPoint(x, data->currentY, z, depthBuffer, SW, SH, sf, color, data->ndotla);
     }
 }
 
@@ -186,41 +193,41 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
     Vec3 temp, tempn, tempw;
     if (p1[1] > p2[1])
     {
-     	CopyVec3(temp, p2);
-     	CopyVec3(p2, p1);
-     	CopyVec3(p1, temp);
-        CopyVec3(tempn, p2n);
-        CopyVec3(p2n, p1n);
-        CopyVec3(p1n, tempn);
-        CopyVec3(tempw, p2w);
-        CopyVec3(p2w, p1w);
-        CopyVec3(p1w, tempw);
+     	CopyVec(temp, p2, 3);
+     	CopyVec(p2, p1, 3);
+     	CopyVec(p1, temp, 3);
+        CopyVec(tempn, p2n, 3);
+        CopyVec(p2n, p1n, 3);
+        CopyVec(p1n, tempn, 3);
+        CopyVec(tempw, p2w, 3);
+        CopyVec(p2w, p1w, 3);
+        CopyVec(p1w, tempw, 3);
     }
 
     if (p2[1] > p3[1])
     {
-     	CopyVec3(temp, p2);
-     	CopyVec3(p2, p3);
-     	CopyVec3(p3, temp);
-        CopyVec3(tempn, p2n);
-        CopyVec3(p2n, p3n);
-        CopyVec3(p3n, tempn);
-        CopyVec3(tempw, p2w);
-        CopyVec3(p2w, p3w);
-        CopyVec3(p3w, tempw);
+     	CopyVec(temp, p2, 3);
+     	CopyVec(p2, p3, 3);
+     	CopyVec(p3, temp, 3);
+        CopyVec(tempn, p2n, 3);
+        CopyVec(p2n, p3n, 3);
+        CopyVec(p3n, tempn, 3);
+        CopyVec(tempw, p2w, 3);
+        CopyVec(p2w, p3w, 3);
+        CopyVec(p3w, tempw, 3);
     }
 
     if (p1[1] > p2[1])
     {
-     	CopyVec3(temp, p2);
-     	CopyVec3(p2, p1);
-     	CopyVec3(p1, temp);
-        CopyVec3(tempn, p2n);
-        CopyVec3(p2n, p1n);
-        CopyVec3(p1n, tempn);
-        CopyVec3(tempw, p2w);
-        CopyVec3(p2w, p1w);
-        CopyVec3(p1w, tempw);
+     	CopyVec(temp, p2, 3);
+     	CopyVec(p2, p1, 3);
+     	CopyVec(p1, temp, 3);
+        CopyVec(tempn, p2n, 3);
+        CopyVec(p2n, p1n, 3);
+        CopyVec(p1n, tempn, 3);
+        CopyVec(tempw, p2w, 3);
+        CopyVec(p2w, p1w, 3);
+        CopyVec(p1w, tempw, 3);
     }
 
     Vec3 lightPos;
@@ -244,53 +251,63 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
     else
     	dP1P3 = 0;
 
-    // First case p2 right; second p2 left
+    
+    Vertex v1, v2, v3;
+    CopyVec(v1.coordinates, p1, 3);
+    CopyVec(v2.coordinates, p2, 3);
+    CopyVec(v3.coordinates, p3, 3);
 
     if(p1[1] != p2[1])
     {  
     	if (dP1P2 > dP1P3)
     	{
-        	int y;
+        	ScanLineData data;
+            int y;
         	for ( y = (int)p1[1]; y <= (int)p3[1]; y++)
         	{
+                data.currentY = y;
+
         		if (y < p2[1])
                 {
-                    float ndotla = nl1;
-                    float ndotlb = nl3;
-                    float ndotlc = nl1;
-                    float ndotld = nl2;
-                    ProcessScanLine(y, p1, p3, p1, p2, color, SW, SH, sf, depthBuffer, ndotla, ndotlb, ndotlc, ndotld);
+                    data.ndotla = nl1;
+                    data.ndotlb = nl3;
+                    data.ndotlc = nl1;
+                    data.ndotld = nl2;
+                    ProcessScanLine(&v1, &v3, &v1, &v2, color, SW, SH, sf, depthBuffer, &data);
                 }    
             	else
             	{
-                    float ndotla = nl1;
-                    float ndotlb = nl3;
-                    float ndotlc = nl2;
-                    float ndotld = nl3;
-                    ProcessScanLine(y, p1, p3, p2, p3, color, SW, SH, sf, depthBuffer, ndotla, ndotlb, ndotlc, ndotld);
+                    data.ndotla = nl1;
+                    data.ndotlb = nl3;
+                    data.ndotlc = nl2;
+                    data.ndotld = nl3;
+                    ProcessScanLine(&v1, &v3, &v2, &v3, color, SW, SH, sf, depthBuffer, &data);
                 }	
         	}
 		}
     	else
     	{
-        	int y;
+        	ScanLineData data;
+            int y;
         	for (y = (int)p1[1]; y <= (int)p3[1]; y++)
         	{
+                data.currentY = y;
+
             	if (y < p2[1])
         		{
-                    float ndotla = nl1;
-                    float ndotlb = nl2;
-                    float ndotlc = nl1;
-                    float ndotld = nl3;
-                    ProcessScanLine(y, p1, p2, p1, p3, color, SW, SH, sf, depthBuffer, ndotla, ndotlb, ndotlc, ndotld);
+                    data.ndotla = nl1;
+                    data.ndotlb = nl2;
+                    data.ndotlc = nl1;
+                    data.ndotld = nl3;
+                    ProcessScanLine(&v1, &v2, &v1, &v3, color, SW, SH, sf, depthBuffer, &data);
                 }
             	else
         		{
-                    float ndotla = nl2;
-                    float ndotlb = nl3;
-                    float ndotlc = nl1;
-                    float ndotld = nl3;
-                    ProcessScanLine(y, p2, p3, p1, p3, color, SW, SH, sf, depthBuffer, ndotla, ndotlb, ndotlc, ndotld);
+                    data.ndotla = nl2;
+                    data.ndotlb = nl3;
+                    data.ndotlc = nl1;
+                    data.ndotld = nl3;
+                    ProcessScanLine(&v2, &v3, &v1, &v3, color, SW, SH, sf, depthBuffer, &data);
                 }
         	}
     	}
@@ -299,49 +316,73 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
     {
     	if (p1[0] < p2[0])
     	{
-        	int y;
+        	ScanLineData data;
+            int y;
         	for ( y = (int)p1[1]; y <= (int)p3[1]; y++)
         	{
+                data.currentY = y;
+
         		if (y < p2[1])
-            		{
-                        float ndotla = nl1;
-                        float ndotlb = nl3;
-                        float ndotlc = nl1;
-                        float ndotld = nl2;
-                        ProcessScanLine(y, p1, p3, p1, p2, color, SW, SH, sf, depthBuffer, ndotla, ndotlb, ndotlc, ndotld);
-                    }
+        		{
+                    data.ndotla = nl1;
+                    data.ndotlb = nl3;
+                    data.ndotlc = nl1;
+                    data.ndotld = nl2;
+                    ProcessScanLine(&v1, &v3, &v1, &v2, color, SW, SH, sf, depthBuffer, &data);
+                }
         		else
-            		{
-                        float ndotla = nl1;
-                        float ndotlb = nl3;
-                        float ndotlc = nl2;
-                        float ndotld = nl3;
-                        ProcessScanLine(y, p1, p3, p2, p3, color, SW, SH, sf, depthBuffer, ndotla, ndotlb, ndotlc, ndotld);
-                    }
+        		{
+                    data.ndotla = nl1;
+                    data.ndotlb = nl3;
+                    data.ndotlc = nl2;
+                    data.ndotld = nl3;
+                    ProcessScanLine(&v1, &v3, &v2, &v3, color, SW, SH, sf, depthBuffer, &data);
+                }
         	}
         }
     	else
     	{
-        	int y;
+        	ScanLineData data;
+            int y;
         	for (y = (int)p1[1]; y <= (int)p3[1]; y++)
         	{
+                data.currentY = y;
+
         		if (y < p2[1])
-            		{
-                        float ndotla = nl1;
-                        float ndotlb = nl2;
-                        float ndotlc = nl1;
-                        float ndotld = nl3;
-                        ProcessScanLine(y, p1, p2, p1, p3, color, SW, SH, sf, depthBuffer, ndotla, ndotlb, ndotlc, ndotld);
-                    }
+        		{
+                    data.ndotla = nl1;
+                    data.ndotlb = nl2;
+                    data.ndotlc = nl1;
+                    data.ndotld = nl3;
+                    ProcessScanLine(&v1, &v2, &v1, &v3, color, SW, SH, sf, depthBuffer, &data);
+                }
         		else
-              		{
-                        float ndotla = nl2;
-                        float ndotlb = nl3;
-                        float ndotlc = nl1;
-                        float ndotld = nl3;
-                        ProcessScanLine(y, p2, p3, p1, p3, color, SW, SH, sf, depthBuffer, ndotla, ndotlb, ndotlc, ndotld);
-                    }
+          		{
+                    data.ndotla = nl2;
+                    data.ndotlb = nl3;
+                    data.ndotlc = nl1;
+                    data.ndotld = nl3;
+                    ProcessScanLine(&v2, &v3, &v1, &v3, color, SW, SH, sf, depthBuffer, &data);
+                }
         	}
         }
     } 
+}
+
+Uint32* getTexturePixels(SDL_Surface* sf, SDL_Renderer* renderer)
+{
+    SDL_Texture* t;
+    void* pixels;
+    SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, sf->w, sf->h);
+    SDL_LockTexture(t, &sf->clip_rect, &pixels, sf->pitch);
+    memcpy(pixels, sf->pixels, sf->w * sf->h);
+    Uint32* retPixels = (Uint32*) pixels;
+    SDL_UnlockTexture(t);
+
+    return retPixels;
+}
+
+Uint32 getTexturePixelAt(Uint32* pixels, int x, int y, int w)
+{
+    return pixels[y * w + x];
 }

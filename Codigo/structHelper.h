@@ -7,7 +7,26 @@
 
 typedef int bool;
 
-void CopyVec3(Vec3, Vec3);
+typedef struct
+{
+	Vec3 normal;
+	Vec3 coordinates;
+	Vec3 wcoordinates;
+	Vec2 texCoordinates;
+} Vertex;
+
+typedef struct
+{
+	int currentY;
+	float ndotla;
+	float ndotlb;
+	float ndotlc;
+	float ndotld; 
+	float ua, ub, uc, ud, va, vb, vc, vd;
+} ScanLineData;
+
+void CopyVec(float*, float*, int);
+void ZeroVec(float*, int);
 
 /////////////////////////////////////////////////////////////////
 //                     uint3 dynamic array                     //
@@ -48,5 +67,18 @@ typedef struct {
 void initVec2DynamicArray(Vec2DynamicArray*, size_t);
 void insertVec2DynamicArray(Vec2DynamicArray*, Vec2);
 void freeVec2DynamicArray(Vec2DynamicArray*);
+
+/////////////////////////////////////////////////////////////////
+//                     Vertex dynamic array                    //
+/////////////////////////////////////////////////////////////////
+typedef struct {
+  Vertex *array;
+  size_t used;
+  size_t size;
+} VertexDynamicArray;
+
+void initVertexDynamicArray(VertexDynamicArray*, size_t);
+void insertVertexDynamicArray(VertexDynamicArray*, Vertex*);
+void freeVertexDynamicArray(VertexDynamicArray*);
 
 #endif
