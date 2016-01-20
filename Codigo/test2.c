@@ -103,7 +103,7 @@ int main( int argc, char* args[] )
       	
             int x0, x1, y0, y1;
 
-            RenderFilledModel(&Vertices, &faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, world); 
+            RenderFilledModel(&Vertices, &faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, world, NULL); 
 
         	SDL_UpdateWindowSurface( window );
     	}

@@ -124,7 +124,7 @@ bool LoadModel(char* path, VertexDynamicArray* outVertices, UInt3DynamicArray* o
 }
 
 
-void RenderFilledModel(VertexDynamicArray* vertices, UInt3DynamicArray* faces, Mat4 wvp, int swidth, int sheight, SDL_Surface* sf, float* depthBuffer, Mat4 world)
+void RenderFilledModel(VertexDynamicArray* vertices, UInt3DynamicArray* faces, Mat4 wvp, int swidth, int sheight, SDL_Surface* sf, float* depthBuffer, Mat4 world, SDL_Surface* tex)
 {
 	int i, j, x0, x1, y0, y1;
 
@@ -182,6 +182,6 @@ void RenderFilledModel(VertexDynamicArray* vertices, UInt3DynamicArray* faces, M
 //		printf("%f, %f, %f\n", color[0], color[1], color[2]);
 		//sleep(1);
 
-		DrawTriangle(v1, v2, v3, v1n, v2n, v3n, v1w, v2w, v3w, color, swidth, sheight, sf, depthBuffer);
+		DrawTriangle(v1, v2, v3, v1n, v2n, v3n, v1w, v2w, v3w, color, swidth, sheight, sf, depthBuffer, tex);
 	}
 }
