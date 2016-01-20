@@ -148,8 +148,26 @@ float ComputeNDotL(Vec3 centerPoint, Vec3 vnFace, Vec3 lightPos)
   return Max(0, Dot3Prod(vnFace, lightDirection));
 }
 
+Uint32 Map(SDL_Surface* tex, float tu, float tv)
+{
+    if (tex == NULL) 
+        return 0;
+    
+    int u = abs((int) (tu*tex->w) % tex->w);
+    int v = abs((int) (tv*tex->h) % tex->h);
 
-void ProcessScanLine(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, Vec3 color, int SW, int SH, SDL_Surface* sf, float* depthBuffer, ScanLineData* data)
+    return getpixel(tex, u, v);
+}
+
+void Uint32ToVec4(Uint32 inColor, Vec4 outColor)
+{
+    outColor[0] = (inColor >> 24) & 0xFF;
+    outColor[1] = (inColor >> 16) & 0xFF;
+    outColor[2] = (inColor >> 8) & 0xFF;
+    outColor[3] = inColor & 0xFF;
+}
+
+void ProcessScanLine(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, Vec3 color, int SW, int SH, SDL_Surface* sf, float* depthBuffer, ScanLineData* data, SDL_Surface* tex)
 {
     // Thanks to current Y, we can compute the gradient to compute others values like
     // the starting X (sx) and ending X (ex) to draw between
@@ -167,12 +185,16 @@ void ProcessScanLine(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, Vec3 color,
     int sx = (int)Interpolate(pa[0], pb[0], gradient1);
     int ex = (int)Interpolate(pc[0], pd[0], gradient2);
 
-    // drawing a line from left (sx) to right (ex) 
     float z1 = Interpolate(pa[2], pb[2], gradient1);
     float z2 = Interpolate(pc[2], pd[2], gradient2);
 
     float snl = Interpolate(data->ndotla, data->ndotlb, gradient1);
     float enl = Interpolate(data->ndotlc, data->ndotld, gradient2);
+
+    float su = Interpolate(va->texCoordinates[0], vb->texCoordinates[0], gradient1);
+    float eu = Interpolate(vc->texCoordinates[0], vd->texCoordinates[0], gradient2);
+    float sv = Interpolate(va->texCoordinates[1], vb->texCoordinates[1], gradient1);
+    float ev = Interpolate(vc->texCoordinates[1], vd->texCoordinates[1], gradient2);
 
     int x;
     for (x = sx ; x < ex; x++)
@@ -181,7 +203,22 @@ void ProcessScanLine(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, Vec3 color,
         float z = Interpolate(z1, z2, gradient);
         float ndotl = Interpolate(snl, enl, gradient);
 
-        DrawPoint(x, data->currentY, z, depthBuffer, SW, SH, sf, color, data->ndotla);
+        float u = Interpolate(su, eu, gradient);
+        float v = Interpolate(sv, ev, gradient);
+
+        Uint32 textureColor;
+
+        if (tex != NULL)
+            textureColor = Map(tex, u, v);
+        else
+            textureColor = 0x01010101;      //si no hay textura entonces pongo 1 en cada componente del color
+
+        Vec3 texColor;
+        Uint32ToVec4(textureColor, texColor);
+        VecByVec(texColor, color, texColor, 3);
+        VecByScalar(texColor, ndotl, texColor, 3);
+
+        DrawPoint(x, data->currentY, z, depthBuffer, SW, SH, sf, texColor, data->ndotla);
     }
 }
 
@@ -273,7 +310,7 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
                     data.ndotlb = nl3;
                     data.ndotlc = nl1;
                     data.ndotld = nl2;
-                    ProcessScanLine(&v1, &v3, &v1, &v2, color, SW, SH, sf, depthBuffer, &data);
+                    ProcessScanLine(&v1, &v3, &v1, &v2, color, SW, SH, sf, depthBuffer, &data, NULL);
                 }    
             	else
             	{
@@ -281,7 +318,7 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
                     data.ndotlb = nl3;
                     data.ndotlc = nl2;
                     data.ndotld = nl3;
-                    ProcessScanLine(&v1, &v3, &v2, &v3, color, SW, SH, sf, depthBuffer, &data);
+                    ProcessScanLine(&v1, &v3, &v2, &v3, color, SW, SH, sf, depthBuffer, &data, NULL);
                 }	
         	}
 		}
@@ -299,7 +336,7 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
                     data.ndotlb = nl2;
                     data.ndotlc = nl1;
                     data.ndotld = nl3;
-                    ProcessScanLine(&v1, &v2, &v1, &v3, color, SW, SH, sf, depthBuffer, &data);
+                    ProcessScanLine(&v1, &v2, &v1, &v3, color, SW, SH, sf, depthBuffer, &data, NULL);
                 }
             	else
         		{
@@ -307,7 +344,7 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
                     data.ndotlb = nl3;
                     data.ndotlc = nl1;
                     data.ndotld = nl3;
-                    ProcessScanLine(&v2, &v3, &v1, &v3, color, SW, SH, sf, depthBuffer, &data);
+                    ProcessScanLine(&v2, &v3, &v1, &v3, color, SW, SH, sf, depthBuffer, &data, NULL);
                 }
         	}
     	}
@@ -328,7 +365,7 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
                     data.ndotlb = nl3;
                     data.ndotlc = nl1;
                     data.ndotld = nl2;
-                    ProcessScanLine(&v1, &v3, &v1, &v2, color, SW, SH, sf, depthBuffer, &data);
+                    ProcessScanLine(&v1, &v3, &v1, &v2, color, SW, SH, sf, depthBuffer, &data, NULL);
                 }
         		else
         		{
@@ -336,7 +373,7 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
                     data.ndotlb = nl3;
                     data.ndotlc = nl2;
                     data.ndotld = nl3;
-                    ProcessScanLine(&v1, &v3, &v2, &v3, color, SW, SH, sf, depthBuffer, &data);
+                    ProcessScanLine(&v1, &v3, &v2, &v3, color, SW, SH, sf, depthBuffer, &data, NULL);
                 }
         	}
         }
@@ -354,7 +391,7 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
                     data.ndotlb = nl2;
                     data.ndotlc = nl1;
                     data.ndotld = nl3;
-                    ProcessScanLine(&v1, &v2, &v1, &v3, color, SW, SH, sf, depthBuffer, &data);
+                    ProcessScanLine(&v1, &v2, &v1, &v3, color, SW, SH, sf, depthBuffer, &data, NULL);
                 }
         		else
           		{
@@ -362,27 +399,9 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
                     data.ndotlb = nl3;
                     data.ndotlc = nl1;
                     data.ndotld = nl3;
-                    ProcessScanLine(&v2, &v3, &v1, &v3, color, SW, SH, sf, depthBuffer, &data);
+                    ProcessScanLine(&v2, &v3, &v1, &v3, color, SW, SH, sf, depthBuffer, &data, NULL);
                 }
         	}
         }
     } 
-}
-
-Uint32* getTexturePixels(SDL_Surface* sf, SDL_Renderer* renderer)
-{
-    SDL_Texture* t;
-    void* pixels;
-    SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, sf->w, sf->h);
-    SDL_LockTexture(t, &sf->clip_rect, &pixels, sf->pitch);
-    memcpy(pixels, sf->pixels, sf->w * sf->h);
-    Uint32* retPixels = (Uint32*) pixels;
-    SDL_UnlockTexture(t);
-
-    return retPixels;
-}
-
-Uint32 getTexturePixelAt(Uint32* pixels, int x, int y, int w)
-{
-    return pixels[y * w + x];
 }

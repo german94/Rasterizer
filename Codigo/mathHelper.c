@@ -1,5 +1,19 @@
 #include "mathHelper.h"
 
+void VecByScalar(float* in, float scalar, float* out, int d)
+{
+	int i;
+	for(i = 0; i < d; i++)
+		out[i] = in[i] * scalar;
+}
+
+void VecByVec(float* in1, float* in2, float* out, int d)
+{
+	int i;
+	for(i = 0; i < d; i++)
+		out[i] = in1[i] * in2[i];
+}
+
 float Dot3Prod(Vec3 v1, Vec3 v2)//dot produc or scalar product
 {
 	return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];

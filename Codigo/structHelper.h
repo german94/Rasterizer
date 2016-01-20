@@ -22,7 +22,6 @@ typedef struct
 	float ndotlb;
 	float ndotlc;
 	float ndotld; 
-	float ua, ub, uc, ud, va, vb, vc, vd;
 } ScanLineData;
 
 void CopyVec(float*, float*, int);

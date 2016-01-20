@@ -25,5 +25,7 @@ void CreateRotationXMatrix(Mat4 m, float ang);
 void CreateRotationYMatrix(Mat4 m, float ang);
 void CreateRotationZMatrix(Mat4 m, float ang);
 void DisplayMatrix(Mat4 m);
+void VecByScalar(float* in, float scalar, float* out, int d);
+void VecByVec(float* in1, float* in2, float* out, int d);
 
 #endif
