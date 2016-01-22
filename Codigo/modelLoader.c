@@ -13,16 +13,15 @@ bool LoadModel(char* path, Vec3DynamicArray *outVertices, Vec2DynamicArray *outU
 
 	initVec2DynamicArray(outUvs, 0);
 
-
-
 	FILE* file = fopen(path, "r");
 
 	if(file == NULL)
 	{
-		printf("Error al cargar elsadasd archivo.\n");
+		printf("Error al cargar el archivo.\n");
 		return false;
 	}
 
+	uint3 vertexIndex, normalIndex, uvIndex;
 	while(1)
 	{
 		//asumimos que la primera linea no va a tener mas de 128 caracteres
@@ -59,7 +58,6 @@ bool LoadModel(char* path, Vec3DynamicArray *outVertices, Vec2DynamicArray *outU
 		{	
 			if(outUvs->size != 0 )
 			{
-				uint3 vertexIndex, uvIndex, normalIndex;
 				int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], 
 				&vertexIndex[1], &uvIndex[1], &normalIndex[1], 
 				&vertexIndex[2], &uvIndex[2], &normalIndex[2]);
@@ -70,23 +68,12 @@ bool LoadModel(char* path, Vec3DynamicArray *outVertices, Vec2DynamicArray *outU
 					return false;
 				}
 
-				vertexIndex[0]--;
-				vertexIndex[1]--;
-				vertexIndex[2]--;
-				normalIndex[0]--;
-				normalIndex[1]--;
-				normalIndex[2]--;
 				uvIndex[0]--;
 				uvIndex[1]--;
 				uvIndex[2]--;
-
-				insertUInt3DynamicArray(outFaces, vertexIndex);
-				insertUInt3DynamicArray(outFaces, uvIndex);
-				insertUInt3DynamicArray(outFaces, normalIndex);
 			}
 			else
 			{
-				uint3 vertexIndex, normalIndex, uvIndex;
 				int matches = fscanf(file, "%d//%d %d//%d %d//%d\n", &vertexIndex[0], &normalIndex[0], 
 				&vertexIndex[1], &normalIndex[1], 
 				&vertexIndex[2], &normalIndex[2]);
@@ -96,18 +83,18 @@ bool LoadModel(char* path, Vec3DynamicArray *outVertices, Vec2DynamicArray *outU
 					printf("Formato incompatible.\n");
 					return false;
 				}
-
-				vertexIndex[0]--;
-				vertexIndex[1]--;
-				vertexIndex[2]--;
-				normalIndex[0]--;
-				normalIndex[1]--;
-				normalIndex[2]--;
-
-				insertUInt3DynamicArray(outFaces, vertexIndex);//AHORA EL TAMAÑO DE FACES ES *3 QUE EL DE LA ANTERIOR FORMA
-				insertUInt3DynamicArray(outFaces, uvIndex);
-				insertUInt3DynamicArray(outFaces, normalIndex);
 			}
+
+			vertexIndex[0]--;
+			vertexIndex[1]--;
+			vertexIndex[2]--;
+			normalIndex[0]--;
+			normalIndex[1]--;
+			normalIndex[2]--;
+
+			insertUInt3DynamicArray(outFaces, vertexIndex);//AHORA EL TAMAÑO DE FACES ES *3 QUE EL DE LA ANTERIOR FORMA
+			insertUInt3DynamicArray(outFaces, uvIndex);
+			insertUInt3DynamicArray(outFaces, normalIndex);
 		}
 	}
 /*//ESTO NO SE :/ REVISA GERMAN :P
@@ -120,9 +107,9 @@ bool LoadModel(char* path, Vec3DynamicArray *outVertices, Vec2DynamicArray *outU
 }
     
 void RenderFilledModel(Vec3DynamicArray *vertices, Vec2DynamicArray *uvs, Vec3DynamicArray *normals, UInt3DynamicArray* faces, Mat4 wvp, int swidth, int sheight, SDL_Surface* sf, float* depthBuffer, Mat4 world,  SDL_Surface* tex)
-{
-	int i, j, x0, x1, y0, y1;
-
+{	
+	int  j;
+	
 	for(j = 0; j < faces->used; j= j+3)//NOTAR QUE COMO GUARDA PARA CADA TRIANGULO LE CORRESPONDEN 3 LUGARES
     {   	   
 	    Vec4 res1, res2, res3, res1n, res2n, res3n, res1w, res2w, res3w;
@@ -168,22 +155,18 @@ void RenderFilledModel(Vec3DynamicArray *vertices, Vec2DynamicArray *uvs, Vec3Dy
         Vec3Mat4Product(normals->array[faces->array[j+2][2]], world, res3n);
 		v3n[0] = res3n[0]; v3n[1] = res3n[1]; v3n[2] = res3n[2];  
 
-
 		Vec2 v1t, v2t, v3t;
-		CopyVec(v1t, uvs->array[faces->array[j+1][0]], 2);
-		CopyVec(v2t, uvs->array[faces->array[j+1][1]], 2);
-		CopyVec(v3t, uvs->array[faces->array[j+1][2]], 2);
-
-	
-	   // Uint32 color =(j % faces->used);
+		if(tex != NULL)
+		{
+			CopyVec(v1t, uvs->array[faces->array[j+1][0]], 2);
+			CopyVec(v2t, uvs->array[faces->array[j+1][1]], 2);
+			CopyVec(v3t, uvs->array[faces->array[j+1][2]], 2);
+		}
 		Vec3 color;
 		//color[0] = 0.25f + (j % faces->used) * 0.75f / faces->used;
 		color[0] = 1.0f;
 		color[1] = color[0];
 		color[2] = color[0];
-	//	printf("%s\n", "color original");
-//		printf("%f, %f, %f\n", color[0], color[1], color[2]);
-		//sleep(1);
 
 		DrawTriangle(v1, v2, v3, v1n, v2n, v3n, v1w, v2w, v3w, color, swidth, sheight, sf, depthBuffer, tex, v1t, v2t, v3t);
 	}

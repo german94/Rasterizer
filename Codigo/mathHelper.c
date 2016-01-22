@@ -81,7 +81,6 @@ void CreateViewMatrix(Mat4 m, Vec3 cameraTarget, Vec3 cameraPos, Vec3 up)
 	
 	Vec3 v;   //eje y de la camara
 	Cross3Prod(w, u, v);
-	//printf("cross v: %f %f %f\n", v[0], v[1], v[2]);
 
 	m[0][0] = u[0];		m[0][1] = v[0];		m[0][2] = w[0];		m[0][3] = 0;
 	m[1][0] = u[1];		m[1][1] = v[1];		m[1][2] = w[1];		m[1][3] = 0;

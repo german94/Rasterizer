@@ -1,8 +1,6 @@
 #include "sdlHelper.h"
-//#include "mathHelper.h"
 
-
-void putpixel(SDL_Surface *surface, int x, int y, float z, Uint32 pixel, int swidth, int sheight, float* depthBuffer, float ndotl)
+void putpixel(SDL_Surface *surface, int x, int y, float z, Uint32 pixel, int swidth, int sheight, float* depthBuffer)
 {
 	
 	int index = x + y*swidth;
@@ -98,10 +96,10 @@ void DrawBline( int x0, int x1, int y0, int y1, SDL_Surface* screenSurface)
 }
 
 
-void DrawPoint(int x, int y, float z, float* depthBuffer, int SW, int SH, SDL_Surface* sf, Uint32 color, float ndotl)
+void DrawPoint(int x, int y, float z, float* depthBuffer, int SW, int SH, SDL_Surface* sf, Uint32 color)
 {
     if(x >= 0 && y >= 0 && x < SW && y <SH)
-        putpixel(sf, x, y, z, color, SW, SH, depthBuffer, ndotl);
+        putpixel(sf, x, y, z, color, SW, SH, depthBuffer);
 }
 
 
@@ -152,12 +150,26 @@ Uint32 Map(SDL_Surface* tex, float tu, float tv)
     return getpixel(tex, u, v);
 }
 
-void Uint32ToVec4(Uint32 inColor, Vec4 outColor)
+void Uint32ToVec4(Uint32 inColor, Vec3 outColor) //recibo (abgr)//REVISAR ORDEN CON LA ORIGINAL
 {
-    outColor[0] = (inColor >> 24) & 0xFF;
-    outColor[1] = (inColor >> 16) & 0xFF;
-    outColor[2] = (inColor >> 8) & 0xFF;
-    outColor[3] = inColor & 0xFF;
+    //outColor[0] = ((inColor >> 24) & 255) / 255.0f;// a
+    outColor[0] = ((inColor >> 16) & 255) / 255.0f;// b
+    outColor[1] = ((inColor >> 8) & 255) / 255.0f;// g
+    outColor[2] = (inColor & 255) / 255.0f; // r 
+}//devuelvo (b,g,r)
+
+
+Uint32 Vec4ToUint32P(float _r, float _g, float _b)
+{
+    Uint32 r = (Uint32)(_r * 255.0f) & 255;
+    Uint32 g = (Uint32)(_g * 255.0f) & 255;
+    Uint32 b = (Uint32)(_b * 255.0f) & 255;
+    //Uint32 b = (Uint32)(_a * 255.0f) & 255;
+    Uint32 value = r;
+    value |= g << 8;
+    value |= b << 16;
+   // value |= a << 24;
+    return (Uint32)value;
 }
 
 void ProcessScanLine(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, Vec3 color, int SW, int SH, SDL_Surface* sf, float* depthBuffer, ScanLineData* data,  SDL_Surface* tex)
@@ -204,14 +216,18 @@ void ProcessScanLine(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, Vec3 color,
         if (tex != NULL)
             textureColor = Map(tex, u, v);
         else
-            textureColor = 0x01010101;      //si no hay textura entonces pongo 1 en cada componente del color
+            textureColor = 0xfffffff;      //si no hay textura entonces pongo  255 
 
-     //   Vec3 texColor;
-     //   Uint32ToVec4(textureColor, texColor);
-      //  VecByVec(texColor, color, texColor, 3);
-      //  VecByScalar(texColor, ndotl, texColor, 3);
+        Vec3 texColor;
+        Uint32ToVec4(textureColor, texColor);
+        VecByVec(texColor, color, texColor, 3);
+        VecByScalar(texColor, ndotl, texColor, 3);
 
-        DrawPoint(x, data->currentY, z, depthBuffer, SW, SH, sf, textureColor, data->ndotla);
+        float r,g,b;
+        r = texColor[2]; g = texColor[1]; b = texColor[0];
+        textureColor = Vec4ToUint32P(r, g, b);
+
+        DrawPoint(x, data->currentY, z, depthBuffer, SW, SH, sf, textureColor);
     }
         
 }
@@ -234,9 +250,10 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
         CopyVec(tempw, p2w, 3);
         CopyVec(p2w, p1w, 3);
         CopyVec(p1w, tempw, 3);
-        CopyVec(tempt, p2t, 2);
-        CopyVec(p2t, p1t, 2);
-        CopyVec(p1t, tempt, 2);
+        if(tex != NULL){
+        	CopyVec(tempt, p2t, 2);
+       		CopyVec(p2t, p1t, 2);
+        	CopyVec(p1t, tempt, 2);}
     }
 
     if (p2[1] > p3[1])
@@ -250,9 +267,10 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
         CopyVec(tempw, p2w, 3);
         CopyVec(p2w, p3w, 3);
         CopyVec(p3w, tempw, 3);
-        CopyVec(tempt, p2t, 2);
-        CopyVec(p2t, p3t, 2);
-        CopyVec(p3t, tempt, 2);
+        if(tex != NULL){
+        	CopyVec(tempt, p2t, 2);
+        	CopyVec(p2t, p3t, 2);
+        	CopyVec(p3t, tempt, 2);}
     }
 
     if (p1[1] > p2[1])
@@ -266,9 +284,10 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
         CopyVec(tempw, p2w, 3);
         CopyVec(p2w, p1w, 3);
         CopyVec(p1w, tempw, 3);
-        CopyVec(tempt, p2t, 2);
-        CopyVec(p2t, p1t, 2);
-        CopyVec(p1t, tempt, 2);
+        if(tex != NULL){
+        	CopyVec(tempt, p2t, 2);
+        	CopyVec(p2t, p1t, 2);
+        	CopyVec(p1t, tempt, 2);}
     }
 
     Vec3 lightPos;
@@ -297,9 +316,10 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
     CopyVec(v1.coordinates, p1, 3);
     CopyVec(v2.coordinates, p2, 3);
     CopyVec(v3.coordinates, p3, 3);
-    CopyVec(v1.texCoordinates, p1t, 2);
-    CopyVec(v2.texCoordinates, p2t, 2);
-    CopyVec(v3.texCoordinates, p3t, 2);
+    if(tex != NULL)
+    	CopyVec(v1.texCoordinates, p1t, 2);
+    	CopyVec(v2.texCoordinates, p2t, 2);
+    	CopyVec(v3.texCoordinates, p3t, 2);
 
 
 

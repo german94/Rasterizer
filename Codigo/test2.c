@@ -59,9 +59,6 @@ int main( int argc, char* args[] )
 
     float a = 0;
 
-    SDL_Surface* tex = SDL_LoadBMP("a.bmp");
-   
-
     if(init())
     {
     	screenSurface = SDL_GetWindowSurface( window );
@@ -72,8 +69,12 @@ int main( int argc, char* args[] )
         UInt3DynamicArray Faces;
 
         LoadModel("model.obj", &Vertices,  &Uvs,  &Normals, &Faces);
-       
-        int j, i;
+
+        SDL_Surface* tex;
+        if(Uvs.size != 0)
+        	tex = SDL_LoadBMP("a.bmp");
+        else
+        	tex = NULL;
 
         Mat4 t;
 	
@@ -108,8 +109,6 @@ int main( int argc, char* args[] )
 
             a+=0.01f;
       	
-            int x0, x1, y0, y1;
-
             RenderFilledModel(&Vertices,  &Uvs,  &Normals, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, world, tex); 
 
         	SDL_UpdateWindowSurface( window );
