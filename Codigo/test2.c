@@ -1,6 +1,7 @@
 #include "sdlHelper.h"
 #include "mathHelper.h"
 #include "modelLoader.h"
+#include "structHelper.h"
 #include <float.h>
  
 const int SCREEN_WIDTH = 800;
@@ -37,6 +38,7 @@ bool init()
 
 int main( int argc, char* args[] )
 {
+	
 
     bool quit = false;
     SDL_Event e;
@@ -57,15 +59,20 @@ int main( int argc, char* args[] )
 
     float a = 0;
 
+    SDL_Surface* tex = SDL_LoadBMP("a.bmp");
+   
+
     if(init())
     {
     	screenSurface = SDL_GetWindowSurface( window );
 
-        VertexDynamicArray Vertices;
-        UInt3DynamicArray faces;
+        Vec3DynamicArray Vertices;
+        Vec2DynamicArray Uvs;
+        Vec3DynamicArray Normals;
+        UInt3DynamicArray Faces;
 
-        LoadModel("modelMonkey.obj", &Vertices, &faces);
-		
+        LoadModel("model.obj", &Vertices,  &Uvs,  &Normals, &Faces);
+       
         int j, i;
 
         Mat4 t;
@@ -103,7 +110,7 @@ int main( int argc, char* args[] )
       	
             int x0, x1, y0, y1;
 
-            RenderFilledModel(&Vertices, &faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, world, NULL); 
+            RenderFilledModel(&Vertices,  &Uvs,  &Normals, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, world, tex); 
 
         	SDL_UpdateWindowSurface( window );
     	}

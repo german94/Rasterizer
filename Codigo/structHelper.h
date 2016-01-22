@@ -24,6 +24,13 @@ typedef struct
 	float ndotld; 
 } ScanLineData;
 
+typedef struct
+{
+  unsigned int *image;
+  int w;
+  int h
+} Texture;
+
 void CopyVec(float*, float*, int);
 void ZeroVec(float*, int);
 
