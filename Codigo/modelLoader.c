@@ -165,3 +165,98 @@ void RenderFilledModel(Vec3DynamicArray *vertices, Vec2DynamicArray *uvs, Vec3Dy
 		DrawTriangle(v1, v2, v3, v1n, v2n, v3n, v1w, v2w, v3w, color, swidth, sheight, sf, depthBuffer, tex, v1t, v2t, v3t);
 	}
 }
+
+
+
+void RenderFilledModel_tex(Vec3DynamicArray *vertices, Vec2DynamicArray *uvs, UInt3DynamicArray* faces, Mat4 wvp, int swidth, int sheight, SDL_Surface* sf, float* depthBuffer, SDL_Surface* tex)
+{	
+	int  j;
+	
+	for(j = 0; j < faces->used; j= j+3)//NOTAR QUE COMO GUARDA PARA CADA TRIANGULO LE CORRESPONDEN 3 LUGARES
+    {   	   
+	    Vec4 res1, res2, res3;
+	    Vec3 v1, v2, v3;
+
+	    Vec3 vertexA, vertexB, vertexC;
+		CopyVec(vertexA, vertices->array[faces->array[j][0]], 3);
+		CopyVec(vertexB, vertices->array[faces->array[j][1]], 3);
+		CopyVec(vertexC, vertices->array[faces->array[j][2]], 3);
+
+	    Vec3Mat4Product(vertexA, wvp, res1);
+	    v1[0] = (res1[0]/res1[3])*swidth/**0.5*/ + swidth*0.5 ;
+	    v1[1] = (res1[1]/res1[3])*sheight/**0.5*/+ sheight*0.5; 
+	    v1[2] = res1[2] / res1[3];
+
+	    Vec3Mat4Product(vertexB, wvp, res2);
+	    v2[0] = (res2[0]/res2[3])*swidth/**0.5*/ + swidth*0.5 ;
+	    v2[1] = (res2[1]/res2[3])*sheight/**0.5*/ + sheight*0.5; 
+	    v2[2] = res2[2] / res2[3];
+
+	    Vec3Mat4Product(vertexC, wvp, res3);
+	    v3[0] = (res3[0]/res3[3])*swidth/**0.5*/ + swidth*0.5 ;
+	    v3[1] = (res3[1]/res3[3])*sheight/**0.5*/ + sheight*0.5; 
+	 	v3[2] = res3[2] / res3[3];
+
+	 	///////////////////////////
+		Vec2 v1t, v2t, v3t;
+		if(tex != NULL)
+		{
+			CopyVec(v1t, uvs->array[faces->array[j+1][0]], 2);
+			CopyVec(v2t, uvs->array[faces->array[j+1][1]], 2);
+			CopyVec(v3t, uvs->array[faces->array[j+1][2]], 2);
+		}
+		Vec3 color;
+		//color[0] = 0.25f + (j % faces->used) * 0.75f / faces->used;
+		color[0] = 1.0f;
+		color[1] = color[0];
+		color[2] = color[0];
+
+		DrawTriangle_tex(v1, v2, v3, color, swidth, sheight, sf, depthBuffer, tex, v1t, v2t, v3t);
+	}
+}
+
+
+
+
+void RenderFilledModel_esq(Vec3DynamicArray *vertices, UInt3DynamicArray* faces, Mat4 wvp, int swidth, int sheight, SDL_Surface* sf)
+{	
+	int  j;
+	
+	for(j = 0; j < faces->used; j= j+3)//NOTAR QUE COMO GUARDA PARA CADA TRIANGULO LE CORRESPONDEN 3 LUGARES
+    {   	   
+	    Vec4 res1, res2, res3;
+	    Vec3 v1, v2, v3;
+
+	    Vec3 vertexA, vertexB, vertexC;
+		CopyVec(vertexA, vertices->array[faces->array[j][0]], 3);
+		CopyVec(vertexB, vertices->array[faces->array[j][1]], 3);
+		CopyVec(vertexC, vertices->array[faces->array[j][2]], 3);
+
+	    Vec3Mat4Product(vertexA, wvp, res1);
+	    v1[0] = (res1[0]/res1[3])*swidth/**0.5*/ + swidth*0.5 ;
+	    v1[1] = (res1[1]/res1[3])*sheight/**0.5*/+ sheight*0.5; 
+	    v1[2] = res1[2] / res1[3];
+
+	    Vec3Mat4Product(vertexB, wvp, res2);
+	    v2[0] = (res2[0]/res2[3])*swidth/**0.5*/ + swidth*0.5 ;
+	    v2[1] = (res2[1]/res2[3])*sheight/**0.5*/ + sheight*0.5; 
+	    v2[2] = res2[2] / res2[3];
+
+	    Vec3Mat4Product(vertexC, wvp, res3);
+	    v3[0] = (res3[0]/res3[3])*swidth/**0.5*/ + swidth*0.5 ;
+	    v3[1] = (res3[1]/res3[3])*sheight/**0.5*/ + sheight*0.5; 
+	 	v3[2] = res3[2] / res3[3];
+
+		Vec3 color;
+		//color[0] = 0.25f + (j % faces->used) * 0.75f / faces->used;
+		color[0] = 1.0f;
+		color[1] = color[0];
+		color[2] = color[0];
+		
+        DrawBline_esq( 	(int)v1[0],  (int)v2[0],  (int)v1[1],  (int)v2[1], sf, color, swidth, sheight);
+              
+        DrawBline_esq(  (int)v2[0],  (int)v3[0],  (int)v2[1],  (int)v3[1], sf, color, swidth, sheight);
+	
+        DrawBline_esq(  (int)v3[0],  (int)v1[0],  (int)v3[1],  (int)v1[1], sf, color, swidth, sheight);
+	}
+}

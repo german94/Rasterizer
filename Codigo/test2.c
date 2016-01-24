@@ -16,6 +16,9 @@ SDL_Event e;
 bool rotX;
 bool rotY;
 bool rotZ;
+bool m_esq;
+bool m_tex;
+bool m_tex_norm;
 float sx, sy, sz;
 float depthBuffer[800 * 600];       //no deja usar las consts por declararlo globalmente
 Mat4 scale;
@@ -58,6 +61,9 @@ bool init()
     rotSpeed = 0.01f;
     showFPS = true;
     showInfo = true;
+    m_esq = false;
+	m_tex = false;
+	m_tex_norm = false;
 
     return true;
 }
@@ -103,6 +109,30 @@ void EventDetection()
                     {
                         rotZ = !rotZ;
                         printf("%d\n", rotZ);
+                        break;
+                    }
+
+                    case SDLK_4:
+                    {
+                        m_esq = !m_esq;
+                        m_tex = false;
+                        m_tex_norm = false;
+                        break;
+                    }
+
+                    case SDLK_5:
+                    {
+                        m_tex = !m_tex;
+                        m_esq = false;
+                        m_tex_norm = false;
+                        break;
+                    }
+
+                    case SDLK_6:
+                    {
+                        m_tex_norm = !m_tex_norm;
+                        m_esq = false;
+                        m_tex = false;
                         break;
                     }
 
@@ -214,6 +244,12 @@ void ShowInfo(SDL_Surface* screen)
     RenderTextR(c, font, "f: mostrar u ocultar fps", screenSurface, &r8);
     SDL_Rect r9 = {0, 140, 0, 0};
     RenderTextR(c, font, "i: mostrar u ocultar informacion", screenSurface, &r9);
+    SDL_Rect r10 = {0, 155, 0, 0};
+    RenderTextR(c, font, "4: mostrar modo esqueleto", screenSurface, &r10);
+    SDL_Rect r11 = {0, 170, 0, 0};
+    RenderTextR(c, font, "5: mostrar modo texturas", screenSurface, &r11);
+    SDL_Rect r12 = {0, 185, 0, 0};
+    RenderTextR(c, font, "6: mostrar modo texturas y normales", screenSurface, &r12);
 }
 
 int main( int argc, char* args[] )
@@ -322,8 +358,17 @@ int main( int argc, char* args[] )
             Mat4Product(wv, proj, wvp);
 
             a += rotSpeed;
-      	
-            RenderFilledModel(&Vertices,  &Uvs,  &Normals, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, world, tex); 
+      		
+            if(m_tex_norm)
+            	RenderFilledModel(&Vertices,  &Uvs,  &Normals, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, world, tex); 
+           
+            if (m_tex)
+				RenderFilledModel_tex(&Vertices,  &Uvs, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, tex); 
+
+           	if (m_esq)
+            	RenderFilledModel_esq(&Vertices, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface); 
+	
+
 
             deltaclock = SDL_GetTicks() - startclock;
             startclock = SDL_GetTicks();
