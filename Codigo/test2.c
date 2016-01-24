@@ -3,12 +3,14 @@
 #include "modelLoader.h"
 #include "structHelper.h"
 #include <float.h>
+#include <stdlib.h>
  
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 
 SDL_Window* window = NULL;
 SDL_Surface* screenSurface = NULL;
+TTF_Font *font;
 
 void initDepthBuffer(float *depthBuffer, int e)
 {
@@ -32,18 +34,21 @@ bool init()
         return false;
     }
 
+    TTF_Init();
+    font = TTF_OpenFont("DroidSans.ttf", 12);
+
     return true;
 }
 
 
 int main( int argc, char* args[] )
 {
-	
-
     bool quit = false;
     SDL_Event e;
 
     Mat4 view, proj, worldToCamera;
+    Mat4 scale;
+    CreateScaleMatrix(scale, 2, 1, 1);
 
     float angleOfView = 0.78; 
     float near = 0.1; 
@@ -58,6 +63,10 @@ int main( int argc, char* args[] )
     CreateProjectionMatrix(proj, near, far, angleOfView, 1.0f);
 
     float a = 0;
+
+    Uint32 startclock = 0;
+    Uint32 deltaclock = 0;
+    Uint32 currentFPS = 0;
 
     if(init())
     {
@@ -78,15 +87,14 @@ int main( int argc, char* args[] )
 
         Mat4 t;
 	
-		t[0][0] = 1;	t[0][1] = 0;	t[0][2] = 0;	t[0][3] = 0;
-		t[1][0] = 0;	t[1][1] = -1;	t[1][2] = 0;	t[1][3] = 0;
-		t[2][0] = 0;	t[2][1] = 0;	t[2][2] = -1;	t[2][3] = 0;
-		t[3][0] = 0;	t[3][1] = 0;	t[3][2] = 20;	t[3][3] = 1;
+        CreateTranslationMatrix(t, 0.0f, 0.0f, 20.0f);        //ESTO NO ANDA Y NO SE POR QUE!!
 
         float depthBuffer[SCREEN_WIDTH*SCREEN_HEIGHT];
       
 		while(!quit)
 		{
+            startclock = SDL_GetTicks();
+
 			while(SDL_PollEvent(&e) != 0)
 			{
 				if(e.type == SDL_QUIT)
@@ -102,8 +110,9 @@ int main( int argc, char* args[] )
             CreateRotationYMatrix(world1, a);
 
             Mat4Product(world1, t, world);
+            Mat4Product(world, scale, world1);
 
-            Mat4Product(world,view, wv);
+            Mat4Product(world1,view, wv);
             
             Mat4Product(wv, proj, wvp);
 
@@ -111,10 +120,25 @@ int main( int argc, char* args[] )
       	
             RenderFilledModel(&Vertices,  &Uvs,  &Normals, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, world, tex); 
 
+            deltaclock = SDL_GetTicks() - startclock;
+            startclock = SDL_GetTicks();
+                    
+            if ( deltaclock != 0 )
+                currentFPS = 1000 / deltaclock;
+
+            char buf[9];
+            strcpy(buf, "FPS: ");
+            snprintf(&buf[5], 4, "%d", currentFPS);
+
+            SDL_Color clrFg = {255,0,0,0};
+            RenderText(clrFg, font, buf, screenSurface);
+            
+
         	SDL_UpdateWindowSurface( window );
     	}
   	}
 
+    TTF_CloseFont(font);
     SDL_DestroyWindow( window );
 
     SDL_Quit();

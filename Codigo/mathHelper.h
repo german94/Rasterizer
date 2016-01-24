@@ -24,6 +24,8 @@ void CreateProjectionMatrix(Mat4 m, float nearPlane, float farPlane, float field
 void CreateRotationXMatrix(Mat4 m, float ang);
 void CreateRotationYMatrix(Mat4 m, float ang);
 void CreateRotationZMatrix(Mat4 m, float ang);
+void CreateTranslationMatrix(Mat4 m, float x, float y, float z);
+void CreateScaleMatrix(Mat4 m, float sx, float sy, float sz);
 void DisplayMatrix(Mat4 m);
 void VecByScalar(float* in, float scalar, float* out, int d);
 void VecByVec(float* in1, float* in2, float* out, int d);

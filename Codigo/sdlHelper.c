@@ -72,6 +72,17 @@ Uint32 getpixel(SDL_Surface *surface, int x, int y)
     }
 }
 
+void RenderText(SDL_Color clrFg, TTF_Font* font, char* buf, SDL_Surface* screenSurface)
+{
+    SDL_Surface *sText = TTF_RenderText_Solid( font, buf, clrFg );
+
+    SDL_Rect rcDest = {0,0,0,0};
+
+    SDL_BlitSurface( sText,NULL, screenSurface,&rcDest );
+
+    SDL_FreeSurface( sText );
+}
+
 void DrawBline( int x0, int x1, int y0, int y1, SDL_Surface* screenSurface)
 {       
     int dx = abs(x1 - x0);
@@ -223,9 +234,7 @@ void ProcessScanLine(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, Vec3 color,
         VecByVec(texColor, color, texColor, 3);
         VecByScalar(texColor, ndotl, texColor, 3);
 
-        float r,g,b;
-        r = texColor[2]; g = texColor[1]; b = texColor[0];
-        textureColor = Vec4ToUint32P(r, g, b);
+        textureColor = Vec4ToUint32P(texColor[2], texColor[1], texColor[0]);
 
         DrawPoint(x, data->currentY, z, depthBuffer, SW, SH, sf, textureColor);
     }

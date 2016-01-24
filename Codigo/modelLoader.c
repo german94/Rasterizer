@@ -92,18 +92,12 @@ bool LoadModel(char* path, Vec3DynamicArray *outVertices, Vec2DynamicArray *outU
 			normalIndex[1]--;
 			normalIndex[2]--;
 
-			insertUInt3DynamicArray(outFaces, vertexIndex);//AHORA EL TAMAÑO DE FACES ES *3 QUE EL DE LA ANTERIOR FORMA
+			insertUInt3DynamicArray(outFaces, vertexIndex);
 			insertUInt3DynamicArray(outFaces, uvIndex);
 			insertUInt3DynamicArray(outFaces, normalIndex);
 		}
 	}
-/*//ESTO NO SE :/ REVISA GERMAN :P
-	if(outNormals.size != 0)
-		freeVec3DynamicArray(&outNormals);
 
-	if(outUvs.size != 0)
-		freeVec2DynamicArray(&outUvs);
-*/
 }
     
 void RenderFilledModel(Vec3DynamicArray *vertices, Vec2DynamicArray *uvs, Vec3DynamicArray *normals, UInt3DynamicArray* faces, Mat4 wvp, int swidth, int sheight, SDL_Surface* sf, float* depthBuffer, Mat4 world,  SDL_Surface* tex)
