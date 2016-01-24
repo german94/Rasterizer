@@ -14,6 +14,7 @@ void Coordto2d(int (*Msrc)[3], int (*Mdst)[2], int cant_pixel);
 void DrawBline( int x0, int x1, int y0, int y1, SDL_Surface* screenSurface);
 void formar_cubo(int (*cubo)[3], int distancia);
 void RenderText(SDL_Color, TTF_Font*, char* buf, SDL_Surface*);
+void RenderTextR(SDL_Color, TTF_Font*, char* buf, SDL_Surface*, SDL_Rect*);
 
 #endif
 

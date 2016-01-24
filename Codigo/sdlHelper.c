@@ -83,6 +83,15 @@ void RenderText(SDL_Color clrFg, TTF_Font* font, char* buf, SDL_Surface* screenS
     SDL_FreeSurface( sText );
 }
 
+void RenderTextR(SDL_Color clrFg, TTF_Font* font, char* buf, SDL_Surface* screenSurface, SDL_Rect* r)
+{
+    SDL_Surface *sText = TTF_RenderText_Solid( font, buf, clrFg );
+
+    SDL_BlitSurface(sText, NULL, screenSurface, r);
+
+    SDL_FreeSurface( sText );
+}
+
 void DrawBline( int x0, int x1, int y0, int y1, SDL_Surface* screenSurface)
 {       
     int dx = abs(x1 - x0);

@@ -32,6 +32,7 @@ typedef struct
 } Texture;
 
 void CopyVec(float*, float*, int);
+void CopyMat4(Mat4, Mat4);
 void ZeroVec(float*, int);
 
 /////////////////////////////////////////////////////////////////

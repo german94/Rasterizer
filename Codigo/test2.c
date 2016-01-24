@@ -8,14 +8,25 @@
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 
-SDL_Window* window = NULL;
-SDL_Surface* screenSurface = NULL;
+SDL_Window* window;
+SDL_Surface* screenSurface;
 TTF_Font *font;
+bool quit;
+SDL_Event e;
+bool rotX;
+bool rotY;
+bool rotZ;
+float sx, sy, sz;
+float depthBuffer[800 * 600];       //no deja usar las consts por declararlo globalmente
+Mat4 scale;
+float rotSpeed;
+bool showFPS;
+bool showInfo;
 
-void initDepthBuffer(float *depthBuffer, int e)
+void initDepthBuffer()
 {
 	int i;
-	for (i = 0; i < e; ++i)
+	for (i = 0; i < SCREEN_WIDTH*SCREEN_HEIGHT; ++i)
 		depthBuffer[i] = FLT_MAX;
 }	 	
 	
@@ -37,18 +48,178 @@ bool init()
     TTF_Init();
     font = TTF_OpenFont("DroidSans.ttf", 12);
 
+    quit = false;
+    rotX = false;
+    rotY = false;
+    rotZ = false;
+    sx = 1.0f;
+    sy = 1.0f;
+    sz = 1.0f;
+    rotSpeed = 0.01f;
+    showFPS = true;
+    showInfo = true;
+
     return true;
 }
 
+void EventDetection()
+{
+    while(SDL_PollEvent(&e) != 0)
+    {
+        switch(e.type)
+        {
+            case SDL_QUIT:
+            {
+               quit = true;
+               break;
+            }
+
+            case SDL_KEYUP:
+            {
+                SDL_Keycode kp = e.key.keysym.sym;
+                switch(kp)
+                {
+                    case SDLK_ESCAPE:
+                    {
+                        quit = true;
+                        break;
+                    }
+
+                    case SDLK_1:
+                    {
+                        rotX = !rotX;
+                        printf("%d\n", rotX);
+                        break;
+                    }
+
+                    case SDLK_2:
+                    {
+                        rotY = !rotY;
+                        printf("%d\n", rotY);
+                        break;
+                    }
+
+                    case SDLK_3:
+                    {
+                        rotZ = !rotZ;
+                        printf("%d\n", rotZ);
+                        break;
+                    }
+
+                    case SDLK_i:
+                    {
+                        showInfo = !showInfo;
+                        break;
+                    }
+
+                    case SDLK_f:
+                    {
+                        showFPS = !showFPS;
+                        break;
+                    }
+
+                    default:
+                        break;
+                }
+            }
+
+            case SDL_KEYDOWN:
+            {
+                SDL_Keycode kp = e.key.keysym.sym;
+                switch(kp)
+                {
+                    case SDLK_q:
+                    {
+                        sx += 0.01f;
+                        CreateScaleMatrix(scale, sx, sy, sz);
+                        break;
+                    }
+
+                    case SDLK_w:
+                    {
+                        sy += 0.01f;
+                        CreateScaleMatrix(scale, sx, sy, sz);
+                        break;
+                    }
+
+                    case SDLK_e:
+                    {
+                        sz += 0.01f;
+                        CreateScaleMatrix(scale, sx, sy, sz);
+                        break;
+                    }
+
+                    case SDLK_a:
+                    {
+                        sx -= 0.01f;
+                        CreateScaleMatrix(scale, sx, sy, sz);
+                        break;
+                    }
+
+                    case SDLK_s:
+                    {
+                        sy -= 0.01f;
+                        CreateScaleMatrix(scale, sx, sy, sz);
+                        break;
+                    }
+
+                    case SDLK_d:
+                    {
+                        sz -= 0.01f;
+                        CreateScaleMatrix(scale, sx, sy, sz);
+                        break;
+                    }
+
+                    case SDLK_m:
+                    {
+                        rotSpeed += 0.001f;
+                        break;
+                    }
+
+                    case SDLK_n:
+                    {
+                        rotSpeed -= 0.001f;
+                        break;
+                    }
+
+                    default:
+                        break;
+                }
+            }
+
+            default:
+                break;
+        }
+    }
+}
+
+void ShowInfo(SDL_Surface* screen)
+{
+    SDL_Color c = { 0, 255, 0, 0 };
+    SDL_Rect r1 = {0, 20, 0, 0};
+    RenderTextR(c, font, "1: rotar el modelo sobre el eje X", screenSurface, &r1);
+    SDL_Rect r2 = {0, 35, 0, 0};
+    RenderTextR(c, font, "2: rotar el modelo sobre el eje Y", screenSurface, &r2);
+    SDL_Rect r3 = {0, 50, 0, 0};
+    RenderTextR(c, font, "3: rotar el modelo sobre el eje Z", screenSurface, &r3);
+    SDL_Rect r4 = {0, 65, 0, 0};
+    RenderTextR(c, font, "q / a: aumentar o disminuir el ancho del objeto", screenSurface, &r4);
+    SDL_Rect r5 = {0, 80, 0, 0};
+    RenderTextR(c, font, "w / s: aumentar o disminuir el alto del objeto", screenSurface, &r5);
+    SDL_Rect r6 = {0, 95, 0, 0};
+    RenderTextR(c, font, "e / d: aumentar o disminuir la profunidad del objeto", screenSurface, &r6);
+    SDL_Rect r7 = {0, 110, 0, 0};
+    RenderTextR(c, font, "m / n: aumentar o disminuir la velocidad de rotacion", screenSurface, &r7);
+    SDL_Rect r8 = {0, 125, 0, 0};
+    RenderTextR(c, font, "f: mostrar u ocultar fps", screenSurface, &r8);
+    SDL_Rect r9 = {0, 140, 0, 0};
+    RenderTextR(c, font, "i: mostrar u ocultar informacion", screenSurface, &r9);
+}
 
 int main( int argc, char* args[] )
 {
-    bool quit = false;
-    SDL_Event e;
 
     Mat4 view, proj, worldToCamera;
-    Mat4 scale;
-    CreateScaleMatrix(scale, 2, 1, 1);
 
     float angleOfView = 0.78; 
     float near = 0.1; 
@@ -70,6 +241,8 @@ int main( int argc, char* args[] )
 
     if(init())
     {
+        CreateScaleMatrix(scale, sx, sy, sz);
+
     	screenSurface = SDL_GetWindowSurface( window );
 
         Vec3DynamicArray Vertices;
@@ -87,36 +260,68 @@ int main( int argc, char* args[] )
 
         Mat4 t;
 	
-        CreateTranslationMatrix(t, 0.0f, 0.0f, 20.0f);        //ESTO NO ANDA Y NO SE POR QUE!!
-
-        float depthBuffer[SCREEN_WIDTH*SCREEN_HEIGHT];
+        CreateTranslationMatrix(t, 0.0f, 0.0f, 20.0f);      
       
 		while(!quit)
 		{
             startclock = SDL_GetTicks();
 
-			while(SDL_PollEvent(&e) != 0)
-			{
-				if(e.type == SDL_QUIT)
-					quit = true;
-			}
+			EventDetection();
 			
 			initDepthBuffer(depthBuffer, SCREEN_WIDTH*SCREEN_HEIGHT);
 
             SDL_FillRect( screenSurface, NULL, SDL_MapRGB( screenSurface->format, 0x00, 0x00, 0x00 ) );
 
+            Mat4 mRotX, mRotY, mRotZ;
+            Identity(mRotX);
+            Identity(mRotY);
+            Identity(mRotZ);
             Mat4 world1, world, wv, wvp;
+            Identity(world);
 
-            CreateRotationYMatrix(world1, a);
+            if(rotY)
+            {
+                CreateRotationYMatrix(mRotY, a);
 
-            Mat4Product(world1, t, world);
-            Mat4Product(world, scale, world1);
+                if(rotX)
+                    CreateRotationXMatrix(mRotX, a);
 
-            Mat4Product(world1,view, wv);
+                if(rotZ)
+                    CreateRotationZMatrix(mRotZ, a);
+
+                Mat4Product(mRotX, mRotY, world1);
+                Mat4Product(world1, mRotZ, world);
+            }
+            else
+            {
+                if(rotX)
+                {
+                    CreateRotationXMatrix(mRotX, a);
+
+                    if(rotY)
+                        CreateRotationYMatrix(mRotY, a);
+
+                    if(rotZ)
+                        CreateRotationZMatrix(mRotZ, a);
+
+                    Mat4Product(mRotX, mRotY, world1);
+                    Mat4Product(world1, mRotZ, world);
+                }
+                else
+                {
+                    if(rotZ)
+                        CreateRotationZMatrix(world, a);       
+                }
+            }
+
+            Mat4Product(world, t, world1);
+            Mat4Product(world1, scale, world);
+
+            Mat4Product(world,view, wv);
             
             Mat4Product(wv, proj, wvp);
 
-            a+=0.01f;
+            a += rotSpeed;
       	
             RenderFilledModel(&Vertices,  &Uvs,  &Normals, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, world, tex); 
 
@@ -131,7 +336,11 @@ int main( int argc, char* args[] )
             snprintf(&buf[5], 4, "%d", currentFPS);
 
             SDL_Color clrFg = {255,0,0,0};
-            RenderText(clrFg, font, buf, screenSurface);
+            if(showFPS)
+                RenderText(clrFg, font, buf, screenSurface);
+
+            if(showInfo)
+                ShowInfo(screenSurface);
             
 
         	SDL_UpdateWindowSurface( window );

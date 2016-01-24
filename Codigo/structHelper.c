@@ -7,6 +7,17 @@ void CopyVec(float* v1, float* v2, int dimension)
         v1[i] = v2[i];
 }
 
+void CopyMat4(Mat4 dst, Mat4 src)
+{
+    int i;
+    for(i = 0; i < 4; i++)
+    {
+        int j;
+        for(j = 0; j < 4; j++)
+            dst[i][j] = src[i][j];
+    }
+}
+
 void ZeroVec(float* v, int d)
 {
     int i;
