@@ -63,7 +63,7 @@ bool init()
     showInfo = true;
     m_esq = false;
 	m_tex = false;
-	m_tex_norm = false;
+	m_tex_norm = true;
 
     return true;
 }
@@ -94,21 +94,18 @@ void EventDetection()
                     case SDLK_1:
                     {
                         rotX = !rotX;
-                        printf("%d\n", rotX);
                         break;
                     }
 
                     case SDLK_2:
                     {
                         rotY = !rotY;
-                        printf("%d\n", rotY);
                         break;
                     }
 
                     case SDLK_3:
                     {
                         rotZ = !rotZ;
-                        printf("%d\n", rotZ);
                         break;
                     }
 
