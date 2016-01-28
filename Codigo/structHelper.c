@@ -86,6 +86,37 @@ void freeVec3DynamicArray(Vec3DynamicArray *a)
 }
 
 /////////////////////////////////////////////////////////////////
+//                     Vec4 dynamic array                      //
+/////////////////////////////////////////////////////////////////
+void initVec4DynamicArray(Vec4DynamicArray *a, size_t initialSize) 
+{
+  a->array = (Vec4 *)malloc(initialSize * sizeof(Vec4));
+  a->used = 0;
+  a->size = initialSize;
+}
+
+void insertVec4DynamicArray(Vec4DynamicArray *a, Vec4 element) 
+{
+  if (a->used == a->size) {
+    a->size *= 2;
+    a->array = (Vec4 *)realloc(a->array, a->size * sizeof(Vec4));
+  }
+  a->array[a->used][0] = element[0];
+  a->array[a->used][1] = element[1];
+  a->array[a->used][2] = element[2];
+  a->array[a->used][3] = element[3];
+
+  a->used++;
+}
+
+void freeVec4DynamicArray(Vec4DynamicArray *a) 
+{
+  free(a->array);
+  a->array = NULL;
+  a->used = a->size = 0;
+}
+
+/////////////////////////////////////////////////////////////////
 //                     Vec2 dynamic array                      //
 /////////////////////////////////////////////////////////////////
 void initVec2DynamicArray(Vec2DynamicArray *a, size_t initialSize) 

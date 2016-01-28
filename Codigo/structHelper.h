@@ -88,4 +88,17 @@ void initVertexDynamicArray(VertexDynamicArray*, size_t);
 void insertVertexDynamicArray(VertexDynamicArray*, Vertex*);
 void freeVertexDynamicArray(VertexDynamicArray*);
 
+/////////////////////////////////////////////////////////////////
+//                     Vec3 dynamic array                      //
+/////////////////////////////////////////////////////////////////
+typedef struct {
+  Vec4 *array;
+  size_t used;
+  size_t size;
+} Vec4DynamicArray;
+
+void initVec4DynamicArray(Vec4DynamicArray*, size_t);
+void insertVec4DynamicArray(Vec4DynamicArray*, Vec4);
+void freeVec4DynamicArray(Vec4DynamicArray*);
+
 #endif

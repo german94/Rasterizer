@@ -278,7 +278,7 @@ int main( int argc, char* args[] )
 
     	screenSurface = SDL_GetWindowSurface( window );
 
-        Vec3DynamicArray Vertices;
+        Vec4DynamicArray Vertices;
         Vec2DynamicArray Uvs;
         Vec3DynamicArray Normals;
         UInt3DynamicArray Faces;
