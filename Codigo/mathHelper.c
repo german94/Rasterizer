@@ -1,5 +1,7 @@
 #include "mathHelper.h"
 
+extern float ScalarProdASM(float *v1, float *v2);
+
 void VecByScalar(float* in, float scalar, float* out, int d)
 {
 	int i;
@@ -67,14 +69,6 @@ void Vec4Mat4Product(Vec4 v, Mat4 m, Vec4 r)
 	r[1] = v[0] * m[0][1] + v[1] * m[1][1] + v[2] * m[2][1] + m[3][1];
 	r[2] = v[0] * m[0][2] + v[1] * m[1][2] + v[2] * m[2][2] + m[3][2];
 	r[3] = v[0] * m[0][3] + v[1] * m[1][3] + v[2] * m[2][3] + m[3][3];
-}
-
-void Vec4Mat4ProductASM(Vec4 v, Mat4 m, Vec4 r)
-{
-	r[0] = ScalarProdASM(v, &r[0], 4);
-	r[1] = ScalarProdASM(v, &r[1], 4);
-	r[2] = ScalarProdASM(v, &r[2], 4);
-	r[3] = ScalarProdASM(v, &r[3], 4);
 }
 
 void CreateViewMatrix(Mat4 m, Vec3 cameraTarget, Vec3 cameraPos, Vec3 up)
@@ -197,11 +191,52 @@ void Traspose(Mat4 m1)
 	for(i = 0; i < 4; i++)
 	{
 		int j;
-		for(j = 0; j < 4; j++)
+		for(j = i; j < 4; j++)
 		{
 			float temp = m1[i][j];
 			m1[i][j] = m1[j][i];
 			m1[j][i] = temp;
 		}
 	}
+}
+
+
+void Traspose2(Mat4 m1, Mat4 res)
+{
+	int i;
+	for(i = 0; i < 4; i++)
+	{
+		int j;
+		for(j = 0; j < 4; j++)
+		{
+			res[j][i] = m1[i][j];
+		}
+	}
+}
+
+void Mat4ProductASM(Mat4 m1, Mat4 m2, Mat4 res)
+{
+	int i, j;
+	for(i = 0; i < 4; i++)
+	{
+		for(j = 0; j < 4; j++)
+			res[i][j] = ScalarProdASM(&m1[i], &m2[j]);
+	}
+}
+
+void Mat4ProductTrasASM(Mat4 m1, Mat4 m2, Mat4 res)
+{
+	int i, j;
+	for(i = 0; i < 4; i++)
+	{
+		for(j = 0; j < 4; j++)
+			res[j][i] = ScalarProdASM(&m1[i], &m2[j]);
+	}
+}
+void Vec4Mat4ProductASM(Vec4 v, Mat4 m, Vec4 r)
+{
+	r[0] = ScalarProdASM(v, &m[0]);
+	r[1] = ScalarProdASM(v, &m[1]);
+	r[2] = ScalarProdASM(v, &m[2]);
+	r[3] = ScalarProdASM(v, &m[3]);
 }

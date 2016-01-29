@@ -1,2 +1,4 @@
-gcc -o test test2.c mathHelper.c sdlHelper.c structHelper.c modelLoader.c  `sdl2-config --cflags --libs` -lm -lSDL2_ttf -w
+1) nasm -f elf64 mathHelper.asm -o asm.o
+
+2) gcc -o test test2.c mathHelper.c sdlHelper.c structHelper.c modelLoader.c  `sdl2-config --cflags --libs` -lm -lSDL2_ttf -w asm.o
 

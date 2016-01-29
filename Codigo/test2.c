@@ -61,9 +61,9 @@ bool init()
     rotSpeed = 0.01f;
     showFPS = true;
     showInfo = true;
-    m_esq = false;
+    m_esq = true;
 	m_tex = false;
-	m_tex_norm = true;
+	m_tex_norm = false;
 
     return true;
 }
@@ -159,6 +159,7 @@ void EventDetection()
                     {
                         sx += 0.01f;
                         CreateScaleMatrix(scale, sx, sy, sz);
+                        Traspose(scale);
                         break;
                     }
 
@@ -166,6 +167,7 @@ void EventDetection()
                     {
                         sy += 0.01f;
                         CreateScaleMatrix(scale, sx, sy, sz);
+                        Traspose(scale);
                         break;
                     }
 
@@ -173,6 +175,7 @@ void EventDetection()
                     {
                         sz += 0.01f;
                         CreateScaleMatrix(scale, sx, sy, sz);
+                        Traspose(scale);
                         break;
                     }
 
@@ -180,6 +183,7 @@ void EventDetection()
                     {
                         sx -= 0.01f;
                         CreateScaleMatrix(scale, sx, sy, sz);
+                        Traspose(scale);
                         break;
                     }
 
@@ -187,6 +191,7 @@ void EventDetection()
                     {
                         sy -= 0.01f;
                         CreateScaleMatrix(scale, sx, sy, sz);
+                        Traspose(scale);
                         break;
                     }
 
@@ -194,6 +199,7 @@ void EventDetection()
                     {
                         sz -= 0.01f;
                         CreateScaleMatrix(scale, sx, sy, sz);
+                        Traspose(scale);
                         break;
                     }
 
@@ -263,8 +269,10 @@ int main( int argc, char* args[] )
     Vec3 pos = { 0, 0, 3};
 
     CreateViewMatrix(view, target, pos, up);
+    Traspose(view);
    
     CreateProjectionMatrix(proj, near, far, angleOfView, 1.0f);
+    Traspose(proj);
 
     float a = 0;
 
@@ -275,12 +283,13 @@ int main( int argc, char* args[] )
     if(init())
     {
         CreateScaleMatrix(scale, sx, sy, sz);
+        Traspose(scale);
 
     	screenSurface = SDL_GetWindowSurface( window );
 
         Vec4DynamicArray Vertices;
         Vec2DynamicArray Uvs;
-        Vec3DynamicArray Normals;
+        Vec4DynamicArray Normals;
         UInt3DynamicArray Faces;
 
         LoadModel("model.obj", &Vertices,  &Uvs,  &Normals, &Faces);
@@ -293,8 +302,10 @@ int main( int argc, char* args[] )
 
         Mat4 t;
 	
-        CreateTranslationMatrix(t, 0.0f, 0.0f, 20.0f);      
-      
+        CreateTranslationMatrix(t, 0.0f, 0.0f, 20.0f);
+        Traspose(t);      
+        
+        Mat4 worldt;
 		while(!quit)
 		{
             startclock = SDL_GetTicks();
@@ -315,15 +326,19 @@ int main( int argc, char* args[] )
             if(rotY)
             {
                 CreateRotationYMatrix(mRotY, a);
+                Traspose(mRotY);
 
                 if(rotX)
                     CreateRotationXMatrix(mRotX, a);
 
                 if(rotZ)
+                {    
                     CreateRotationZMatrix(mRotZ, a);
+                    Traspose(mRotZ);
+                }
 
-                Mat4Product(mRotX, mRotY, world1);
-                Mat4Product(world1, mRotZ, world);
+                Mat4ProductASM(mRotX, mRotY, world1);
+                Mat4ProductASM(world1, mRotZ, world);
             }
             else
             {
@@ -332,32 +347,44 @@ int main( int argc, char* args[] )
                     CreateRotationXMatrix(mRotX, a);
 
                     if(rotY)
+                    {    
                         CreateRotationYMatrix(mRotY, a);
-
+                        Traspose(mRotY);
+                    }
+                            
                     if(rotZ)
+                    {    
                         CreateRotationZMatrix(mRotZ, a);
+                        Traspose(mRotZ);
+                    }        
 
-                    Mat4Product(mRotX, mRotY, world1);
-                    Mat4Product(world1, mRotZ, world);
+                    Mat4ProductASM(mRotX, mRotY, world1);
+                    Mat4ProductASM(world1, mRotZ, world);
                 }
                 else
                 {
                     if(rotZ)
-                        CreateRotationZMatrix(world, a);       
+                    {
+                        CreateRotationZMatrix(world, a);
+                        Traspose(world);
+                    }
                 }
             }
 
-            Mat4Product(world, t, world1);
-            Mat4Product(world1, scale, world);
+            Mat4ProductASM(world, t, world1);
 
-            Mat4Product(world,view, wv);
-            
-            Mat4Product(wv, proj, wvp);
+            Mat4ProductASM(world1, scale, world);
 
+            Mat4ProductASM(world,view, wv);
+
+            Mat4ProductTrasASM(wv, proj, wvp);
+
+            Traspose2(world, worldt);
+  
             a += rotSpeed;
       		
             if(m_tex_norm)
-            	RenderFilledModel(&Vertices,  &Uvs,  &Normals, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, world, tex); 
+            	RenderFilledModel(&Vertices,  &Uvs,  &Normals, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, worldt, tex); 
            
             if (m_tex)
 				RenderFilledModel_tex(&Vertices,  &Uvs, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, tex); 
