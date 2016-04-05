@@ -1,5 +1,7 @@
 #include "sdlHelper.h"
 
+extern void InterpolateASM(float *gradientes, float *max, float *min, float *unos, float *res);
+
 void putpixel(SDL_Surface *surface, int x, int y, float z, Uint32 pixel, int swidth, int sheight, float* depthBuffer)
 {
 	
@@ -99,41 +101,19 @@ void DrawPoint(int x, int y, float z, float* depthBuffer, int SW, int SH, SDL_Su
         putpixel(sf, x, y, z, color, SW, SH, depthBuffer);
 }
 
-
-float Max(float a, float b)
-{
-	return (a > b) ? a : b;
-}
-
-float Min(float a, float b)
-{
-	return (a < b) ? a : b;
-}
-
-
-float Clamp(float value)
-{ 
-	return Max(0, Min(value, 1));
-}
-
-
-float Interpolate(float min, float max, float gradient)
-{ 
-	return min + (max - min) * Clamp(gradient);
-}
-
-
 float ComputeNDotL(Vec3 centerPoint, Vec3 vnFace, Vec3 lightPos) 
 {
-  Vec3 lightDirection;
+	Vec3 lightDirection;
 
-  Sub3(lightPos, centerPoint, lightDirection);
+	Sub3(lightPos, centerPoint, lightDirection);
 
-  Normalize3(vnFace);
+	Normalize3(vnFace);
   
-  Normalize3(lightDirection);
+	Normalize3(lightDirection);
 
-  return Max(0, Dot3Prod(vnFace, lightDirection));
+	float prod = Dot3Prod(vnFace, lightDirection);
+
+	return (0 > prod) ? 0 : prod;
 }
 
 Uint32 Map(SDL_Surface* tex, float tu, float tv)
@@ -181,32 +161,50 @@ void ProcessScanLine(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, Vec3 color,
     CopyVec(pc, vc->coordinates, 3);
     CopyVec(pd, vd->coordinates, 3);
 
+	Vec4 min = { pa[0], pc[0], pa[2], pc[2]};
+    Vec4 max = { pb[0],pd[0], pb[2], pd[2]};
+    Vec4 unos = {1.0, 1.0, 1.0, 1.0};
+	Vec4 res;
+
     float gradient1 = pa[1] != pb[1] ? (data->currentY - pa[1]) / (pb[1] - pa[1]) : 1;
     float gradient2 = pc[1] != pd[1] ? (data->currentY - pc[1]) / (pd[1] - pc[1]) : 1;
-            
-    int sx = (int)Interpolate(pa[0], pb[0], gradient1);
-    int ex = (int)Interpolate(pc[0], pd[0], gradient2);
+    Vec4 gradientes = {gradient1, gradient2, gradient1, gradient2};
+ 	
+    InterpolateASM(gradientes, max, min, unos, res);
+    int sx = (int)res[0];
+    int ex = (int)res[1];
+    float z1 = res[2];
+    float z2 = res[3];
 
-    float z1 = Interpolate(pa[2], pb[2], gradient1);
-    float z2 = Interpolate(pc[2], pd[2], gradient2);
+    min[0] = data->ndotla ; min[1] = data->ndotlc ; min[2] = va->texCoordinates[0] ; min[3] = vc->texCoordinates[0] ;
+    max[0] = data->ndotlb ; max[1] = data->ndotld ; max[2] = vb->texCoordinates[0] ; max[3] = vd->texCoordinates[0] ;
+    InterpolateASM(gradientes, max, min, unos, res);
+    float snl = res[0]; 
+	float enl = res[1];
+	float su = res[2];
+	float eu = res[3];
 
-    float snl = Interpolate(data->ndotla, data->ndotlb, gradient1);
-    float enl = Interpolate(data->ndotlc, data->ndotld, gradient2);
+    min[0] = va->texCoordinates[1] ; min[1] = vc->texCoordinates[1] ;
+	max[0] = vb->texCoordinates[1] ; max[1] = vd->texCoordinates[1] ;
+    InterpolateASM(gradientes, max, min, unos, res);
+    float sv = res[0];
+    float ev = res[1];
 
-    float su = Interpolate(va->texCoordinates[0], vb->texCoordinates[0], gradient1);
-    float eu = Interpolate(vc->texCoordinates[0], vd->texCoordinates[0], gradient2);
-    float sv = Interpolate(va->texCoordinates[1], vb->texCoordinates[1], gradient1);
-    float ev = Interpolate(vc->texCoordinates[1], vd->texCoordinates[1], gradient2);
+    min[0] = z1; min[1] = snl; min[2] = su; min[3] = sv;
+	max[0] = z2; max[1] = enl; max[2] = eu; max[3] = ev; 
 
-     int x;
+    int x;
     for (x = sx ; x < ex; x++)
     {
   		float gradient = (x - sx) / (float)(ex - sx);
-        float z = Interpolate(z1, z2, gradient);
-        float ndotl = Interpolate(snl, enl, gradient);
+  		gradientes[0] = gradient; gradientes[1] = gradient; gradientes[2] = gradient; gradientes[3] = gradient;
+        
+        InterpolateASM(gradientes, max, min, unos, res);
 
-        float u = Interpolate(su, eu, gradient);
-        float v = Interpolate(sv, ev, gradient);
+        float z = res[0];
+        float ndotl = res[1];
+        float u = res[2];
+        float v = res[3];
 
         Uint32 textureColor;
 
@@ -443,28 +441,43 @@ void ProcessScanLine_tex(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, Vec3 co
     CopyVec(pc, vc->coordinates, 3);
     CopyVec(pd, vd->coordinates, 3);
 
+    Vec4 min = { pa[0], pc[0], pa[2], pc[2]};
+    Vec4 max = { pb[0],pd[0], pb[2], pd[2]};
+    Vec4 unos = {1.0, 1.0, 1.0, 1.0};
+	Vec4 res;
+
     float gradient1 = pa[1] != pb[1] ? (data->currentY - pa[1]) / (pb[1] - pa[1]) : 1;
     float gradient2 = pc[1] != pd[1] ? (data->currentY - pc[1]) / (pd[1] - pc[1]) : 1;
-            
-    int sx = (int)Interpolate(pa[0], pb[0], gradient1);
-    int ex = (int)Interpolate(pc[0], pd[0], gradient2);
+    Vec4 gradientes = {gradient1, gradient2, gradient1, gradient2};
+    
+    InterpolateASM(gradientes, max, min, unos, res);
+    int sx = (int)res[0];
+    int ex = (int)res[1];
+    float z1 = res[2];
+    float z2 = res[3];     
+   
+    min[0] = va->texCoordinates[0] ; min[1] = vc->texCoordinates[0] ; min[2] = va->texCoordinates[1] ; min[3] = vc->texCoordinates[1] ;
+    max[0] = vb->texCoordinates[0] ; max[1] = vd->texCoordinates[0] ; max[2] = vb->texCoordinates[1] ; max[3] = vd->texCoordinates[1] ;
+    InterpolateASM(gradientes, max, min, unos, res);
+    float su = res[0]; 
+	float eu = res[1];
+	float sv = res[2];
+	float ev = res[3];
 
-    float z1 = Interpolate(pa[2], pb[2], gradient1);
-    float z2 = Interpolate(pc[2], pd[2], gradient2);
+	min[0] = z1; min[1] = su; min[2] = sv;
+	max[0] = z2; max[1] = eu; max[2] = ev;  
 
-    float su = Interpolate(va->texCoordinates[0], vb->texCoordinates[0], gradient1);
-    float eu = Interpolate(vc->texCoordinates[0], vd->texCoordinates[0], gradient2);
-    float sv = Interpolate(va->texCoordinates[1], vb->texCoordinates[1], gradient1);
-    float ev = Interpolate(vc->texCoordinates[1], vd->texCoordinates[1], gradient2);
-
-     int x;
+    int x;
     for (x = sx ; x < ex; x++)
     {
         float gradient = (x - sx) / (float)(ex - sx);
-        float z = Interpolate(z1, z2, gradient);
 
-        float u = Interpolate(su, eu, gradient);
-        float v = Interpolate(sv, ev, gradient);
+        gradientes[0] = gradient; gradientes[1] = gradient; gradientes[2] = gradient;
+        InterpolateASM(gradientes, max, min, unos, res);
+
+        float z = res[0];
+        float u = res[1];
+        float v = res[2];
 
         Uint32 textureColor;
 

@@ -1,5 +1,7 @@
 #include "structHelper.h"
 
+extern void CopyVecASM(float* v1, float* v2);
+
 void CopyVec(float* v1, float* v2, int dimension)
 {
     int i;
@@ -7,15 +9,11 @@ void CopyVec(float* v1, float* v2, int dimension)
         v1[i] = v2[i];
 }
 
-void CopyMat4(Mat4 dst, Mat4 src)
+void CopyVec4(float* v1, float* v2)
 {
     int i;
     for(i = 0; i < 4; i++)
-    {
-        int j;
-        for(j = 0; j < 4; j++)
-            dst[i][j] = src[i][j];
-    }
+        v1[i] = v2[i];
 }
 
 void ZeroVec(float* v, int d)

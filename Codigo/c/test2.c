@@ -4,9 +4,13 @@
 #include "structHelper.h"
 #include <float.h>
 #include <stdlib.h>
+#include <time.h>  
+
  
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
+
+extern void initDepthBufferASM2(float *buffer, float *maxs, int tam);
 
 SDL_Window* window;
 SDL_Surface* screenSurface;
@@ -28,11 +32,11 @@ bool showInfo;
 
 void initDepthBuffer()
 {
-	int i;
-	for (i = 0; i < SCREEN_WIDTH*SCREEN_HEIGHT; ++i)
-		depthBuffer[i] = FLT_MAX;
-}	 	
-	
+    int i;
+    for (i = 0; i < SCREEN_WIDTH*SCREEN_HEIGHT; ++i)
+        depthBuffer[i] = FLT_MAX;
+}   
+
 bool init()
 {
 	if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
@@ -52,7 +56,7 @@ bool init()
     font = TTF_OpenFont("DroidSans.ttf", 12);
 
     quit = false;
-    rotX = false;
+    rotX = true;
     rotY = false;
     rotZ = false;
     sx = 1.0f;
@@ -61,9 +65,9 @@ bool init()
     rotSpeed = 0.01f;
     showFPS = true;
     showInfo = true;
-    m_esq = true;
+    m_esq = false;
 	m_tex = false;
-	m_tex_norm = false;
+	m_tex_norm = true;
 
     return true;
 }
@@ -264,6 +268,7 @@ int main( int argc, char* args[] )
     float near = 0.1; 
     float far = 100; 
 
+    Vec4 vec_max = {FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX};
     Vec3 up = { 0, 1, 0 };
     Vec3 target = { 0, 0, -1 };
     Vec3 pos = { 0, 0, 3};
@@ -293,26 +298,31 @@ int main( int argc, char* args[] )
         UInt3DynamicArray Faces;
 
         LoadModel("model.obj", &Vertices,  &Uvs,  &Normals, &Faces);
-
+          
         SDL_Surface* tex;
         if(Uvs.size != 0)
         	tex = SDL_LoadBMP("a.bmp");
         else
         	tex = NULL;
 
+        clock_t start = clock();
         Mat4 t;
 	
         CreateTranslationMatrix(t, 0.0f, 0.0f, 20.0f);
         Traspose(t);      
         
         Mat4 worldt;
+
+        int contador = 0;
 		while(!quit)
 		{
+			contador ++;
+
             startclock = SDL_GetTicks();
 
 			EventDetection();
-			
-			initDepthBuffer(depthBuffer, SCREEN_WIDTH*SCREEN_HEIGHT);
+						 			 
+            initDepthBufferASM2(depthBuffer, vec_max, SCREEN_WIDTH*SCREEN_HEIGHT);
 
             SDL_FillRect( screenSurface, NULL, SDL_MapRGB( screenSurface->format, 0x00, 0x00, 0x00 ) );
 
@@ -337,8 +347,8 @@ int main( int argc, char* args[] )
                     Traspose(mRotZ);
                 }
 
-                Mat4ProductASM(mRotX, mRotY, world1);
-                Mat4ProductASM(world1, mRotZ, world);
+                Mat4Product(mRotX, mRotY, world1);
+                Mat4Product(world1, mRotZ, world);
             }
             else
             {
@@ -358,8 +368,8 @@ int main( int argc, char* args[] )
                         Traspose(mRotZ);
                     }        
 
-                    Mat4ProductASM(mRotX, mRotY, world1);
-                    Mat4ProductASM(world1, mRotZ, world);
+                    Mat4Product(mRotX, mRotY, world1);
+                    Mat4Product(world1, mRotZ, world);
                 }
                 else
                 {
@@ -371,13 +381,13 @@ int main( int argc, char* args[] )
                 }
             }
 
-            Mat4ProductASM(world, t, world1);
+            Mat4Product(world, t, world1);
 
-            Mat4ProductASM(world1, scale, world);
+            Mat4Product(world1, scale, world);
 
-            Mat4ProductASM(world,view, wv);
+            Mat4Product(world,view, wv);
 
-            Mat4ProductTrasASM(wv, proj, wvp);
+            Mat4ProductTras(wv, proj, wvp);
 
             Traspose2(world, worldt);
   
@@ -413,6 +423,8 @@ int main( int argc, char* args[] )
             
 
         	SDL_UpdateWindowSurface( window );
+
+        	if(contador == 3000) {printf("Tiempo transcurrido: %f\n", ((double)clock() - start) / CLOCKS_PER_SEC); quit = true;}
     	}
   	}
 

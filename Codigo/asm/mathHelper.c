@@ -58,17 +58,17 @@ void Mat4Product(Mat4 m1, Mat4 m2, Mat4 res)
 	for(i = 0; i < 4; i++)
 	{
 		for(j = 0; j < 4; j++)
-			res[i][j] = m1[i][0] * m2[0][j] + m1[i][1] * m2[1][j] + m1[i][2] * m2[2][j] + m1[i][3] * m2[3][j];
+			res[i][j] = m1[i][0] * m2[j][0] + m1[i][1] * m2[j][1] + m1[i][2] * m2[j][2] + m1[i][3] * m2[j][3];
 	}
 }
 
 //vector fila
 void Vec4Mat4Product(Vec4 v, Mat4 m, Vec4 r)
 {
-	r[0] = v[0] * m[0][0] + v[1] * m[1][0] + v[2] * m[2][0] + m[3][0];
-	r[1] = v[0] * m[0][1] + v[1] * m[1][1] + v[2] * m[2][1] + m[3][1];
-	r[2] = v[0] * m[0][2] + v[1] * m[1][2] + v[2] * m[2][2] + m[3][2];
-	r[3] = v[0] * m[0][3] + v[1] * m[1][3] + v[2] * m[2][3] + m[3][3];
+	r[0] = v[0] * m[0][0] + v[1] * m[0][1] + v[2] * m[0][2] + m[0][3];
+	r[1] = v[0] * m[1][0] + v[1] * m[1][1] + v[2] * m[1][2] + m[1][3];
+	r[2] = v[0] * m[2][0] + v[1] * m[2][1] + v[2] * m[2][2] + m[2][3];
+	r[3] = v[0] * m[3][0] + v[1] * m[3][1] + v[2] * m[3][2] + m[3][3];
 }
 
 void CreateViewMatrix(Mat4 m, Vec3 cameraTarget, Vec3 cameraPos, Vec3 up)
@@ -94,38 +94,6 @@ void CreateViewMatrix(Mat4 m, Vec3 cameraTarget, Vec3 cameraPos, Vec3 up)
 	m[3][3] = 1;
 }
 
-
-/*
-void CreateViewMatrix(Mat4 m, Vec3 cameraTarget, Vec3 cameraPos, Vec3 up)
-{
-	Vec3 w;   //eje z de la camara
-	Sub3(cameraTarget, cameraPos, w);
-	Normalize3(w);
-	//printf("resta w: %f %f %f\n", w[0], w[1], w[2]);
-
-
-	Vec3 u;   //eje x de la camara
-	Cross3Prod(up, w, u);
-	Normalize3(u);
-	//printf("cross up: %f %f %f\n", u[0], u[1], u[2]);
-	//Normalize3(u);
-
-	Vec3 v;   //eje y de la camara
-	Cross3Prod(w, u, v);
-	//printf("cross v: %f %f %f\n", v[0], v[1], v[2]);
-
-	m[0][0] = u[0];		m[0][1] = u[1];		m[0][2] = u[2];		m[0][3] = -Dot3Prod(cameraPos, u);
-	m[1][0] = v[0];		m[1][1] = v[1];		m[1][2] = v[2];		m[1][3] = -Dot3Prod(cameraPos, v);
-	m[2][0] = w[0];		m[2][1] = w[1];		m[2][2] = w[2];		m[2][3] = -Dot3Prod(cameraPos, w);
-
-	m[3][0] = 0;
-	m[3][1] = 0;
-	m[3][2] = 0;
-	m[3][3] = 1;
-}
-*/
-//ejelo aspectRatio: 800/600
-//ejemplo de fieldOfView: PI / 4 (el angulo de vision la camara)
 void CreateProjectionMatrix(Mat4 m, float nearPlane, float farPlane, float fieldOfView, float aspectRatio)
 {
 	m[0][0] = 1/tanf(fieldOfView*0.5*aspectRatio);
@@ -214,6 +182,18 @@ void Traspose2(Mat4 m1, Mat4 res)
 	}
 }
 
+float ScalarProd(float *v1, float *v2)
+{
+	int i;
+	float res = 0.0;
+	for( i = 0; i < 4; i++)
+	{
+		res = res + v1[i]*v2[i];
+	}
+	return res;
+}
+
+/*
 void Mat4ProductASM(Mat4 m1, Mat4 m2, Mat4 res)
 {
 	int i, j;
@@ -223,7 +203,19 @@ void Mat4ProductASM(Mat4 m1, Mat4 m2, Mat4 res)
 			res[i][j] = ScalarProdASM(&m1[i], &m2[j]);
 	}
 }
+*/
 
+void Mat4ProductTras(Mat4 m1, Mat4 m2, Mat4 res)
+{
+	int i, j;
+	for(i = 0; i < 4; i++)
+	{
+		for(j = 0; j < 4; j++)
+			res[j][i] = ScalarProd(&m1[i], &m2[j]);
+	}
+}
+
+/*
 void Mat4ProductTrasASM(Mat4 m1, Mat4 m2, Mat4 res)
 {
 	int i, j;
@@ -232,11 +224,12 @@ void Mat4ProductTrasASM(Mat4 m1, Mat4 m2, Mat4 res)
 		for(j = 0; j < 4; j++)
 			res[j][i] = ScalarProdASM(&m1[i], &m2[j]);
 	}
-}
+}*/
+/*
 void Vec4Mat4ProductASM(Vec4 v, Mat4 m, Vec4 r)
 {
 	r[0] = ScalarProdASM(v, &m[0]);
 	r[1] = ScalarProdASM(v, &m[1]);
 	r[2] = ScalarProdASM(v, &m[2]);
 	r[3] = ScalarProdASM(v, &m[3]);
-}
+}*/

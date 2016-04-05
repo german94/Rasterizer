@@ -110,51 +110,51 @@ void RenderFilledModel(Vec4DynamicArray *vertices, Vec2DynamicArray *uvs, Vec4Dy
 	    Vec3 v1, v2, v3, v1n, v2n, v3n, v1w, v2w, v3w;
 
 	    Vec4 vertexA, vertexB, vertexC;
-		CopyVec(vertexA, vertices->array[faces->array[j][0]], 4);
-		CopyVec(vertexB, vertices->array[faces->array[j][1]], 4);
-		CopyVec(vertexC, vertices->array[faces->array[j][2]], 4);
+		CopyVec4(vertexA, vertices->array[faces->array[j][0]], 4);
+		CopyVec4(vertexB, vertices->array[faces->array[j][1]], 4);
+		CopyVec4(vertexC, vertices->array[faces->array[j][2]], 4);
 
 
-	    Vec4Mat4ProductASM(vertexA, wvp, res1);
+	    Vec4Mat4Product(vertexA, wvp, res1);
 	    v1[0] = (res1[0]/res1[3])*swidth/**0.5*/ + swidth*0.5 ;
 	    v1[1] = (res1[1]/res1[3])*sheight/**0.5*/+ sheight*0.5; 
 	    v1[2] = res1[2] / res1[3];
 
-	    Vec4Mat4ProductASM(vertexB, wvp, res2);
+	    Vec4Mat4Product(vertexB, wvp, res2);
 	    v2[0] = (res2[0]/res2[3])*swidth/**0.5*/ + swidth*0.5 ;
 	    v2[1] = (res2[1]/res2[3])*sheight/**0.5*/ + sheight*0.5; 
 	    v2[2] = res2[2] / res2[3];
 
-	    Vec4Mat4ProductASM(vertexC, wvp, res3);
+	    Vec4Mat4Product(vertexC, wvp, res3);
 	    v3[0] = (res3[0]/res3[3])*swidth/**0.5*/ + swidth*0.5 ;
 	    v3[1] = (res3[1]/res3[3])*sheight/**0.5*/ + sheight*0.5; 
 	 	v3[2] = res3[2] / res3[3];
 
 	 	///////////////////////////
- 		Vec4Mat4ProductASM(vertexA, world, res1w);
+ 		Vec4Mat4Product(vertexA, world, res1w);
  		v1w[0] = res1w[0]; v1w[1] = res1w[1]; v1w[2] = res1w[2];
 
-        Vec4Mat4ProductASM(vertexB, world, res2w);
+        Vec4Mat4Product(vertexB, world, res2w);
 		v2w[0] = res2w[0]; v2w[1] = res2w[1]; v2w[2] = res2w[2];
 
-        Vec4Mat4ProductASM(vertexC, world, res3w);
+        Vec4Mat4Product(vertexC, world, res3w);
         v3w[0] = res3w[0]; v3w[1] = res3w[1]; v3w[2] = res3w[2];        ////////////
 
         ////////////////////////////
 
         Vec4 vertexAn, vertexBn, vertexCn;
-		CopyVec(vertexAn, normals->array[faces->array[j+2][0]], 4);
-		CopyVec(vertexBn, normals->array[faces->array[j+2][1]], 4);
-		CopyVec(vertexCn, normals->array[faces->array[j+2][2]], 4);
+		CopyVec4(vertexAn, normals->array[faces->array[j+2][0]], 4);
+		CopyVec4(vertexBn, normals->array[faces->array[j+2][1]], 4);
+		CopyVec4(vertexCn, normals->array[faces->array[j+2][2]], 4);
 
 
-        Vec4Mat4ProductASM(vertexAn, world, res1n);
+        Vec4Mat4Product(vertexAn, world, res1n);
         v1n[0] = res1n[0]; v1n[1] = res1n[1]; v1n[2] = res1n[2];        ////////////
 
-        Vec4Mat4ProductASM(vertexBn, world, res2n);
+        Vec4Mat4Product(vertexBn, world, res2n);
 		v2n[0] = res2n[0]; v2n[1] = res2n[1]; v2n[2] = res2n[2]; 
 
-        Vec4Mat4ProductASM(vertexCn, world, res3n);
+        Vec4Mat4Product(vertexCn, world, res3n);
 		v3n[0] = res3n[0]; v3n[1] = res3n[1]; v3n[2] = res3n[2];  
 
 		Vec2 v1t, v2t, v3t;
@@ -186,22 +186,22 @@ void RenderFilledModel_tex(Vec4DynamicArray *vertices, Vec2DynamicArray *uvs, UI
 	    Vec3 v1, v2, v3;
 
 	    Vec4 vertexA, vertexB, vertexC;
-		CopyVec(vertexA, vertices->array[faces->array[j][0]], 4);
-		CopyVec(vertexB, vertices->array[faces->array[j][1]], 4);
-		CopyVec(vertexC, vertices->array[faces->array[j][2]], 4);
+		CopyVec4(vertexA, vertices->array[faces->array[j][0]], 4);
+		CopyVec4(vertexB, vertices->array[faces->array[j][1]], 4);
+		CopyVec4(vertexC, vertices->array[faces->array[j][2]], 4);
 
 
-	    Vec4Mat4ProductASM(vertexA, wvp, res1);
+	    Vec4Mat4Product(vertexA, wvp, res1);
 	    v1[0] = (res1[0]/res1[3])*swidth/**0.5*/ + swidth*0.5 ;
 	    v1[1] = (res1[1]/res1[3])*sheight/**0.5*/+ sheight*0.5; 
 	    v1[2] = res1[2] / res1[3];
 
-	    Vec4Mat4ProductASM(vertexB, wvp, res2);
+	    Vec4Mat4Product(vertexB, wvp, res2);
 	    v2[0] = (res2[0]/res2[3])*swidth/**0.5*/ + swidth*0.5 ;
 	    v2[1] = (res2[1]/res2[3])*sheight/**0.5*/ + sheight*0.5; 
 	    v2[2] = res2[2] / res2[3];
 
-	    Vec4Mat4ProductASM(vertexC, wvp, res3);
+	    Vec4Mat4Product(vertexC, wvp, res3);
 	    v3[0] = (res3[0]/res3[3])*swidth/**0.5*/ + swidth*0.5 ;
 	    v3[1] = (res3[1]/res3[3])*sheight/**0.5*/ + sheight*0.5; 
 	 	v3[2] = res3[2] / res3[3];
@@ -237,27 +237,26 @@ void RenderFilledModel_esq(Vec4DynamicArray *vertices, UInt3DynamicArray* faces,
 	    Vec3 v1, v2, v3;
 
 	    Vec4 vertexA, vertexB, vertexC;
-		CopyVec(vertexA, vertices->array[faces->array[j][0]], 4);
-		CopyVec(vertexB, vertices->array[faces->array[j][1]], 4);
-		CopyVec(vertexC, vertices->array[faces->array[j][2]], 4);
+		CopyVec4(vertexA, vertices->array[faces->array[j][0]], 4);
+		CopyVec4(vertexB, vertices->array[faces->array[j][1]], 4);
+		CopyVec4(vertexC, vertices->array[faces->array[j][2]], 4);
 
-	    Vec4Mat4ProductASM(vertexA, wvp, res1);
+	    Vec4Mat4Product(vertexA, wvp, res1);
 	    v1[0] = (res1[0]/res1[3])*swidth/**0.5*/ + swidth*0.5 ;
 	    v1[1] = (res1[1]/res1[3])*sheight/**0.5*/+ sheight*0.5; 
 	    v1[2] = res1[2] / res1[3];
 
-	    Vec4Mat4ProductASM(vertexB, wvp, res2);
+	    Vec4Mat4Product(vertexB, wvp, res2);
 	    v2[0] = (res2[0]/res2[3])*swidth/**0.5*/ + swidth*0.5 ;
 	    v2[1] = (res2[1]/res2[3])*sheight/**0.5*/ + sheight*0.5; 
 	    v2[2] = res2[2] / res2[3];
 
-	    Vec4Mat4ProductASM(vertexC, wvp, res3);
+	    Vec4Mat4Product(vertexC, wvp, res3);
 	    v3[0] = (res3[0]/res3[3])*swidth/**0.5*/ + swidth*0.5 ;
 	    v3[1] = (res3[1]/res3[3])*sheight/**0.5*/ + sheight*0.5; 
 	 	v3[2] = res3[2] / res3[3];
 
 		Vec3 color;
-		//color[0] = 0.25f + (j % faces->used) * 0.75f / faces->used;
 		color[0] = 1.0f;
 		color[1] = color[0];
 		color[2] = color[0];
