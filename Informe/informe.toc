@@ -1,0 +1,5 @@
+\select@language {spanish}
+\contentsline {section}{\numberline {1}Introducci\IeC {\'o}n}{3}{section.1}
+\contentsline {subsection}{\numberline {1.1}\IeC {\textquestiondown }Qu\IeC {\'e} es un renderizador 3D?}{3}{subsection.1.1}
+\contentsline {subsection}{\numberline {1.2}SDL}{3}{subsection.1.2}
+\contentsline {subsection}{\numberline {1.3}Otras features}{3}{subsection.1.3}
