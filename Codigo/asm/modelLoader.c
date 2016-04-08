@@ -102,6 +102,7 @@ bool LoadModel(char* path, Vec4DynamicArray *outVertices, Vec2DynamicArray *outU
     
 void RenderFilledModel(Vec4DynamicArray *vertices, Vec2DynamicArray *uvs, Vec4DynamicArray *normals, UInt3DynamicArray* faces, Mat4 wvp, int swidth, int sheight, SDL_Surface* sf, float* depthBuffer, Mat4 world,  SDL_Surface* tex)
 {	
+	Vec4 aux = {1, 0, 0, 0};
 	int  j;
 	
 	for(j = 0; j < faces->used; j= j+3)//NOTAR QUE COMO GUARDA PARA CADA TRIANGULO LE CORRESPONDEN 3 LUGARES
@@ -115,29 +116,29 @@ void RenderFilledModel(Vec4DynamicArray *vertices, Vec2DynamicArray *uvs, Vec4Dy
 		CopyVec4(vertexC, vertices->array[faces->array[j][2]], 4);
 
 
-	    Vec4Mat4Product(vertexA, wvp, res1);
+	    Vec4Mat4ProductASM(vertexA, wvp, res1, aux);
 	    v1[0] = (res1[0]/res1[3])*swidth/**0.5*/ + swidth*0.5 ;
 	    v1[1] = (res1[1]/res1[3])*sheight/**0.5*/+ sheight*0.5; 
 	    v1[2] = res1[2] / res1[3];
 
-	    Vec4Mat4Product(vertexB, wvp, res2);
+	    Vec4Mat4ProductASM(vertexB, wvp, res2, aux);
 	    v2[0] = (res2[0]/res2[3])*swidth/**0.5*/ + swidth*0.5 ;
 	    v2[1] = (res2[1]/res2[3])*sheight/**0.5*/ + sheight*0.5; 
 	    v2[2] = res2[2] / res2[3];
 
-	    Vec4Mat4Product(vertexC, wvp, res3);
+	    Vec4Mat4ProductASM(vertexC, wvp, res3, aux);
 	    v3[0] = (res3[0]/res3[3])*swidth/**0.5*/ + swidth*0.5 ;
 	    v3[1] = (res3[1]/res3[3])*sheight/**0.5*/ + sheight*0.5; 
 	 	v3[2] = res3[2] / res3[3];
 
 	 	///////////////////////////
- 		Vec4Mat4Product(vertexA, world, res1w);
+ 		Vec4Mat4ProductASM(vertexA, world, res1w, aux);
  		v1w[0] = res1w[0]; v1w[1] = res1w[1]; v1w[2] = res1w[2];
 
-        Vec4Mat4Product(vertexB, world, res2w);
+        Vec4Mat4ProductASM(vertexB, world, res2w, aux);
 		v2w[0] = res2w[0]; v2w[1] = res2w[1]; v2w[2] = res2w[2];
 
-        Vec4Mat4Product(vertexC, world, res3w);
+        Vec4Mat4ProductASM(vertexC, world, res3w, aux);
         v3w[0] = res3w[0]; v3w[1] = res3w[1]; v3w[2] = res3w[2];        ////////////
 
         ////////////////////////////
@@ -148,13 +149,13 @@ void RenderFilledModel(Vec4DynamicArray *vertices, Vec2DynamicArray *uvs, Vec4Dy
 		CopyVec4(vertexCn, normals->array[faces->array[j+2][2]], 4);
 
 
-        Vec4Mat4Product(vertexAn, world, res1n);
+        Vec4Mat4ProductASM(vertexAn, world, res1n, aux);
         v1n[0] = res1n[0]; v1n[1] = res1n[1]; v1n[2] = res1n[2];        ////////////
 
-        Vec4Mat4Product(vertexBn, world, res2n);
+        Vec4Mat4ProductASM(vertexBn, world, res2n, aux);
 		v2n[0] = res2n[0]; v2n[1] = res2n[1]; v2n[2] = res2n[2]; 
 
-        Vec4Mat4Product(vertexCn, world, res3n);
+        Vec4Mat4ProductASM(vertexCn, world, res3n, aux);
 		v3n[0] = res3n[0]; v3n[1] = res3n[1]; v3n[2] = res3n[2];  
 
 		Vec2 v1t, v2t, v3t;
@@ -178,6 +179,7 @@ void RenderFilledModel(Vec4DynamicArray *vertices, Vec2DynamicArray *uvs, Vec4Dy
 
 void RenderFilledModel_tex(Vec4DynamicArray *vertices, Vec2DynamicArray *uvs, UInt3DynamicArray* faces, Mat4 wvp, int swidth, int sheight, SDL_Surface* sf, float* depthBuffer, SDL_Surface* tex)
 {	
+	Vec4 aux = {1, 0, 0, 0};
 	int  j;
 	
 	for(j = 0; j < faces->used; j= j+3)//NOTAR QUE COMO GUARDA PARA CADA TRIANGULO LE CORRESPONDEN 3 LUGARES
@@ -191,17 +193,17 @@ void RenderFilledModel_tex(Vec4DynamicArray *vertices, Vec2DynamicArray *uvs, UI
 		CopyVec4(vertexC, vertices->array[faces->array[j][2]], 4);
 
 
-	    Vec4Mat4Product(vertexA, wvp, res1);
+	    Vec4Mat4ProductASM(vertexA, wvp, res1, aux);
 	    v1[0] = (res1[0]/res1[3])*swidth/**0.5*/ + swidth*0.5 ;
 	    v1[1] = (res1[1]/res1[3])*sheight/**0.5*/+ sheight*0.5; 
 	    v1[2] = res1[2] / res1[3];
 
-	    Vec4Mat4Product(vertexB, wvp, res2);
+	    Vec4Mat4ProductASM(vertexB, wvp, res2, aux);
 	    v2[0] = (res2[0]/res2[3])*swidth/**0.5*/ + swidth*0.5 ;
 	    v2[1] = (res2[1]/res2[3])*sheight/**0.5*/ + sheight*0.5; 
 	    v2[2] = res2[2] / res2[3];
 
-	    Vec4Mat4Product(vertexC, wvp, res3);
+	    Vec4Mat4ProductASM(vertexC, wvp, res3, aux);
 	    v3[0] = (res3[0]/res3[3])*swidth/**0.5*/ + swidth*0.5 ;
 	    v3[1] = (res3[1]/res3[3])*sheight/**0.5*/ + sheight*0.5; 
 	 	v3[2] = res3[2] / res3[3];
@@ -230,6 +232,7 @@ void RenderFilledModel_tex(Vec4DynamicArray *vertices, Vec2DynamicArray *uvs, UI
 void RenderFilledModel_esq(Vec4DynamicArray *vertices, UInt3DynamicArray* faces, Mat4 wvp, int swidth, int sheight, SDL_Surface* sf)
 {	
 	int  j;
+	Vec4 aux = {1, 0, 0, 0};
 	
 	for(j = 0; j < faces->used; j= j+3)//NOTAR QUE COMO GUARDA PARA CADA TRIANGULO LE CORRESPONDEN 3 LUGARES
     {   	   
@@ -241,17 +244,17 @@ void RenderFilledModel_esq(Vec4DynamicArray *vertices, UInt3DynamicArray* faces,
 		CopyVec4(vertexB, vertices->array[faces->array[j][1]], 4);
 		CopyVec4(vertexC, vertices->array[faces->array[j][2]], 4);
 
-	    Vec4Mat4Product(vertexA, wvp, res1);
+	    Vec4Mat4ProductASM(vertexA, wvp, res1, aux);
 	    v1[0] = (res1[0]/res1[3])*swidth/**0.5*/ + swidth*0.5 ;
 	    v1[1] = (res1[1]/res1[3])*sheight/**0.5*/+ sheight*0.5; 
 	    v1[2] = res1[2] / res1[3];
 
-	    Vec4Mat4Product(vertexB, wvp, res2);
+	    Vec4Mat4ProductASM(vertexB, wvp, res2, aux);
 	    v2[0] = (res2[0]/res2[3])*swidth/**0.5*/ + swidth*0.5 ;
 	    v2[1] = (res2[1]/res2[3])*sheight/**0.5*/ + sheight*0.5; 
 	    v2[2] = res2[2] / res2[3];
 
-	    Vec4Mat4Product(vertexC, wvp, res3);
+	    Vec4Mat4ProductASM(vertexC, wvp, res3, aux);
 	    v3[0] = (res3[0]/res3[3])*swidth/**0.5*/ + swidth*0.5 ;
 	    v3[1] = (res3[1]/res3[3])*sheight/**0.5*/ + sheight*0.5; 
 	 	v3[2] = res3[2] / res3[3];

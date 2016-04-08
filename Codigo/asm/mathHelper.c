@@ -1,6 +1,7 @@
 #include "mathHelper.h"
 
 extern float ScalarProdASM(float *v1, float *v2);
+extern void Vec4Mat4ProductASM(float *v, float *m, float *r, float *aux);
 
 void VecByScalar(float* in, float scalar, float* out, int d)
 {
