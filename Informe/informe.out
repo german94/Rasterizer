@@ -1,4 +1,11 @@
 \BOOKMARK [1][-]{section.1}{Introducci\363n}{}% 1
 \BOOKMARK [2][-]{subsection.1.1}{\277Qu\351 es un renderizador 3D?}{section.1}% 2
-\BOOKMARK [2][-]{subsection.1.2}{SDL}{section.1}% 3
+\BOOKMARK [2][-]{subsection.1.2}{Librer\355a SDL}{section.1}% 3
 \BOOKMARK [2][-]{subsection.1.3}{Otras features}{section.1}% 4
+\BOOKMARK [1][-]{section.2}{C\363digo SDL}{}% 5
+\BOOKMARK [2][-]{subsection.2.1}{Inicializaci\363n, terminaci\363n y manejo de errores}{section.2}% 6
+\BOOKMARK [2][-]{subsection.2.2}{Manejo de ventana}{section.2}% 7
+\BOOKMARK [2][-]{subsection.2.3}{Ciclo principal y detecci\363n de eventos}{section.2}% 8
+\BOOKMARK [2][-]{subsection.2.4}{Renderizado de texto \(HAY QUE LLAMAR A TTF\137QUIT\)}{section.2}% 9
+\BOOKMARK [2][-]{subsection.2.5}{Timers}{section.2}% 10
+\BOOKMARK [1][-]{section.3}{Funci\363n putpixel}{}% 11
