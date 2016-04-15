@@ -402,15 +402,21 @@ Sea v = (x, y, z, w) luego de efectuar v*M3 tendremos un nuevo vector v' con la 
 z' =$x*0$ $+$ $y*0$ $+$ $\frac{-f}{f-n}$*$z$ + $\frac{-f*n}{f-n}$*$1$
 
 Se deberían cumplir dos condiciones: cuando v este mas cerca del $near$ $plane$ z' debería ser 0 y mientras mas cerca de $far$ $plane$ debería tender al valor 1. 
- Veamos cuando z es igual a $f$
+
+
+ Veamos cuando z es igual a $-f$
  
  z'= $\frac{-f}{f-n}$*$(-f)$ + $\frac{-f*n}{f-n}$*$1$ = $\frac{f*f + -f*n}{f-n}$ = $\frac{f*(f-n)}{f-n}$ = $f$
  
  
- Y cuando z es igual a $n$
+ Y cuando z es igual a $-n$
+ 
+ 
  z'= $\frac{-f}{f-n}$*$(-n)$ + $\frac{-f*n}{f-n}$*$1$ = $\frac{f*n - f*n}{f-n}$ = $0$
  
 Recordemos que aun es necesario dividir por w' que es -z por lo que en el primer caso -z = $f$ entonces, tendríamos como resultado final 1; en el segundo caso 0. Efectivamente obtuvimos los valores deseados.
+
+
 Por último, hay que tener en cuenta el ángulo de visión (AOV)  o campo de visión (FOV) de la cámara. Este parámetro controla qué parte de la escena es visible a la cámara.\newline
 Generalmente se utiliza es suponer que la ventana de proyección es un cuadrado de [-1: 1] en cada dimensión. y que la distancia entre la misma y la cámara es igual a 1. 
 
@@ -422,6 +428,7 @@ Generalmente se utiliza es suponer que la ventana de proyección es un cuadrado 
     \label{fig:mesh1}
 \end{figure}
 
+\pagebreak
 
 Dado que la parte observable de nuestro mundo 3D puede variar de acuerdo al valor de FOV, debemos incluirlo de alguna manera en nuestro cambio de coordenadas. Sin entrar en detalle en la trigonometría que hay detras de esto, se utiliza el valor $P = 1 \ / \ tan(FOV * 0.5)$. Esto nos va a permitir escalar las coordenadas para poder definir la visibilidad de los vértices de acuerdo a este ángulo y no solo al posicionamiento de los mismos.
 La matriz de proyección entonces queda de la siguiente forma:
