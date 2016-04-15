@@ -162,35 +162,36 @@ Tanto para mostrar los FPS como las indicaciones de uso, nuestro programa muestr
 \subsection{Timers}
 Para medir la performance de la aplicación una de las técnicas que usamos fue el uso de timers. Si bien SDL provee soporte para esto, decidimos utilizar los clásicos Clocks de C pero hicimos uso de la función $SDL\_GetTicks$ que nos devuelve la cantidad de milisegundos que pasaron desde que se inicializó la librería.
 
-\section{Función $putpixel$}
+\subsection{Función $putpixel$}
 Si bien esta función no se encuentra dentro de la SDL, tiene una relación muy cercana a la misma ya que trabaja a un nivel bastante bajo con sus estructuras y formatos (efectuando operaciones como shifteos y and's) y es por eso que se encuentra en sdlHelper.c.
 Toma como parámetros la superficie ($SDL\_Surface*$) de la ventana, coordenadas enteras x, y, z, un píxel en formato entero de 32 bits, tamaños enteros ancho y alto de la ventana y un puntero al depthBuffer ($float*$). Lo que hace es manipular la superficie de la ventana de manera tal de modificar el píxel que se encuentra en la posición $(x, y)$ para que ahora tenga el valor del píxel que toma como parámetro. 
 \par Sin embargo, vemos que también hay otros parámetros como una coordenada z y un depthBuffer. Esto es porque, debido a que estamos renderizando en una ventana 2D que representa a un mundo 3D, cada píxel tiene una ``profundidad'' (que guardamos en el depthBuffer) y que utilizamos para testear si el píxel original que se encuentra en dichas coordenadas está delante o detras (en términos de la coordenada z) del que toma esta función por parámetro.
 En el caso de que el nuevo píxel esté delante del viejo, entonces efectivamente lo modificamos, caso contrario dejamos
  todo como está.
  
- \newpage
+\section{Implementación de estructuras}
+Dado que este proyecto está realizado en C y algunas partes específicas en Assembler, no contamos con estructuras dinámicas implementadas que podamos usar de manera práctica. Estas estructuras en nuestro caso son arreglos dinámicos, las definimos nosotros en structHelper.h y sus implementaciones están en structHelper.c. Fueron construidas para el almacenamiento dinámico de coordenadas 1D, 2D, 3D y 4D a la hora de cargar un modelo 3D desde un archivo.
+\par Existen varias implementaciones de estas estructuras y todas son similares, lo que cambia son las dimensiones de los puntos que almacena y el tipo de dato utilizado. Esto se debe a que a la hora de cargar un modelo 3D se necesitan cargar muchos datos de distinta naturaleza como por ejemplo los vértices del mismo (tres coordenadas de tipo float), las coordenadas de la textura en el caso de que use alguna (dos coordenadas de tipo float), los índices de los vértices (enteros) y las caras de los triángulos (tres coordenadas enteras).
+\par Si observamos el código en structHelper.h, vemos que cada estructura posee una declaración similar y existen exactamente tres funciones para su manejo: la inicialización, la inserción y la liberación de memoria. Estas tres funciones nos dan el suporte suficiente para la carga de datos.
  
-\section{Matrices:}
+\section{Conceptos matemáticos}
 
+En esta sección vamos a exponer un poco los conceptos matemáticos subyacentes de la aplicación. Las librerías gráficas que brindan soporte 3D de alto nivel como también las de bajo nivel como Direct3D y OpenGL, tratan de abstraer un poco al programador de estos conceptos. Esto significa que muchas veces el programador no necesita saber que formato tiene una matriz específica si no que simplemente llama a la función encargada de construir dicha matriz que la librería provee y listo. En este trabajo, dado que no hacemos uso de ninguna librería que brinde el soporte matemático para el manejo 3D, tuvimos que ponernos un poco más en contacto con varios de los conceptos básicos necesarios para tratar con modelos 3D y vamos a introducirlos un poco en esta sección.
 
-Cuando un modelo 3D es creado a partir de  algún programa, este vive en un espacio proporcionado por el mismo programa conocido como espacio del modelo, "Model Space". Luego, para poder ser renderizado pasa por múltiples proyecciones y espacios hasta que es visible en la pantalla. 
-La idea se basa en utilizar tres matrices fundamentales conocidas como World, Wiev y Projection Matrix y combinarlas en una matriz: 
+\par Cuando un modelo 3D es creado, éste vive en un espacio de coordenadas por defecto (proporcionado generalmente por el programa que se utilizó para diseñarlo), conocido como espacio del modelo o $Model Space$. Luego, para poder ser renderizado pasa por múltiples transformaciones que lo llevan a otros espacios de coordenadas hasta que finalmente es visible en la pantalla. 
+\par La idea se basa en utilizar tres matrices fundamentales conocidas como World, View y Projection y combinarlas utilizando el producto de matrices en una sola: 
 PVW = Projection*View*World
-De esta manera  multiplicando cada coordenada del objeto (en el $Model$ $Space$) por la PVW, el objeto se mueve a través de varios espacios para finalmente proyectarse en  pantalla.
+De esta manera  multiplicando cada coordenada del objeto (en $Model Space$) por la PVW, el objeto se mueve a través de varios espacios para finalmente proyectarse en pantalla.
 
  
-\subsection{Matriz del mundo (World Matrix):}
+\subsection{Matriz del mundo (World Matrix)}
+La primera matriz que describiremos sera la  World Matrix o Matriz del mundo.
+Como mencionamos anteriormente, cada modelo vive inicialmente en un espacio local,  por lo que transformaremos sus vértices a un sistema de coordenadas común conocido como espacio de mundo o World Space. Esta matriz nos va a permitir determinar una posición,  orientación e incluso escalar el modelo en el nuevo espacio 3D.
+\par La World Matrix la conseguiremos por medio del producto de otras 3 matrices, cada una de tamaño 4x4 y asumiendo una notación donde las filas representan cada uno de los ejes. Es decir la primera, segunda y tercer fila corresponden a los ejes x, y, z respectivamente y la cuarta fila se utilizará por cuestiones más matemáticas y para diferenciar entre vectores (direcciones) y puntos. Dado que adoptamos esta convención, al efectuar el producto entre un vector y una matriz, el vector deberá ubicarse a la izquierda de la matriz.
+\par La $World Matrix$ se compone a su vez por distintos tipos de matrices combinadas, expresando esta combinación como el producto de estas matrices al igual que hicimos con la matriz PVW. A continuación vemos los distintos tipos de matrices que pueden utilizarse para conformar la $World Matrix$.
 
 
-La primera matriz que describiremos sera la  World Matrix (también conocida como Transformation Matrix):
-Como mencionamos cada modelo vive inicialmente en un espacio local, del modelo,  por lo que transformaremos sus vértices a un sistema de coordenadas común conocido como espacio mundial o World Space. Esta matriz nos va a permitir determinar una  posición,  orientación e incluso escalar el modelo en el nuevo espacio 3D. \newline
-La World Matrix la conseguiremos por medio del producto de otras 3 matrices, cada una de tamaño 4x4 y asumiendo una notación donde las filas representan cada uno de los ejes es decir, la primera fila representa al eje x, la segunda al eje y, la tercera al eje z y se usara otra fila por cuestiones matemáticas. Dado que adoptamos esta notación al efectuar el producto entre un vector y una matriz, el vector deberá ubicarse a la izquierda de la matriz.\newline
-Para determinar la posición de la coordenada dentro del $World$ $Space$ utilizaremos la siguientes matrices:
-
-
-
-\textbf{Matriz de traslación (Translation Matrix)}: nos va a permitir trasladar las coordenadas,   
+\textbf{Matriz de traslación (Translation Matrix)}: nos permite trasladar las coordenadas del modelo en el espacio   
  \[
 \begin{bmatrix}
 1 & 0 & 0 & 0 \\
@@ -201,14 +202,10 @@ Traslacion.x & Traslacion.y & traslacion.z & 1
 \]
 
 
+Si bien para representar  coordenadas en un espacio 3D son necesarios tres valores (ubicación en el eje x, y y z) utilizaremos un cuarto, w, con valor 1, necesario para la aritmética matricial. En este caso Traslación indica en cuanto queremos mover cada una de las coordenadas. Traslacion.x indicara cuanto moveremos el valor x;  Traslacion.y el valor de la coordenada en y y finalmente Traslacion.z a z.
+\par Si quisieramos trasladar las coordenadas (5,5,5,1) 12 unidades en dirección del eje x, al multiplicar dicho vector por la matriz de traslación obtendremos como resultado (5 + 12, 5 5, 1 ) efectivamente obteniendo el resultado deseado.  
 
-Si bien para representar  coordenadas en un espacio 3D son necesarios tres valores (ubicación en el eje x, y y z) utilizaremos un cuarto, w, con valor 1, necesario para la aritmética matricial. En este caso Traslación indica en cuanto queremos mover cada una de las coordenadas. Traslacion.x indicara cuanto moveremos el valor x;  Traslacion.y el valor de la coordenada en y y finalmente Traslacion.z a z.\newline
-Por ejemplo si nosotros queremos trasladar las coordenadas (5,5,5,1) 12 unidades en dirección del eje x, al multiplicar dicho vector por la matriz de traslación obtendremos como resultado (5 + 12, 5 5, 1 ) efectivamente obteniendo el resultado deseado.  
-
-
-
-
-\textbf{matriz de escala (Scale Matrix)}:
+\textbf{Matriz de escala (Scale Matrix)}: nos permite estirar en distintas direcciones al modelo
  
 \[
 \begin{bmatrix}
@@ -218,7 +215,7 @@ sx & 0 & 0 & 0 \\
 0 & 0 & 0 & 1  
 \end{bmatrix}
 \]
-sx, sy y sz representa el tamaño a escalar de cada uno de los vectores. Si tomamos por ejemplo la primera fila esta representa al eje x, se puede observar que los ejes siguen teniendo la misma dirección pero una coordenada quedara escalada en un tamaño sx para el valor x de la misma. 
+sx, sy y sz representan el tamaño a escalar en la dirección correspondiente a la fila de la matriz. Si tomamos por ejemplo la primera fila, que representa al eje x, se puede observar que el eje conserva la dirección pero es escalado por un valor sx. 
 
 
 
@@ -229,7 +226,7 @@ sx, sy y sz representa el tamaño a escalar de cada uno de los vectores. Si toma
  
  
  
-Matriz de rotación alrededor del eje x:
+Matriz de rotación alrededor del eje x: nos permite rotar en cierto ángulo al modelo en una dirección particular
 \[
 \begin{bmatrix}
 1 & 0 & 0 & 0 \\
@@ -258,38 +255,29 @@ sin(ang) & cos(ang) & 0 & 0 \\
 \]
 
 
-las  matrices representan  la rotación de ang grados del plano. Notemos el valor de la coordenada en el eje sobre el cual queremos rotar nunca cambia. Esto es lo que se espera cuando nosotros queremos rotar alrededor del eje en cuestión, ya que  la rotación es exclusivamente alrededor del eje y por lo tanto las coordenadas se mantienen constantes.
-Luego de poder escalar, trasladar y rotar nuestros vectores es posible combinar cada una de estas transformaciones en una sola matriz: \newline
+Las  matrices representan  la rotación de ang grados del plano. Notemos el valor de la coordenada en el eje sobre el cual queremos rotar nunca cambia. Esto es lo que se espera cuando nosotros queremos rotar alrededor del eje en cuestión, ya que  la rotación es exclusivamente alrededor del eje y por lo tanto las coordenadas se mantienen constantes.
 
+\par Ya vimos como es posible trasladar, estirar y rotar el modelo y como dijimos antes, es posible combinar cada una de estas transformaciones en una sola matriz ($World Matrix$): \newline
 World Matrix = Rotation Matrix * Tanslation Matrix * Scale Matrix\newline  \newline
- Dado que el producto de matrices no es conmutativo entonces el orden el que se realice puede dar como resultado distintas transformaciones y posicionamiento del modelo final. Nosotros adoptaremos el anterior orden.
+ Dado que el producto de matrices no es conmutativo entonces el orden el que se realice puede dar como resultado distintas transformaciones y posicionamiento del modelo final. Nosotros, por convención, adoptaremos el orden anterior.
 Por ultimo la transformación de cada una de las coordenadas estará dada por: \newline
 
-coordenadas transformadas =  coordenadas original * World Matrix 
+coordenadas\_transformadas = coordenadas\_originales * WorldMatrix 
 
 
-\subsection{Matriz de vista (View Matrix):}
+\subsection{Matriz de vista (View Matrix)}
+Como explicamos en la sección anterior, el primer paso para  renderizar un objeto 3D  es poner a todos los modelos en el mismo espacio, $World Space$. Para continuar con la proyección en pantalla de nuestro modelo necesitamos efectuar un nuevo cambio de coordenadas hacia otro espacio llamado $View Space$.
 
-
-
-El primer paso para  renderizar un objeto 3D  es poner a todos los modelos en el mismo espacio,  World Space. Para continuar con la proyección en pantalla de nuestro modelo aun es necesario mover todos los objetos a otro espacio el espacio de visión, View Space. 
-
-
-¿Por que es necesario un nuevo espacio? Si bien ya tenemos a nuestro modelo uno podría estar mirándolo desde cualquier dirección, la transformación consiste en cambiar el sistema de coordenadas de toda la escena a otro sistema centrado en por ejemplo en una cámara lo que determinara un punto de vista. Esto implicara proyectar todos los vértices pero ahora desde el punto de vista de la cámara. \newline
-La $View$ $Matrix$ definirá la posición y orientación de la cámara  estableciéndonos en un nuevo espacio,  modificando sus valores alteramos el centro y el plano de proyección respecto al espacio del mundo. 
-
-
-\begin{figure}[h]
+\par ¿Por que es necesario un nuevo espacio? Básicamente porque podríamos estar mirándolo desde cualquier dirección. La transformación consiste en cambiar el sistema de coordenadas de toda la escena a uno nuevo que represente la cámara que está visualizando el modelo (por eso también se lo llama $Camera Space$. Así, la matriz asociada a esta transformación ($View Matrix$) definirá la posición y orientación de la cámara, modificando sus valores alteramos el centro y el plano de proyección respecto al espacio del mundo. 
+\begin{figure}[h!]
     \centering
     \includegraphics[width=0.50\textwidth]{Imagenes/a.png}
-    \caption{En la figura los vectores n, u, v definen los ejes principales del nuevo sistema de referencia en el $View$ $Space$.}
+    \caption{Los vectores n, u, v definen los ejes principales del nuevo sistema de referencia en el $View$ $Space$.}
     \label{fig:mesh1}
 \end{figure}
 
-\pagebreak
-\begin{figure}
-Para la creación de la matriz haremos uso de tres vectores $eye$, $target$ y $up$, el primero determinara la posición de la cámara en el $World$ $Space$; $target$ determinara la posición en la que estará centrada la cámara, determinando el punto central que queremos mirar y finalmente $up$  que define la dirección "hacia arriba" desde el punto de vista de la cámara.  Una implementación típica, la cual adoptamos, es asumir que que la cámara esta colocada sobre el eje -z. Esta elección se conoce posición de los ejes según la regla de la mano izquierda, $left-handed$ $coordinate$ $system$. 
-
+Para la creación de la matriz haremos uso de tres vectores $eye$, $target$ y $up$. El vector $eye$ determina la posición de la cámara con respecto al $World Space$. $target$ determina la dirección hacia donde está enfocando la cámara. $up$ que define la dirección ``hacia arriba'' desde el punto de vista de la cámara.  Una implementación típica, la cual adoptamos, es asumir que que la cámara esta colocada sobre el eje -z (left-handed coordinate system o regla de la mano izquierda por convención).
+\begin{figure}[h!]
  \centering
   \subfloat[]{
    \label{f:c1}
@@ -297,20 +285,18 @@ Para la creación de la matriz haremos uso de tres vectores $eye$, $target$ y $u
   \subfloat[]{
    \label{f:c}
     \includegraphics[width=0.4\textwidth]{Imagenes/c.png}}
-  \caption{A la izquierda se muestra la ubicación de los ejes utilizando la regla de la mano izquierda y a la derecha como estaría posicionada nuestro objeto de referencia, en este caso una cámara.}
+  \caption{A la izquierda se muestra la ubicación de los ejes utilizando la regla de la mano izquierda y a la derecha como estaría posicionada nuestra cámara según dicha regla.}
  \label{f:coordenadas}
 \end{figure}
 
 
-En primer lugar se calcula un vector hacia adelante es decir, en nuestro sistema, un nuevo vector -z, -z', a partir de la posición de la cámara hasta el objetivo ($target$) y la normalización del mismo. Luego, un nuevo vector x, x', tomando el producto vectorial del vector z' con el vector $up$ dando un vector perpendicular a ambos. Luego, solo queda calcular el vector perpendicular a estos que constituirá nuestro nuevo vector y, y'. \newline
-El código fuente queda constituido de la siguiente manera: \newline \newline
+Para construir esta matriz debemos primero calcular tres nuevos vectores: x', y' y z'. Para calcularlos vamos a empezar por z' e ir utilizando los datos que ya sabemos (como $target$, $eye$ y $up$). cross es la función que computa el producto cruzado (así aseguramos perpendicularidad) y normal la función de normalización de vectores. Así, los cálculos se efectúan de la siguiente manera: \newline \newline
     z'  = normal(eye - target); \newline 
     x' = normal(cross(up, z' )); \newline
     y' = cross(z', x');   \newline
     
     
-Donde normal normaliza el vector pasado como parámetro y Cross el producto vectorial.
-Con estos datos podemos construir una nueva matriz que represente a estos nuevos ejes
+Con estos datos podemos construir una nueva matriz que represente a estos nuevos ejes:
 \[
 orientation =
 \begin{bmatrix}
@@ -320,7 +306,7 @@ x'.z & y'.z & z'.z & 0 \\
 0 & 0 & 0 & 1      
 \end{bmatrix} 
 \]
-Como la cámara todavía no está  en la posición de la coordenada $eye$ para llegar allí se crea una matriz de traslación que "moverá" la cámara. \newline 
+Como la cámara todavía no está en la posición deseada ($eye$), para llegar allí se crea la siguiente matriz de traslación: \newline 
 \[
 translation =
 \begin{bmatrix}
@@ -330,7 +316,7 @@ translation =
 -eye.x & -eye.y & -eye.z & 1 
 \end{bmatrix}
 \]
- Combinando la matriz de orientación con la de traslación obtendremos la $View$ $Matrix$:  \newline
+ Combinando la matriz de orientación con la de traslación obtendremos la matriz deseada ($View\ Matrix$):  \newline
   $View$ $Matrix$ = $orientation$ * $translation$;
   
   
@@ -343,11 +329,12 @@ x'.z & y'.z & z'.z & 0 \\
 -dot(x', eye) & -dot(y', eye) & -dot(z', eye) & 1    
 \end{bmatrix}
 \]
-Con dot el producto escalar. Este método es mas optimizado ya que elimina la necesidad de efectuar un producto matricial.
-\subsection{Matriz de proyección (Projection Matrix):}
-Todos los vértices transformados dentro del $View$ $Space$ todavía tienen tres dimensiones pero, en pantalla se muestra el objeto utilizando solo vectores en dos dimensiones. Además, aun, no tenemos perspectiva es decir, que tan lejos o cerca estamos del objeto.  Dado que adoptamos la idea de posicionar la cámara sobre el eje -z, esto determinara la cercanía o lejanía con el modelo,  modificando el tamaño del mismo. La matriz de proyección decidirá sera la encarga de solucionar estas cuestiones. \newline
-Existen distintos tipos de proyecciones, por ejemplo en una proyección en perspectiva los objetos que están más lejos de la cámara se hacen más pequeños, mientras que en una proyección ortográfica la distancia a la cámara no tiene un efecto sobre el tamaño del objeto. En nuestro caso utilizaremos proyección en perspectiva. \newline
- La proyección en perspectiva se basa en la idea que la parte visible se encuentra dentro de una determinada figura (llamada $View$ $Frustum$). El volumen de esta figura esta definida por seis planos: un plano cerca de la cámara ($near$ $plane$) , un plano más lejos ($far$ $plane$) y cuatro planos laterales que definen los bordes. El $near$ $plane$  define a partir de donde se puede visualizar  y el $far$ $plane$ define hasta qué punto podemos ver. De este modo, solo los objetos que se encuentren entre estos planos seras representados en pantalla. 
+Donde dot es la función que calcula el producto escalar. Este método es mas optimizado ya que no requiere realizar un producto matricial.
+
+\subsection{Matriz de proyección (Projection Matrix)}
+Todos los vértices transformados dentro del $View \ Space$ siguen teniendo tres dimensiones cuando en realidad para poder dibujarlos en pantalla se necesitan exactamente dos dimensiones. Además, aún no tenemos perspectiva, es decir, que tan lejos o cerca estamos del objeto. Dado que adoptamos la idea de posicionar la cámara sobre el eje -z, esto determinará la cercanía o lejanía con el modelo, modificando así el tamaño del mismo. La matriz de proyección será la encarga de solucionar estas cuestiones.
+\par Existen distintos tipos de proyecciones, por ejemplo en una proyección en perspectiva los objetos que están más lejos de la cámara se hacen más pequeños, mientras que en una proyección ortográfica la distancia a la cámara no tiene un efecto alguno sobre el tamaño del objeto. En nuestro caso utilizaremos proyección en perspectiva.
+\par La proyección en perspectiva se basa en la idea que la parte visible se encuentra dentro de una determinada figura (llamada $View \ Frustum$). El volumen de esta figura está definido por seis planos: un plano cerca de la cámara ($near \ plane$), un plano más lejos ($far \ plane$) y cuatro planos laterales que definen los bordes. El $near \ plane$  define a partir de donde se puede visualizar y el $far \ plane$ define hasta que punto podemos ver. De este modo, solo los objetos que se encuentren entre estos planos serán representados en pantalla. 
  
  
 \begin{figure}[h]
@@ -356,8 +343,8 @@ Existen distintos tipos de proyecciones, por ejemplo en una proyección en persp
     \caption{Visualización basada en $View $ $Frustum$}
     \label{fig:mesh1}
 \end{figure}
-La matriz calculara las coordenadas dentro del intervalo [-1,1], de esta forma un punto no sera visible si solo si luego de multiplicar la $projection$ $matrix$ es menor que -1 o mayor que 1. Se adopta utilizar las coordenadas dentro de ese intervalo para que sea independiente de las dimensiones de la pantalla. Una vez que tengamos las coordenadas de la matriz solo deberemos multiplicarlas por el ancho y alto de la pantalla en la que se este trabajando para dimensionarlos.\newline 
-Dado que adoptamos la ubicación de los ejes con la regla $left-handed$ estaremos posicionados sobre el eje -z. Por lo que debemos convertir cada punto de la coordenada z en -z, esto se puede lograr multiplicando las coordenadas por: 
+La matriz calculará las coordenadas dentro del intervalo [-1,1], de esta forma un punto no será visible sii luego de multiplicar la $projection matrix$ es menor que -1 o mayor que 1. Se adopta utilizar las coordenadas dentro de ese intervalo para que sea independiente de las dimensiones de la pantalla. Una vez que tengamos las coordenadas de la matriz solo deberemos multiplicarlas por el ancho y alto de la pantalla en la que se este trabajando para dimensionarlos.
+\par Dado que adoptamos la ubicación de los ejes con la regla $left-handed$ estaremos posicionados sobre el eje -z. Por lo que debemos convertir cada punto de la coordenada z en -z, esto se puede lograr multiplicando las coordenadas por: 
 
 
 \[
@@ -375,8 +362,8 @@ De esta forma si tenemos el vector de coordenadas v = (x,y,z,1) quedaría como: 
 
 v'= (x, y, -z, 1); Luego de efectuar v*M1\newline
 
-El segundo paso requiere dividir las coordenadas x e y por -z. De esta manera cuando el objeto este mas lejos de la cámara el valor de z sera mayor por lo que los cocientes serán mas bajo que en el caso contrario, de esta manera empezamos a redimensionar nuestro objeto. \newline
-Recordemos que estamos trabajando con vectores de coordenadas de 4 dimensiones (conocidas como coordenadas homogéneas), donde el ultimo valor es igual a 1. Si multiplicamos cualquiera de estas coordenadas tanto con la World y/o Translation matrix observaremos que el ultimo valor se sigue manteniendo en un 1 (este debería quedar así ya que es un valor auxiliar). Sin embargo, no es el cuando de cuando multipliquemos por esta matriz. Por lo que para volver a las coordenadas homogéneas tenemos que dividir a x, y, z por w. Entonces, si w fuese igual a -z, conseguiríamos lo que estamos buscando: dividir x e y por -z.\newline
+El segundo paso requiere dividir las coordenadas x e y por -z. De esta manera cuando el objeto esté mas lejos de la cámara el valor de z sera mayor por lo que los cocientes serán más chicos (en módulo) y estaremos dándole perspectiva a nuestro objeto.
+\par Recordemos que estamos trabajando con vectores de coordenadas de 4 dimensiones (conocidas como coordenadas homogéneas) donde el ultimo valor es igual a 1. Si multiplicamos cualquiera de estas coordenadas por la World y/o Translation matrix observaremos que el ultimo valor se sigue manteniendo en un 1 (que es lo que queremos). Sin embargo, no es el caso cuando cuando multiplicamos por esta matriz. Esto significa que para volver a las coordenadas homogéneas tenemos que dividir a x, y y z por w (????). Entonces, si w fuese igual a -z, conseguiríamos lo que estamos buscando: dividir x e y por -z.\newline
 
 Consideremos cambiar la cuarta columna de la matriz M1 por el siguiente vector (0,0,-1,0) tenemos una M2 tal que:
 
@@ -436,12 +423,8 @@ Generalmente se utiliza es suponer que la ventana de proyección es un cuadrado 
 \end{figure}
 
 
-Como la distancia a la ventana de la pantalla/escena a la posición de la cámara no varia. Pero lo observable puede cambiar de acuerdo al valor de FOV entonces, lo que vamos a cambiar en son las coordenadas proyectadas, escalándolas hacia arriba o hacia abajo. Por ejemplo: Si los puntos una coordenada son x = 1,1 e y = 1,2 estas coordenadas están fuera del rango [-1: 1], y el punto por lo tanto no es visible. Si los puntos de las coordenadas se escalan hacia abajo multiplicándolos por ejemplo por 0,5, entonces las nuevas coordenadas, serán x'= 0,55 e y' = 0,66, los cuales serán ahora visibles. Para lograr este escalado vamos a utilizar el campo de visión de la cámara.  \newline
- El valor del campo de visión no se utiliza directamente sino que la tangente del ángulo sobre dos se utiliza en su lugar. \newline
-Dado que para valores de FOV menor a 90 grados, la tangente del ángulo medio da valores menores a 1, y para valores mayores de 90 da valores superiores a 1. Si multiplicamos este valor directamente por el de nuestras coordenadas cuando el campo de visión es mas grande estaríamos escalándolo por un valor mayor a 1 obteniendo el efecto contrario al que queremos por eso se utiliza el valor inverso de este valor.\newline
-Finalmente para escalar las coordenadas del punto proyectado utilizamos sera:\newline
-P = 1 / tan(fov*0,5). \newline
-Y por lo tanto tenemos la versión final de nuestra matriz de proyección en perspectiva:
+Dado que la parte observable de nuestro mundo 3D puede variar de acuerdo al valor de FOV, debemos incluirlo de alguna manera en nuestro cambio de coordenadas. Sin entrar en detalle en la trigonometría que hay detras de esto, se utiliza el valor $P = 1 \ / \ tan(FOV * 0.5)$. Esto nos va a permitir escalar las coordenadas para poder definir la visibilidad de los vértices de acuerdo a este ángulo y no solo al posicionamiento de los mismos.
+La matriz de proyección entonces queda de la siguiente forma:
 
 
 \[
@@ -454,15 +437,19 @@ P & 0 & 0 & 0 \\
 \]
 
 
-Ya tenemos todas las matrices por lo que si multiplicamos cada coordenada dentro del $model$ $space$ por la matriz PVW estaremos casi en condiciones de tener representado nuestro modelo en la pantalla solo nos queda dividir estas coordenadas por $w'$ y mapear estos valores a las dimensiones de nuestra pantalla.\newline
+Ya tenemos todas las matrices necesarias, con lo cual si multiplicamos cada coordenada dentro del $Model \ Space$ por la matriz PVW estaremos casi en condiciones de tener representado nuestro modelo en la pantalla. Lo único que falta es dividir estas coordenadas por $w'$ y mapear estos valores a las dimensiones de nuestra pantalla.\newline
 
 
-Llamemos $x''$ e $y''$ a las coordenadas finales que permitirán graficar en nuestra pantalla al modelo 3D y ($x'$, $y'$, $z'$, $w'$) al valor obtenido luego de multiplicar una coordenada por WVP tendremos que: \newline
+Llamemos $x''$ e $y''$ a las coordenadas finales que permitirán graficar en nuestra pantalla al modelo 3D y ($x'$, $y'$, $z'$, $w'$) al valor obtenido luego de multiplicar una coordenada por PVW tendremos que: \newline
 
 $x''$ = $\frac{x'}{w'}*width +  width*0.5$ \newline
 
 $y''$ = $\frac{y'}{w'}*height +  height*0.5$ \newline
 
-Donde $width$ y $height$ representa el ancho y alto de nuestra pantalla correspondientemente, notar que luego sumamos $width*0.5$ en $x''$ y $height*0.5$ en $y''$ para tener las coordenadas finales centradas en la pantalla.
+Donde $width$ y $height$ representa el ancho y alto de nuestra pantall. Notar que luego sumamos $width*0.5$ a $x''$ y $height*0.5$ a $y''$ para tener las coordenadas finales centradas en la pantalla.
+
+\subsection{mathHelper}
+En el archivo mathHelper.h declaramos numerosas funciones matemáticas que luego definimos en mathHelper.c. Estas funciones van desde cálculos básicos como el producto cruzado, el producto escalar, normalizaciones y productos de matrices hasta la construcción de matrices específicas como de rotación, escala, vista y proyección.
+\par Existen cálculos que se repiten mucho a lo largo del código y que, en algunos casos, es necesario realizarlos por cada ejecución del ciclo principal por ejemplo. En estos casos decidimos implementar también una versión de los mismos en Assembler con el objetivo de optimizar la performance y poder realizar mediciones y comparaciones con las versiones de estas funciones en C. Las funciones matemáticas que decidimos implementar en Assembler son las siguientes: producto escalar (ScalarProdASM), interpolación (InterpolateASM, hablaremos del uso de esta función más adelante) y producto de vector por matriz (Vec4Mat4ProductASM). También existen otras funciones que decidimos implementar en Assembler, que no realizan cálculos matemáticos pero que se ve reflejado en la experimentación que haberlas programado en Assembler mejoró notablemente la performance, hablaremos de ellas más adelante.
 
 \end{document}

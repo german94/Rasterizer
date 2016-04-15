@@ -9,4 +9,10 @@
 \contentsline {subsection}{\numberline {2.3}Ciclo principal y detecci\IeC {\'o}n de eventos}{4}{subsection.2.3}
 \contentsline {subsection}{\numberline {2.4}Renderizado de texto (HAY QUE LLAMAR A TTF_QUIT)}{5}{subsection.2.4}
 \contentsline {subsection}{\numberline {2.5}Timers}{5}{subsection.2.5}
-\contentsline {section}{\numberline {3}Funci\IeC {\'o}n $putpixel$}{5}{section.3}
+\contentsline {subsection}{\numberline {2.6}Funci\IeC {\'o}n $putpixel$}{5}{subsection.2.6}
+\contentsline {section}{\numberline {3}Implementaci\IeC {\'o}n de estructuras}{6}{section.3}
+\contentsline {section}{\numberline {4}Conceptos matem\IeC {\'a}ticos}{6}{section.4}
+\contentsline {subsection}{\numberline {4.1}Matriz del mundo (World Matrix)}{6}{subsection.4.1}
+\contentsline {subsection}{\numberline {4.2}Matriz de vista (View Matrix)}{8}{subsection.4.2}
+\contentsline {subsection}{\numberline {4.3}Matriz de proyecci\IeC {\'o}n (Projection Matrix)}{9}{subsection.4.3}
+\contentsline {subsection}{\numberline {4.4}mathHelper}{12}{subsection.4.4}

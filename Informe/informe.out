@@ -8,4 +8,10 @@
 \BOOKMARK [2][-]{subsection.2.3}{Ciclo principal y detecci\363n de eventos}{section.2}% 8
 \BOOKMARK [2][-]{subsection.2.4}{Renderizado de texto \(HAY QUE LLAMAR A TTF\137QUIT\)}{section.2}% 9
 \BOOKMARK [2][-]{subsection.2.5}{Timers}{section.2}% 10
-\BOOKMARK [1][-]{section.3}{Funci\363n putpixel}{}% 11
+\BOOKMARK [2][-]{subsection.2.6}{Funci\363n putpixel}{section.2}% 11
+\BOOKMARK [1][-]{section.3}{Implementaci\363n de estructuras}{}% 12
+\BOOKMARK [1][-]{section.4}{Conceptos matem\341ticos}{}% 13
+\BOOKMARK [2][-]{subsection.4.1}{Matriz del mundo \(World Matrix\)}{section.4}% 14
+\BOOKMARK [2][-]{subsection.4.2}{Matriz de vista \(View Matrix\)}{section.4}% 15
+\BOOKMARK [2][-]{subsection.4.3}{Matriz de proyecci\363n \(Projection Matrix\)}{section.4}% 16
+\BOOKMARK [2][-]{subsection.4.4}{mathHelper}{section.4}% 17
