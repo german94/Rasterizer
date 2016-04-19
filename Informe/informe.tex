@@ -183,6 +183,20 @@ En esta sección vamos a exponer un poco los conceptos matemáticos subyacentes 
 PVW = Projection*View*World
 De esta manera  multiplicando cada coordenada del objeto (en $Model Space$) por la PVW, el objeto se mueve a través de varios espacios para finalmente proyectarse en pantalla.
 
+\textbf{Interpolación:}
+
+
+Un concepto que usaremos sera el principio de interpolación lineal,  el cual nos permite obtener un tercer punto interpolado ($x_c$, $y_c$),  ajustándose a los valores de otros dos ($x_a, y_a$) y ($x_b, y_b$). Básicamente consiste en trazar una recta que pasa por ($x_a,y_a$) y ($x_b,y_b$), y calcular los valores intermedios sobre esta recta. La formula para obtenerlos es la siguiente:
+
+$y_c$ = $y_a$ + $(x_c - x_a)*\frac{y_b - y_a}{x_b - x_c}$  (1)
+
+Observemos que en la formula (1) $\frac{y_b - y_a}{x_b - x_c}$ es el valor de la  pendiente entre estos dos puntos es decir, la recta sobre la cual se ubicara el punto a interpolar. 
+\par Dado que la formula (1) nos permite obtener el valor y del punto a polarizar a partir del x, en caso de ser conocido el valor y, y desconocido el de x si despejamos de (1) obtenemos la siguiente formula :
+
+$x_c$ = $x_a$ + $(x_b - x_a)*gradient$ 
+
+con $gradient$  = $\frac{y_c - y_a}{y_b - y_a}$
+
  
 \subsection{Matriz del mundo (World Matrix)}
 La primera matriz que describiremos sera la  World Matrix o Matriz del mundo.
@@ -459,7 +473,6 @@ Donde $width$ y $height$ representa el ancho y alto de nuestra pantall. Notar qu
 En el archivo mathHelper.h declaramos numerosas funciones matemáticas que luego definimos en mathHelper.c. Estas funciones van desde cálculos básicos como el producto cruzado, el producto escalar, normalizaciones y productos de matrices hasta la construcción de matrices específicas como de rotación, escala, vista y proyección.
 \par Existen cálculos que se repiten mucho a lo largo del código y que, en algunos casos, es necesario realizarlos por cada ejecución del ciclo principal por ejemplo. En estos casos decidimos implementar también una versión de los mismos en Assembler con el objetivo de optimizar la performance y poder realizar mediciones y comparaciones con las versiones de estas funciones en C. Las funciones matemáticas que decidimos implementar en Assembler son las siguientes: producto escalar (ScalarProdASM), interpolación (InterpolateASM, hablaremos del uso de esta función más adelante) y producto de vector por matriz (Vec4Mat4ProductASM). También existen otras funciones que decidimos implementar en Assembler, que no realizan cálculos matemáticos pero que se ve reflejado en la experimentación que haberlas programado en Assembler mejoró notablemente la performance, hablaremos de ellas más adelante.
 
-
 \subsection{sdlHelper: }
 
 
@@ -482,20 +495,9 @@ Luego de tener las coordenadas como vectores bidimensionales procederemos a la r
 
 
 En la figura 5 observamos que se comienza sobre un punto SX ubicado sobre una de las aristas y se procede a crear una sucesión de puntos de izquierda a derecha, incrementando el valor de SX.x, hasta llegar al punto EX.x. Esta idea la aplicaremos empezando a iterar desde un valor Y igual a P1.y y cada vez que se completa una linea procederemos a aumentar el valor Y para crear una nueva, hasta que Y sea igual a P3.y. 
-\par La principal incógnita que se nos plantea es encontrar el valor SX.x y EX.x en cada linea, ya que SX.y y EX.y es igual al valor Y de la iteración. Para esto nos basaremos en el principio de  interpolación lineal  el cual nos permite obtener un tercer punto interpolado ($x_c$, $y_c$),  ajustándose a los valores de otros dos ($x_a, y_a$) y ($x_b, y_b$). Básicamente consiste en trazar una recta que pasa por ($x_a,y_a$) y ($x_b,y_b$), y calcular los valores intermedios sobre esta recta. La formula para obtenerlos es la siguiente:
+\par La principal incógnita que se nos plantea es encontrar el valor SX.x y EX.x en cada linea, ya que SX.y y EX.y es igual al valor Y de la iteración. Para esto utilizaremos la formula de interpolación a partir de conocer el valor del eje y; mientras que los puntos que requiere la función seran los que conformen la rectas pendientes sobre la cual se encuentren SX y EX.
+\par La función encargada de usar la interpolación de los puntos y proceder con la creación de las lineas la denominaremos $ProcessScanLine$ quien sera llamada por DrawTriangle en los diferentes escenarios que se nos planteen.
 
-
-$y_c$ = $y_a$ + $(x_c - x_a)*\frac{y_b - y_a}{x_b - x_c}$  (1)
-
-Observemos que en la formula (1) $\frac{y_b - y_a}{x_b - x_c}$ es el valor de la  pendiente entre estos dos puntos es decir, la recta sobre la cual se ubicara el punto a interpolar. En nuestro caso estas rectas pendientes representan la arista sobre la cual se encuentra SX y EX.
-\par La función encargada de interpolar los puntos y proceder con la creación de las lineas la denominaremos $ProcessScanLine$ quien sera llamada por DrawTriangle en los diferentes escenarios que se nos planteen.
-\par Dado que la formula (1) nos permite obtener el valor y del punto a polarizar a partir del x, mientras que en nuestro caso el primer valor es el conocido y el segundo no, si despejamos de (1) obtenemos la siguiente formula :
-
-$x_c$ = $x_a$ + $(x_b - x_a)*gradient$ 
-
-con $gradient$  = $\frac{y_c - y_a}{y_b - y_a}$
-
-formula que usaremos en la función $Interpolate$
 
 Sea pa, pb los puntos que me permiten interpolar SX y pc y pd los que interpolan a EX podemos definir: 
 
@@ -527,25 +529,27 @@ dP1P2 = (P2.x - P1.x) / (P2.y - P1.y)
 dP1P3 = (P3.x - P1.x) / (P3.y - P1.y)
 
 
-Que representan las pendientes inversas de los puntos que se utilicen. Dado que el valor del eje y se incrementa hacia abajo dP1P2 sera positivo cuando P2 este a la derecha de P1 mientras que dP1P3 sera negativo, cumpliendose que dP1P2 $>$ dP1P3; y para el caso de P2 a la izquierda de P1 tenemos que dP1P2 $<$ dP1P3. \par Dado que P2.y podria ser igual a P1.y o P3.y igual a P1.y entonces dP1P2 y dP1P3 serán igual a cero correspondientemente.
+Que representan las pendientes inversas de los puntos que se utilicen. Dado que el valor del eje y se incrementa hacia abajo dP1P2 sera positivo cuando P2 este a la derecha de P1 mientras que dP1P3 sera negativo, cumpliendose que dP1P2 $>$ dP1P3; y para el caso de P2 a la izquierda de P1 tenemos que dP1P2 $<$ dP1P3. \par Dado que P2.y podria ser igual a P1.y o P3.y igual a P1.y entonces asignaremos el valor cero a dP1P2 y dP1P3 correspondientemente.
 
 
 
-Continuando con los posibles escenarios, si P2.y es distinto de P1.y se nos presentan los primeros dos casos:
-
+Continuando con los posibles escenarios, decidimos divir los casos que se presentan cuando P2.y es distinto de P1.y y cuando es igual.\newline
+\par Cuando P2.y es distinto a P1.y se nos presentan los primeros dos casos:
  
 \begin{itemize}
 \item Primer caso: P1 se encuentra a la derecha de P2 (dP1P2 $>$ dP1P3). Se puede observar en el triangulo izquierdo de la figura 5. SX.x se obtiene a partir de los puntos P1 y P3, en cambio EX hasta el valor P2.y puede ser calculado con P1 y P2 pero luego se utilizara a P2 y P3.
 
 \item Segundo caso: P1 se encuentra a la izquierda de P2 (dP1P2 $<$ dP1P3). Correspondiendose al lado derecho de la figura, vemos que EX.x se obtiene a partir de P1 y P3, mientras que SX.x con P1 y P2 hasta que se llegue al valor Y $=$ P2.y y luego con P2 y P3. 
 
-\item Tercer caso:  P2.y es  igual P1.y, SX.x se obtiene por los puntos P1 y P3 , mientras que EX.x por P2 y P3 si P1.x es menor a P2.x en caso contrario SX.x es consecuencia de P2 y P3 mientras que EX.x de P1 y P3 
+Cuando P2.y es igual a P1.y tenemos que evaluar lo siguiente:
 
-\item Cuarto caso:  P2.y es  igual P3.y. SX.x se obtiene por los puntos P1 y P2 , mientras que EX.x por P1 y P3 si P2.x es menor a P3.x en caso contrario SX.x es consecuencia de P1 y P3 mientras que EX.x de P1 y P2.
+\item Tercer caso:  SX.x se obtiene por los puntos P1 y P3 , mientras que EX.x por P2 y P3 si P1.x es menor a P2.x en caso contrario SX.x es consecuencia de P2 y P3 mientras que EX.x de P1 y P3 
+
+
 \end{itemize}
 
 
-Una vez planteados las distintas situaciones podemos proceder con la rasterización de los triángulos. 
+Una vez planteadas las distintas situaciones podemos proceder con la rasterización de los triángulos. 
   
 El código fuente que describe el proceso anterior es el siguiente:
 
@@ -575,12 +579,7 @@ O ESTE PSEUDOCODIGO SOLAMENTE NO SE.....)
                     ProcessScanLine(P1, P3, P2, P3, Y)
                else
                     ProcessScanline(P2, P3, P1, P3, Y)
-    if (Cuarto Caso)			
-          for (Y = P1.y to P3.y)    	
-               if(P3.x < P2.x)
-                   ProcessScanLine(P1, P3, P1, P2, Y)
-               else
-                   ProcessScanline(P1, P2, P1, P3, Y)							
+  					
 \end{verbatim}
 
 
