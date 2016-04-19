@@ -403,7 +403,6 @@ int main( int argc, char* args[] )
             	RenderFilledModel_esq(&Vertices, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface); 
 	
 
-
             deltaclock = SDL_GetTicks() - startclock;
             startclock = SDL_GetTicks();
                     

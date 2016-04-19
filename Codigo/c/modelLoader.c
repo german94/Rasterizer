@@ -262,10 +262,6 @@ void RenderFilledModel_esq(Vec4DynamicArray *vertices, UInt3DynamicArray* faces,
 		color[1] = color[0];
 		color[2] = color[0];
 		
-        DrawBline_esq( 	(int)v1[0],  (int)v2[0],  (int)v1[1],  (int)v2[1], sf, color, swidth, sheight);
-              
-        DrawBline_esq(  (int)v2[0],  (int)v3[0],  (int)v2[1],  (int)v3[1], sf, color, swidth, sheight);
-	
-        DrawBline_esq(  (int)v3[0],  (int)v1[0],  (int)v3[1],  (int)v1[1], sf, color, swidth, sheight);
+		DrawTriangle_esq(v1, v2, v3, color, swidth, sheight, sf);
 	}
 }
