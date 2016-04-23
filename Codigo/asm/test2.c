@@ -32,6 +32,7 @@ Mat4 scale;
 float rotSpeed;
 bool showFPS;
 bool showInfo;
+Vec3 lightPos;
 
 bool init()
 {
@@ -203,6 +204,47 @@ void EventDetection()
                         break;
                     }
 
+                    case SDLK_UP:
+                    {
+                        if (lightPos[1] > -SCREEN_HEIGHT/2)
+                            lightPos[1]-=0.05;
+                        break;
+                    }
+
+                    case SDLK_LEFT:
+                    {
+                        if (lightPos[0] < SCREEN_WIDTH)
+                            lightPos[0]+=0.05;
+                        break;
+                    }
+
+                    case SDLK_DOWN:
+                    {
+                        if (lightPos[1] < SCREEN_HEIGHT)
+                            lightPos[1]+=0.05;
+                        break;
+                    }
+
+                    case SDLK_RIGHT:
+                    {
+                        if (lightPos[0] > -SCREEN_WIDTH/2)
+                            lightPos[0]-=0.05;
+                        break;
+                    }
+
+                    case SDLK_x:
+                    {
+                        lightPos[2]-=0.05;
+                        break;
+                    }
+
+                    case SDLK_z:
+                    {
+                        if (lightPos[2] < 21)
+                            lightPos[2]+=0.05;
+                        break;
+                    }
+
                     case SDLK_m:
                     {
                         rotSpeed += 0.001f;
@@ -269,6 +311,7 @@ int main( int argc, char* args[] )
     Vec3 target = { 0, 0, -1 };
     Vec3 pos = { 0, 0, 3};
 
+    lightPos[0] = 0; lightPos[1] = 0; lightPos[2] = 20;
     CreateViewMatrix(view, target, pos, up);
     Traspose(view);
    
@@ -390,7 +433,7 @@ int main( int argc, char* args[] )
             a += rotSpeed;
       		
             if(m_tex_norm)
-            	RenderFilledModel(&Vertices,  &Uvs,  &Normals, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, worldt, tex); 
+            	RenderFilledModel(&Vertices,  &Uvs,  &Normals, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, worldt, tex, lightPos); 
            
             if (m_tex)
 				RenderFilledModel_tex(&Vertices,  &Uvs, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, tex); 

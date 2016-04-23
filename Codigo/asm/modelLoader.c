@@ -100,7 +100,7 @@ bool LoadModel(char* path, Vec4DynamicArray *outVertices, Vec2DynamicArray *outU
 
 }
     
-void RenderFilledModel(Vec4DynamicArray *vertices, Vec2DynamicArray *uvs, Vec4DynamicArray *normals, UInt3DynamicArray* faces, Mat4 wvp, int swidth, int sheight, SDL_Surface* sf, float* depthBuffer, Mat4 world,  SDL_Surface* tex)
+void RenderFilledModel(Vec4DynamicArray *vertices, Vec2DynamicArray *uvs, Vec4DynamicArray *normals, UInt3DynamicArray* faces, Mat4 wvp, int swidth, int sheight, SDL_Surface* sf, float* depthBuffer, Mat4 world,  SDL_Surface* tex, Vec3 lightPos)
 {	
 	Vec4 aux = {1, 0, 0, 0};
 	int  j;
@@ -171,7 +171,7 @@ void RenderFilledModel(Vec4DynamicArray *vertices, Vec2DynamicArray *uvs, Vec4Dy
 		color[1] = color[0];
 		color[2] = color[0];
 
-		DrawTriangle(v1, v2, v3, v1n, v2n, v3n, v1w, v2w, v3w, color, swidth, sheight, sf, depthBuffer, tex, v1t, v2t, v3t);
+		DrawTriangle(v1, v2, v3, v1n, v2n, v3n, v1w, v2w, v3w, color, swidth, sheight, sf, depthBuffer, tex, v1t, v2t, v3t, lightPos);
 	}
 }
 

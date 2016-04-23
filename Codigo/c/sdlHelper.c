@@ -233,7 +233,7 @@ void ProcessScanLine(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, Vec3 color,
         
 }
 
-void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 p1w, Vec3 p2w, Vec3 p3w, Vec3 color, int SW, int SH, SDL_Surface* sf, float* depthBuffer,  SDL_Surface* tex, Vec2 p1t, Vec2 p2t, Vec2 p3t )
+void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 p1w, Vec3 p2w, Vec3 p3w, Vec3 color, int SW, int SH, SDL_Surface* sf, float* depthBuffer,  SDL_Surface* tex, Vec2 p1t, Vec2 p2t, Vec2 p3t,  Vec3 lightPos)
 {
     // Sorting the points in order to always have this order on screen p1, p2 & p3
     // with p1 always up (thus having the Y the lowest possible to be near the top screen)
@@ -290,9 +290,6 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
         	CopyVec(p2t, p1t, 2);
         	CopyVec(p1t, tempt, 2);}
     }
-
-    Vec3 lightPos;
-    lightPos[0] = 0; lightPos[1] = 0; lightPos[2] = 20;
 
     float nl1 = ComputeNDotL(p1w, p1n, lightPos);
     float nl2 = ComputeNDotL(p2w, p2n, lightPos);
