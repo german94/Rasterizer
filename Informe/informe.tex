@@ -162,7 +162,7 @@ Tanto para mostrar los FPS como las indicaciones de uso, nuestro programa muestr
 \subsection{Timers}
 Para medir la performance de la aplicación una de las técnicas que usamos fue el uso de timers. Si bien SDL provee soporte para esto, decidimos utilizar los clásicos Clocks de C pero hicimos uso de la función $SDL\_GetTicks$ que nos devuelve la cantidad de milisegundos que pasaron desde que se inicializó la librería.
 
-\subsection{Función $putpixel$}
+\subsection{Función $putpixel$} \label{putpixel}
 Si bien esta función no se encuentra dentro de la SDL, tiene una relación muy cercana a la misma ya que trabaja a un nivel bastante bajo con sus estructuras y formatos (efectuando operaciones como shifteos y and's) y es por eso que se encuentra en sdlHelper.c.
 Toma como parámetros la superficie ($SDL\_Surface*$) de la ventana, coordenadas enteras x, y, z, un píxel en formato entero de 32 bits, tamaños enteros ancho y alto de la ventana y un puntero al depthBuffer ($float*$). Lo que hace es manipular la superficie de la ventana de manera tal de modificar el píxel que se encuentra en la posición $(x, y)$ para que ahora tenga el valor del píxel que toma como parámetro. 
 \par Sin embargo, vemos que también hay otros parámetros como una coordenada z y un depthBuffer. Esto es porque, debido a que estamos renderizando en una ventana 2D que representa a un mundo 3D, cada píxel tiene una ``profundidad'' (que guardamos en el depthBuffer) y que utilizamos para testear si el píxel original que se encuentra en dichas coordenadas está delante o detras (en términos de la coordenada z) del que toma esta función por parámetro.
@@ -608,6 +608,10 @@ Ahora esta función tendrá las coordenadas UV para cada vértice. En cada una d
 \par Una vez calculados $su$, $eu$ podremos interpolar los valores intermedios para calcular las coordenadas U de los puntos entre SX.x y EX.x e interpolando con $sv$ y $ev$ obtendremos los valores del eje V.
 \par Dado que las coordenadas en los ejes UV están entre los valores cero y uno, una vez calculadas las coordenadas UV de cada punto sera necesario escalarlas para acceder correctamente en $tex$. Solucionaremos esto definiendo la función $map$ que realiza el producto del ancho de la imagen con el valor de la coordenada U y el producto del alto de la imagen con la coordenada V e indexara en $tex$.
 Por ultimo dibujar cada punto con el color asociado estará a cargo de $Draw\_point$. En caso de no tener una textura cargada simplemente asignaremos un numero de color arbitrario.  
+
+A partir de este modo implementaremos el uso del $depthBuffer$ mencionado en \ref{putpixel} por lo que sera necesario además interpolar el valor z asociado a cada punto para luego poder comparar y así dibujar o no un píxel.
+
+ 
 \par finalmente podemos expresar la función por medio de siguiente pseudocódigo: 
 
 
@@ -628,7 +632,10 @@ ProcessScanLine_tex(pa, pb, pc, pd, Y, tex):
     eu = Interpolate(pc.U, pd.U, gradient2)
     sv = Interpolate(pa.V, pb.V, gradient1).V denota al valor en la coodenadas V
     ev = Interpolate(pc.V, pd.V, gradient2)
-    
+    z1 = Interpolate(pa.z, pb.z, gradient1)
+    z2 = Interpolate(pc.z, pd.z, gradient2)
+   
+
     for (x = SX.x to EX.x)
         gradient = (x - sx) / (float)(ex - sx)
         z = Interpolate2(z1, z2, gradient)
