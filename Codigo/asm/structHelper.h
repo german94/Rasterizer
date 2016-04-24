@@ -32,7 +32,6 @@ typedef struct
 } Texture;
 
 void CopyVec(float*, float*, int);
-void ZeroVec(float*, int);
 
 /////////////////////////////////////////////////////////////////
 //                     uint3 dynamic array                     //
@@ -46,19 +45,6 @@ typedef struct {
 void initUInt3DynamicArray(UInt3DynamicArray*, size_t);
 void insertUInt3DynamicArray(UInt3DynamicArray*, uint3);
 void freeUint3DynamicArray(UInt3DynamicArray*);
-
-/////////////////////////////////////////////////////////////////
-//                     Vec3 dynamic array                      //
-/////////////////////////////////////////////////////////////////
-typedef struct {
-  Vec3 *array;
-  size_t used;
-  size_t size;
-} Vec3DynamicArray;
-
-void initVec3DynamicArray(Vec3DynamicArray*, size_t);
-void insertVec3DynamicArray(Vec3DynamicArray*, Vec3);
-void freeVec3DynamicArray(Vec3DynamicArray*);
 
 
 /////////////////////////////////////////////////////////////////
@@ -74,18 +60,10 @@ void initVec2DynamicArray(Vec2DynamicArray*, size_t);
 void insertVec2DynamicArray(Vec2DynamicArray*, Vec2);
 void freeVec2DynamicArray(Vec2DynamicArray*);
 
-/////////////////////////////////////////////////////////////////
-//                     Vertex dynamic array                    //
-/////////////////////////////////////////////////////////////////
-typedef struct {
-  Vertex *array;
-  size_t used;
-  size_t size;
-} VertexDynamicArray;
 
-void initVertexDynamicArray(VertexDynamicArray*, size_t);
-void insertVertexDynamicArray(VertexDynamicArray*, Vertex*);
-void freeVertexDynamicArray(VertexDynamicArray*);
+ /////////////////////////////////////////////////////////////////
+ //                     Vec4 dynamic array                      //
+ /////////////////////////////////////////////////////////////////
 
 typedef struct {
    Vec4 *array;

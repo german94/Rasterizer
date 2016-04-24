@@ -10,8 +10,7 @@
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 
-extern void initDepthBufferASM(float *buffer, int tam);
-extern void initDepthBufferASM2(float *buffer, float *maxs, int tam);
+extern void initDepthBufferASM(float *buffer, float *maxs, int tam);
 
 
 
@@ -315,7 +314,7 @@ int main( int argc, char* args[] )
     CreateViewMatrix(view, target, pos, up);
     Traspose(view);
    
-    CreateProjectionMatrix(proj, near, far, angleOfView, 1.0f);
+    CreateProjectionMatrix(proj, near, far, angleOfView);
     Traspose(proj);
 
     float a = 0;
@@ -344,7 +343,6 @@ int main( int argc, char* args[] )
         else
         	tex = NULL;
 
-        clock_t start = clock();
         Mat4 t;
 	
         CreateTranslationMatrix(t, 0.0f, 0.0f, 20.0f);
@@ -361,7 +359,7 @@ int main( int argc, char* args[] )
 
 			EventDetection();
 						 			 
-            initDepthBufferASM2(depthBuffer, vec_max, SCREEN_WIDTH*SCREEN_HEIGHT);
+            initDepthBufferASM(depthBuffer, vec_max, SCREEN_WIDTH*SCREEN_HEIGHT);
 
             SDL_FillRect( screenSurface, NULL, SDL_MapRGB( screenSurface->format, 0x00, 0x00, 0x00 ) );
 
@@ -433,13 +431,13 @@ int main( int argc, char* args[] )
             a += rotSpeed;
       		
             if(m_tex_norm)
-            	RenderFilledModel(&Vertices,  &Uvs,  &Normals, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, worldt, tex, lightPos); 
+            	RenderFilledModel_m3(&Vertices,  &Uvs,  &Normals, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, worldt, tex, lightPos); 
            
             if (m_tex)
-				RenderFilledModel_tex(&Vertices,  &Uvs, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, tex); 
+				RenderFilledModel_m2(&Vertices,  &Uvs, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, tex); 
 
            	if (m_esq)
-            	RenderFilledModel_esq(&Vertices, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface); 
+            	RenderFilledModel_m1(&Vertices, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface); 
 	
 
 
@@ -462,8 +460,6 @@ int main( int argc, char* args[] )
             
 
         	SDL_UpdateWindowSurface( window );
-
-        	if(contador == 3000) {printf("Tiempo transcurrido: %f\n", ((double)clock() - start) / CLOCKS_PER_SEC); quit = true;}
     	}
   	}
 

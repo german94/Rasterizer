@@ -1,58 +1,10 @@
-global ScalarProdASM
 global initDepthBufferASM
-global initDepthBufferASM2
-global CopyVecASM
 global InterpolateASM
 global Vec4Mat4ProductASM
 
-
-section .data
-
-BOUND: dd 1000.0, 1000.0, 1000.0, 1000.0
-
 section .text
 
-
-ScalarProdASM:
-	; rdi v1; rsi v2
-	push rbp
-	mov rbp, rsp
-	pxor xmm2, xmm2 ; suma
- 	pxor xmm0, xmm0
- 	pxor xmm1, xmm1
-	movdqu xmm0, [rdi] ; v1_1 | v1_2 | v1_3 | v1_4
-	movdqu xmm1, [rsi] ; v2_1 | v2_2 | v2_3 | v2_4
-	mulps xmm0, xmm1 ; v1_1*v2_1 | v1_2*v2_2 | v1_3*v2_3 | v1_4*v2_4
-	movdqu xmm2, xmm0 ; v1_1*v2_1 | v1_2*v2_2 | v1_3*v2_3 | v1_4*v2_4
-	psrldq xmm2, 8 ; 0 | 0 | v1_1*v2_1 | v1_2*v2_2
-	addps xmm0, xmm2; * | * | v1_3*v2_3 + v1_1*v2_1 | v1_4*v2_4 + v1_2*v2_2
-	movdqu xmm2, xmm0 ; * | * | v1_3*v2_3 + v1_1*v2_1 | v1_4*v2_4 + v1_2*v2_2
-	psrldq xmm2, 4 ; * | * | * | v1_3*v2_3 + v1_1*v2_1 
-	addps xmm0, xmm2; * | * | * | v1_4*v2_4 + v1_2*v2_2 + v1_3*v2_3 + v1_1*v2_1 
-	pop rbp
-	ret
-
-
 initDepthBufferASM:
-	; rdi buffer; rsi tam
-	push rbp
-	mov rbp, rsp
-	xor rax, rax
-	xor rcx, rcx
-	mov rax, rdi ; buffer
-	movdqu xmm0, [BOUND]		;1000|  1000|  1000|  1000	
-	.ciclo:
-		cmp rcx, rsi
-		je .fin
-		movups [rax], xmm0
-		add rax, 16
-		add rcx, 4
-		jmp .ciclo
-	.fin:	
-	pop rbp
-	ret
-
-initDepthBufferASM2:
 	; rdi buffer; rsi vec_max; rdx tam
 	push rbp
 	mov rbp, rsp
@@ -68,16 +20,6 @@ initDepthBufferASM2:
 		add rcx, 4
 		jmp .ciclo
 	.fin:	
-	pop rbp
-	ret
-
-CopyVecASM:
-	; rdi dest; rsi or
-	push rbp
-	mov rbp, rsp
- 	pxor xmm0, xmm0
-	movdqu xmm0, [rsi] ; or_1 | or_2 | or_3 | or_4
-	movdqu [rdi], xmm0 ; dest_1 | dest_2 | dest_3 | dest_4
 	pop rbp
 	ret
 

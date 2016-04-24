@@ -2,44 +2,42 @@
 
 extern void InterpolateASM(float *gradientes, float *max, float *min, float *unos, float *res);
 
-void putpixel(SDL_Surface *surface, int x, int y, float z, Uint32 pixel, int swidth, int sheight, float* depthBuffer)
+void putpixel(int x, int y, float z, float* depthBuffer, int swidth, int sheight, SDL_Surface* surface, Uint32 pixel)
 {
 	
 	int index = x + y*swidth;
-	if(depthBuffer[index] > z)
+	if(x >= 0 && y >= 0 && x < swidth && y < sheight && depthBuffer[index] > z)
 	{
   		depthBuffer[index] = z;
 	    int bpp = surface->format->BytesPerPixel;
-    /* Here p is the address to the pixel we want to set */
-    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
 
-    switch(bpp) {
-    case 1:
-        *p = pixel;
-        break;
+    	Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
 
-    case 2:
-        *(Uint16 *)p = pixel;
-        break;
+    	switch(bpp) {
+    		case 1:
+				*p = pixel;
+        		break;
 
-    case 3:
-        if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
-            p[0] = (pixel >> 16) & 0xff;
-            p[1] = (pixel >> 8) & 0xff;
-            p[2] = pixel & 0xff;
-        } else {
-            p[0] = pixel & 0xff;
-            p[1] = (pixel >> 8) & 0xff;
-            p[2] = (pixel >> 16) & 0xff;
-        }
-        break;
+    		case 2:
+        		*(Uint16 *)p = pixel;
+        		break;
 
-    case 4:
-        *(Uint32 *)p = pixel;
-        break;
-    }
-	
+    		case 3:
+        		if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
+            		p[0] = (pixel >> 16) & 0xff;
+            		p[1] = (pixel >> 8) & 0xff;
+            		p[2] = pixel & 0xff;
+        		} else {
+			        p[0] = pixel & 0xff;
+			        p[1] = (pixel >> 8) & 0xff;
+			        p[2] = (pixel >> 16) & 0xff;
+        		}
+       			break;
 
+    		case 4:
+        		*(Uint32 *)p = pixel;
+        		break;
+    	}
 	}
 }
 
@@ -74,13 +72,6 @@ Uint32 getpixel(SDL_Surface *surface, int x, int y)
     }
 }
 
-float Interpolate1(float min, float max, float gradient)
-{ 
-    float mini = (gradient < 1) ? gradient : 1;
-    float maxi = (0 > mini) ? 0 : mini;
-    return min + (max - min) *maxi;
-}
-
 void RenderText(SDL_Color clrFg, TTF_Font* font, char* buf, SDL_Surface* screenSurface)
 {
     SDL_Surface *sText = TTF_RenderText_Solid( font, buf, clrFg );
@@ -101,11 +92,11 @@ void RenderTextR(SDL_Color clrFg, TTF_Font* font, char* buf, SDL_Surface* screen
     SDL_FreeSurface( sText );
 }
 
-
-void DrawPoint(int x, int y, float z, float* depthBuffer, int SW, int SH, SDL_Surface* sf, Uint32 color)
-{
-    if(x >= 0 && y >= 0 && x < SW && y <SH)
-        putpixel(sf, x, y, z, color, SW, SH, depthBuffer);
+float Interpolate1(float min, float max, float gradient)
+{ 
+    float mini = (gradient < 1) ? gradient : 1;
+    float maxi = (0 > mini) ? 0 : mini;
+    return min + (max - min) *maxi;
 }
 
 float ComputeNDotL(Vec3 centerPoint, Vec3 vnFace, Vec3 lightPos) 
@@ -136,7 +127,6 @@ Uint32 Map(SDL_Surface* tex, float tu, float tv)
 
 void Uint32ToVec4(Uint32 inColor, Vec3 outColor) //recibo (abgr)//REVISAR ORDEN CON LA ORIGINAL
 {
-    //outColor[0] = ((inColor >> 24) & 255) / 255.0f;// a
     outColor[0] = ((inColor >> 16) & 255) / 255.0f;// b
     outColor[1] = ((inColor >> 8) & 255) / 255.0f;// g
     outColor[2] = (inColor & 255) / 255.0f; // r 
@@ -148,20 +138,15 @@ Uint32 Vec4ToUint32P(float _r, float _g, float _b)
     Uint32 r = (Uint32)(_r * 255.0f) & 255;
     Uint32 g = (Uint32)(_g * 255.0f) & 255;
     Uint32 b = (Uint32)(_b * 255.0f) & 255;
-    //Uint32 b = (Uint32)(_a * 255.0f) & 255;
     Uint32 value = r;
     value |= g << 8;
     value |= b << 16;
-   // value |= a << 24;
     return (Uint32)value;
 }
 
-void ProcessScanLine(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, Vec3 color, int SW, int SH, SDL_Surface* sf, float* depthBuffer, ScanLineData* data,  SDL_Surface* tex)
+void ProcessScanLine_m3(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, int SW, int SH, SDL_Surface* sf, float* depthBuffer, ScanLineData* data,  SDL_Surface* tex)
 {
-    // Thanks to current Y, we can compute the gradient to compute others values like
-    // the starting X (sx) and ending X (ex) to draw between
-    // if pa.Y == pb.Y or pc.Y == pd.Y, gradient is forced to 1
-
+    
     Vec3 pa, pb, pc, pd;
     CopyVec(pa, va->coordinates, 3);
     CopyVec(pb, vb->coordinates, 3);
@@ -214,29 +199,27 @@ void ProcessScanLine(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, Vec3 color,
         float v = res[3];
 
         Uint32 textureColor;
+        Vec3 texColor;
 
         if (tex != NULL)
+        {
             textureColor = Map(tex, u, v);
+            Uint32ToVec4(textureColor, texColor);
+        }
+       
         else
-            textureColor = 0xfffffff;      //si no hay textura entonces pongo  255 
+        {
+            texColor[0] = 1.0; texColor[1] = 1.0; texColor[2] = 1.0;     //si no hay textura entonces pongo  color blanco 
+        }
 
-        Vec3 texColor;
-        Uint32ToVec4(textureColor, texColor);
-        VecByVec(texColor, color, texColor, 3);
         VecByScalar(texColor, ndotl, texColor, 3);
-
         textureColor = Vec4ToUint32P(texColor[2], texColor[1], texColor[0]);
-
-        DrawPoint(x, data->currentY, z, depthBuffer, SW, SH, sf, textureColor);
-    }
-        
+        putpixel(x, data->currentY, z, depthBuffer, SW, SH, sf, textureColor);
+    }  
 }
 
-void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 p1w, Vec3 p2w, Vec3 p3w, Vec3 color, int SW, int SH, SDL_Surface* sf, float* depthBuffer,  SDL_Surface* tex, Vec2 p1t, Vec2 p2t, Vec2 p3t, Vec3 lightPos)
+void DrawTriangle_m3(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 p1w, Vec3 p2w, Vec3 p3w, int SW, int SH, SDL_Surface* sf, float* depthBuffer,  SDL_Surface* tex, Vec2 p1t, Vec2 p2t, Vec2 p3t, Vec3 lightPos)
 {
-    // Sorting the points in order to always have this order on screen p1, p2 & p3
-    // with p1 always up (thus having the Y the lowest possible to be near the top screen)
-    // then p2 between p1 & p3
     Vec3 temp, tempn, tempw;
     Vec2 tempt;
     if (p1[1] > p2[1])
@@ -336,7 +319,7 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
                     data.ndotlb = nl3;
                     data.ndotlc = nl1;
                     data.ndotld = nl2;
-                    ProcessScanLine(&v1, &v3, &v1, &v2, color, SW, SH, sf, depthBuffer, &data, tex);
+                    ProcessScanLine_m3(&v1, &v3, &v1, &v2, SW, SH, sf, depthBuffer, &data, tex);
                 }    
             	else
             	{
@@ -344,7 +327,7 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
                     data.ndotlb = nl3;
                     data.ndotlc = nl2;
                     data.ndotld = nl3;
-                    ProcessScanLine(&v1, &v3, &v2, &v3, color, SW, SH, sf, depthBuffer, &data, tex);
+                    ProcessScanLine_m3(&v1, &v3, &v2, &v3, SW, SH, sf, depthBuffer, &data, tex);
                 }	
         	}
 		}
@@ -362,7 +345,7 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
                     data.ndotlb = nl2;
                     data.ndotlc = nl1;
                     data.ndotld = nl3;
-                    ProcessScanLine(&v1, &v2, &v1, &v3, color, SW, SH, sf, depthBuffer, &data, tex);
+                    ProcessScanLine_m3(&v1, &v2, &v1, &v3, SW, SH, sf, depthBuffer, &data, tex);
                 }
             	else
         		{
@@ -370,7 +353,7 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
                     data.ndotlb = nl3;
                     data.ndotlc = nl1;
                     data.ndotld = nl3;
-                    ProcessScanLine(&v2, &v3, &v1, &v3, color, SW, SH, sf, depthBuffer, &data, tex);
+                    ProcessScanLine_m3(&v2, &v3, &v1, &v3, SW, SH, sf, depthBuffer, &data, tex);
                 }
         	}
     	}
@@ -385,11 +368,11 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
         	{
         		data.currentY = y;
 
-                data.ndotla = nl1;//REVISAR ESTOS NDOTL
+                data.ndotla = nl1;
                 data.ndotlb = nl3;
                 data.ndotlc = nl2;
                 data.ndotld = nl3;
-                ProcessScanLine(&v1, &v3, &v2, &v3, color, SW, SH, sf, depthBuffer, &data, tex);
+                ProcessScanLine_m3(&v1, &v3, &v2, &v3, SW, SH, sf, depthBuffer, &data, tex);
                
         	}
         }
@@ -401,23 +384,19 @@ void DrawTriangle(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 
         	{
                 data.currentY = y;
 
-                data.ndotla = nl2;//REVISAR ESTOS NDOTL
+                data.ndotla = nl2;
                 data.ndotlb = nl3;
                 data.ndotlc = nl1;
                 data.ndotld = nl3;
-                ProcessScanLine(&v2, &v3, &v1, &v3, color, SW, SH, sf, depthBuffer, &data, tex);
+                ProcessScanLine_m3(&v2, &v3, &v1, &v3, SW, SH, sf, depthBuffer, &data, tex);
         	}
         }
     } 
 }
 
 
-void ProcessScanLine_tex(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, Vec3 color, int SW, int SH, SDL_Surface* sf, float* depthBuffer, ScanLineData* data,  SDL_Surface* tex)
+void ProcessScanLine_m2(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, int SW, int SH, SDL_Surface* sf, float* depthBuffer, ScanLineData* data,  SDL_Surface* tex)
 {
-    // Thanks to current Y, we can compute the gradient to compute others values like
-    // the starting X (sx) and ending X (ex) to draw between
-    // if pa.Y == pb.Y or pc.Y == pd.Y, gradient is forced to 1
-
     Vec3 pa, pb, pc, pd;
     CopyVec(pa, va->coordinates, 3);
     CopyVec(pb, vb->coordinates, 3);
@@ -466,25 +445,17 @@ void ProcessScanLine_tex(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, Vec3 co
 
         if (tex != NULL)
             textureColor = Map(tex, u, v);
+    
         else
-            textureColor = 0xfffffff;      //si no hay textura entonces pongo  255 
+            textureColor = 0xfffffff;  //si no hay textura entonces pongo  color blanco 
 
-        Vec3 texColor;
-        Uint32ToVec4(textureColor, texColor);
-        VecByVec(texColor, color, texColor, 3);
-
-        textureColor = Vec4ToUint32P(texColor[2], texColor[1], texColor[0]);
-
-        DrawPoint(x, data->currentY, z, depthBuffer, SW, SH, sf, textureColor);
+        putpixel(x, data->currentY, z, depthBuffer, SW, SH, sf, textureColor);
     }
         
 }
 
-void DrawTriangle_tex(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 color, int SW, int SH, SDL_Surface* sf, float* depthBuffer,  SDL_Surface* tex, Vec2 p1t, Vec2 p2t, Vec2 p3t )
+void DrawTriangle_m2(Vec3 p1, Vec3 p2, Vec3 p3, int SW, int SH, SDL_Surface* sf, float* depthBuffer,  SDL_Surface* tex, Vec2 p1t, Vec2 p2t, Vec2 p3t )
 {
-    // Sorting the points in order to always have this order on screen p1, p2 & p3
-    // with p1 always up (thus having the Y the lowest possible to be near the top screen)
-    // then p2 between p1 & p3
     Vec3 temp;
     Vec2 tempt;
     if (p1[1] > p2[1])
@@ -540,11 +511,11 @@ void DrawTriangle_tex(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 color, int SW, int SH, SDL
     CopyVec(v2.coordinates, p2, 3);
     CopyVec(v3.coordinates, p3, 3);
     if(tex != NULL)
+    {    
         CopyVec(v1.texCoordinates, p1t, 2);
         CopyVec(v2.texCoordinates, p2t, 2);
         CopyVec(v3.texCoordinates, p3t, 2);
-
-
+    }
 
     if(p1[1] != p2[1])
     {  
@@ -558,11 +529,11 @@ void DrawTriangle_tex(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 color, int SW, int SH, SDL
 
                 if (y < p2[1])
                 {
-                    ProcessScanLine_tex(&v1, &v3, &v1, &v2, color, SW, SH, sf, depthBuffer, &data, tex);
+                    ProcessScanLine_m2(&v1, &v3, &v1, &v2, SW, SH, sf, depthBuffer, &data, tex);
                 }    
                 else
                 {
-                    ProcessScanLine_tex(&v1, &v3, &v2, &v3, color, SW, SH, sf, depthBuffer, &data, tex);
+                    ProcessScanLine_m2(&v1, &v3, &v2, &v3, SW, SH, sf, depthBuffer, &data, tex);
                 }   
             }
         }
@@ -576,11 +547,11 @@ void DrawTriangle_tex(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 color, int SW, int SH, SDL
 
                 if (y < p2[1])
                 {
-                    ProcessScanLine_tex(&v1, &v2, &v1, &v3, color, SW, SH, sf, depthBuffer, &data, tex);
+                    ProcessScanLine_m2(&v1, &v2, &v1, &v3, SW, SH, sf, depthBuffer, &data, tex);
                 }
                 else
                 {
-                    ProcessScanLine_tex(&v2, &v3, &v1, &v3, color, SW, SH, sf, depthBuffer, &data, tex);
+                    ProcessScanLine_m2(&v2, &v3, &v1, &v3, SW, SH, sf, depthBuffer, &data, tex);
                 }
             }
         }
@@ -595,7 +566,7 @@ void DrawTriangle_tex(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 color, int SW, int SH, SDL
             {
                 data.currentY = y;
 
-                ProcessScanLine_tex(&v1, &v3, &v2, &v3, color, SW, SH, sf, depthBuffer, &data, tex);
+                ProcessScanLine_m2(&v1, &v3, &v2, &v3, SW, SH, sf, depthBuffer, &data, tex);
             }
         }
         else
@@ -606,44 +577,29 @@ void DrawTriangle_tex(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 color, int SW, int SH, SDL
             {
                 data.currentY = y;
 
-                ProcessScanLine_tex(&v2, &v3, &v1, &v3, color, SW, SH, sf, depthBuffer, &data, tex);
+                ProcessScanLine_m2(&v2, &v3, &v1, &v3, SW, SH, sf, depthBuffer, &data, tex);
             }
         }
     } 
 }
 
 
-void ProcessScanLine_esq(Vec3 va, Vec3 vb, Vec3 vc, Vec3 vd, Vec3 color, int SW, int SH, SDL_Surface* sf, int Y)
+void ProcessScanLine_m1(Vec3 va, Vec3 vb, Vec3 vc, Vec3 vd, int SW, int SH, SDL_Surface* sf, int Y)
 {
-    // Thanks to current Y, we can compute the gradient to compute others values like
-    // the starting X (sx) and ending X (ex) to draw between
-    // if pa.Y == pb.Y or pc.Y == pd.Y, gradient is forced to 1
-
     float gradient1 = va[1] != vb[1] ? (Y - va[1]) / (vb[1] - va[1]) : 1;
     float gradient2 = vc[1] != vd[1] ? (Y - vc[1]) / (vd[1] - vc[1]) : 1;
             
     int sx = (int)Interpolate1(va[0], vb[0], gradient1);
     int ex = (int)Interpolate1(vc[0], vd[0], gradient2);
 
-    Uint32 textureColor;
+    Uint32 textureColor = 0xfffffff;      // color por default blanco
 
-    textureColor = 0xfffffff;      //si no hay textura entonces pongo  255 
-
-    Vec3 texColor;
-    Uint32ToVec4(textureColor, texColor);
-    VecByVec(texColor, color, texColor, 3);
-
-    textureColor = Vec4ToUint32P(texColor[2], texColor[1], texColor[0]);
-
-    DrawPoint_esq(sx, Y , SW, SH, sf, textureColor);
-    DrawPoint_esq(ex, Y, SW, SH, sf, textureColor);  
+    putpixel_m1(sx, Y , SW, SH, sf, textureColor);
+    putpixel_m1(ex, Y, SW, SH, sf, textureColor);
 }
 
-void DrawTriangle_esq(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 color, int SW, int SH, SDL_Surface* sf)
+void DrawTriangle_m1(Vec3 p1, Vec3 p2, Vec3 p3, int SW, int SH, SDL_Surface* sf)
 {
-    // Sorting the points in order to always have this order on screen p1, p2 & p3
-    // with p1 always up (thus having the Y the lowest possible to be near the top screen)
-    // then p2 between p1 & p3
     Vec3 temp;
     Vec2 tempt;
     if (p1[1] > p2[1])
@@ -692,11 +648,11 @@ void DrawTriangle_esq(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 color, int SW, int SH, SDL
                 
                 if (y < p2[1])
                 {
-                    ProcessScanLine_esq(p1, p3, p1, p2, color, SW, SH, sf, y);
+                    ProcessScanLine_m1(p1, p3, p1, p2, SW, SH, sf, y);
                 }    
                 else
                 {
-                    ProcessScanLine_esq(p1, p3, p2, p3, color, SW, SH, sf, y);
+                    ProcessScanLine_m1(p1, p3, p2, p3, SW, SH, sf, y);
                 }   
             }
         }
@@ -707,11 +663,11 @@ void DrawTriangle_esq(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 color, int SW, int SH, SDL
             {
                 if (y < p2[1])
                 {
-                    ProcessScanLine_esq(p1, p2, p1, p3, color, SW, SH, sf, y);
+                    ProcessScanLine_m1(p1, p2, p1, p3, SW, SH, sf, y);
                 }
                 else
                 {
-                    ProcessScanLine_esq(p2, p3, p1, p3, color, SW, SH, sf, y);
+                    ProcessScanLine_m1(p2, p3, p1, p3, SW, SH, sf, y);
                 }
             }
         }
@@ -723,7 +679,7 @@ void DrawTriangle_esq(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 color, int SW, int SH, SDL
             int y;
             for ( y = (int)p1[1]; y <= (int)p3[1]; y++)
             {
-                ProcessScanLine_esq(p1, p3, p2, p3, color, SW, SH, sf, y);
+                ProcessScanLine_m1(p1, p3, p2, p3, SW, SH, sf, y);
             }
         }
         else
@@ -731,48 +687,43 @@ void DrawTriangle_esq(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 color, int SW, int SH, SDL
             int y;
             for (y = (int)p1[1]; y <= (int)p3[1]; y++)
             {
-                ProcessScanLine_esq(p2, p3, p1, p3, color, SW, SH, sf, y);
+                ProcessScanLine_m1(p2, p3, p1, p3, SW, SH, sf, y);
             }
         }
     } 
 }
 
-void putpixel_esq(SDL_Surface *surface, int x, int y, Uint32 pixel, int swidth, int sheight)
+void putpixel_m1(int x, int y, int swidth, int sheight, SDL_Surface* surface, Uint32 pixel)
 {
-    
-    int bpp = surface->format->BytesPerPixel;
-    /* Here p is the address to the pixel we want to set */
-    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+    if(x >= 0 && y >= 0 && x < swidth && y < sheight)
+    {
+	    int bpp = surface->format->BytesPerPixel;
+	    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
 
-    switch(bpp) {
-    case 1:
-        *p = pixel;
-        break;
+	    switch(bpp) {
+	    case 1:
+	        *p = pixel;
+	        break;
 
-    case 2:
-        *(Uint16 *)p = pixel;
-        break;
+	    case 2:
+	        *(Uint16 *)p = pixel;
+	        break;
 
-    case 3:
-        if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
-            p[0] = (pixel >> 16) & 0xff;
-            p[1] = (pixel >> 8) & 0xff;
-            p[2] = pixel & 0xff;
-        } else {
-            p[0] = pixel & 0xff;
-            p[1] = (pixel >> 8) & 0xff;
-            p[2] = (pixel >> 16) & 0xff;
-        }
-        break;
+	    case 3:
+	        if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
+	            p[0] = (pixel >> 16) & 0xff;
+	            p[1] = (pixel >> 8) & 0xff;
+	            p[2] = pixel & 0xff;
+	        } else {
+	            p[0] = pixel & 0xff;
+	            p[1] = (pixel >> 8) & 0xff;
+	            p[2] = (pixel >> 16) & 0xff;
+	        }
+	        break;
 
-    case 4:
-        *(Uint32 *)p = pixel;
-        break;
-    }
-}
-
-void DrawPoint_esq(int x, int y, int SW, int SH, SDL_Surface* sf, Uint32 color)
-{
-    if(x >= 0 && y >= 0 && x < SW && y <SH)
-        putpixel_esq(sf, x, y, color, SW, SH);
+	    case 4:
+	        *(Uint32 *)p = pixel;
+	        break;
+	    }
+	}
 }

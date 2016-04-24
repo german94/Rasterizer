@@ -6,15 +6,26 @@
 #include "structHelper.h"
 #include "mathHelper.h"
 
-void putpixel(SDL_Surface *surface, int x, int y, float z, Uint32 pixel, int swidth, int sheight, float* depthBuffer);
+void putpixel(int x, int y, float z, float* depthBuffer, int swidth, int sheight, SDL_Surface* surface, Uint32 pixel);
 Uint32 getpixel(SDL_Surface *surface, int x, int y);
-void Translation(int (*Msrc)[3], int (*Mdst)[3], int cant_pixel, int *trans);
-void RotationX(int (*Mdst)[3], int (*Msrc)[3], int angulo, int cant_pixel);
-void Coordto2d(int (*Msrc)[3], int (*Mdst)[2], int cant_pixel);
-void DrawBline( int x0, int x1, int y0, int y1, SDL_Surface* screenSurface);
-void formar_cubo(int (*cubo)[3], int distancia);
-void RenderText(SDL_Color, TTF_Font*, char* buf, SDL_Surface*);
-void RenderTextR(SDL_Color, TTF_Font*, char* buf, SDL_Surface*, SDL_Rect*);
+void RenderText(SDL_Color clrFg, TTF_Font* font, char* buf, SDL_Surface* screenSurface);
+void RenderTextR(SDL_Color clrFg, TTF_Font* font, char* buf, SDL_Surface* screenSurface, SDL_Rect* r);
+float Max(float a, float b);
+float Min(float a, float b);
+float Clamp(float value);
+float Interpolate2(float min, float max, float gradient);
+float Interpolate1(float min, float max, float gradient);
+float ComputeNDotL(Vec3 centerPoint, Vec3 vnFace, Vec3 lightPos); 
+Uint32 Map(SDL_Surface* tex, float tu, float tv);
+void Uint32ToVec4(Uint32 inColor, Vec3 outColor);
+Uint32 Vec4ToUint32P(float _r, float _g, float _b);
+void ProcessScanLine_m3(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, int SW, int SH, SDL_Surface* sf, float* depthBuffer, ScanLineData* data,  SDL_Surface* tex);
+void DrawTriangle_m3(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 p1w, Vec3 p2w, Vec3 p3w, int SW, int SH, SDL_Surface* sf, float* depthBuffer,  SDL_Surface* tex, Vec2 p1t, Vec2 p2t, Vec2 p3t,  Vec3 lightPos);
+void ProcessScanLine_m2(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, int SW, int SH, SDL_Surface* sf, float* depthBuffer, ScanLineData* data,  SDL_Surface* tex);
+void DrawTriangle_m2(Vec3 p1, Vec3 p2, Vec3 p3, int SW, int SH, SDL_Surface* sf, float* depthBuffer,  SDL_Surface* tex, Vec2 p1t, Vec2 p2t, Vec2 p3t );
+void ProcessScanLine_m1(Vec3 va, Vec3 vb, Vec3 vc, Vec3 vd, int SW, int SH, SDL_Surface* sf, int Y);
+void DrawTriangle_m1(Vec3 p1, Vec3 p2, Vec3 p3, int SW, int SH, SDL_Surface* sf);
+void putpixel_m1(int x, int y, int swidth, int sheight, SDL_Surface* surface, Uint32 pixel);
 
 #endif
 

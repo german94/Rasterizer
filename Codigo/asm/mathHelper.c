@@ -1,6 +1,5 @@
 #include "mathHelper.h"
 
-extern float ScalarProdASM(float *v1, float *v2);
 extern void Vec4Mat4ProductASM(float *v, float *m, float *r, float *aux);
 
 void VecByScalar(float* in, float scalar, float* out, int d)
@@ -95,11 +94,11 @@ void CreateViewMatrix(Mat4 m, Vec3 cameraTarget, Vec3 cameraPos, Vec3 up)
 	m[3][3] = 1;
 }
 
-void CreateProjectionMatrix(Mat4 m, float nearPlane, float farPlane, float fieldOfView, float aspectRatio)
+void CreateProjectionMatrix(Mat4 m, float nearPlane, float farPlane, float fieldOfView)
 {
-	m[0][0] = 1/tanf(fieldOfView*0.5*aspectRatio);
+	m[0][0] = 1/tanf(fieldOfView*0.5);
 	m[0][1] = m[0][2] = m[0][3] = 0;
-	m[1][1] = 1/tanf(fieldOfView*0.5*aspectRatio);
+	m[1][1] = 1/tanf(fieldOfView*0.5);
 	m[1][0] = m[1][2] = m[1][3] = 0;
 	m[2][2] = -farPlane / (farPlane - nearPlane);
 	m[2][3] = -1;
@@ -194,18 +193,6 @@ float ScalarProd(float *v1, float *v2)
 	return res;
 }
 
-/*
-void Mat4ProductASM(Mat4 m1, Mat4 m2, Mat4 res)
-{
-	int i, j;
-	for(i = 0; i < 4; i++)
-	{
-		for(j = 0; j < 4; j++)
-			res[i][j] = ScalarProdASM(&m1[i], &m2[j]);
-	}
-}
-*/
-
 void Mat4ProductTras(Mat4 m1, Mat4 m2, Mat4 res)
 {
 	int i, j;
@@ -215,22 +202,3 @@ void Mat4ProductTras(Mat4 m1, Mat4 m2, Mat4 res)
 			res[j][i] = ScalarProd(&m1[i], &m2[j]);
 	}
 }
-
-/*
-void Mat4ProductTrasASM(Mat4 m1, Mat4 m2, Mat4 res)
-{
-	int i, j;
-	for(i = 0; i < 4; i++)
-	{
-		for(j = 0; j < 4; j++)
-			res[j][i] = ScalarProdASM(&m1[i], &m2[j]);
-	}
-}*/
-/*
-void Vec4Mat4ProductASM(Vec4 v, Mat4 m, Vec4 r)
-{
-	r[0] = ScalarProdASM(v, &m[0]);
-	r[1] = ScalarProdASM(v, &m[1]);
-	r[2] = ScalarProdASM(v, &m[2]);
-	r[3] = ScalarProdASM(v, &m[3]);
-}*/
