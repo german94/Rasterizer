@@ -485,9 +485,9 @@ Luego de tener las coordenadas como vectores bidimensionales procederemos a la r
 
 
 \par Inicialmente nuestro modelo esta conformado por polígonos mas específicamente triángulos. Blender nos permite obtener los vértices de los mismos por lo que el primer modo se encargara de reconstruir los polígonos.
-\par Construiremos una nueva función llamada $DrawTriangle$ que sera la encargada de transformar los puntos bidimensionales proyectando y rellenando los triángulos en nuestra pantalla.
+\par Construiremos una nueva función llamada $DrawTriangle\_m1$ que sera la encargada de transformar los puntos bidimensionales proyectando y rellenando los triángulos en nuestra pantalla.
 
-\textbf{DrawTriangle\_esq y ProcessScanLine\_esq:}
+\textbf{DrawTriangle\_m1 y ProcessScanLine\_m1:}
 
 \par  Sean v1,v2,v3 los tres vértices que forman un triangulo, la función renombrara dichos vértices como P1, P2, P3 de manera que P1 sea el que se encuentre en una posición menor o igual que P2 respecto del eje y;  P2 a su vez sera aquel que se encuentre en una posición menor o igual que P3 respecto del mismo eje. 
 \par Definiremos P1.y como el valor en la coordenada y de P1, P1.x como el valor en el eje x y de manera análoga para P2, P3, SX y EX. 
@@ -502,14 +502,14 @@ Luego de tener las coordenadas como vectores bidimensionales procederemos a la r
 \end{figure}
 
 \par La principal incógnita que se nos plantea es encontrar el valor SX.x y EX.x (ya que SX.y y EX.y es igual al valor Y de la iteración) de manera que se ubique dentro de la recta que los uniría. Para esto utilizaremos la formula de interpolación a partir de conocer el valor del eje y; mientras que los puntos que requiere la función seran los que conformen la recta sobre la cual se encuentren SX y EX.
-\par La función encargada de usar la interpolación de los puntos y proceder con la creación de las lineas la denominaremos $ProcessScanLine\_esq$ quien sera llamada por $DrawTriangle\_esq$ en los diferentes escenarios que se nos planteen.
+\par La función encargada de usar la interpolación de los puntos y proceder con la creación de las lineas la denominaremos $ProcessScanLine\_m1$ quien sera llamada por $DrawTriangle\_m1$ en los diferentes escenarios que se nos planteen.
 
 
 Sea pa, pb los puntos que me permiten interpolar SX y pc y pd los que interpolan a EX podemos definir: 
 
 
 \begin{verbatim}
-ProcessScanLine(pa, pb, pc, pd, Y):
+ProcessScanLine_m1(pa, pb, pc, pd, Y):
     gradient1 = if (pa.y != pb.y) 
                     (Y - pa.y) / (pb.y - pa.y)
                 else 1                          
@@ -520,12 +520,12 @@ ProcessScanLine(pa, pb, pc, pd, Y):
     SX.x = Interpolate(pa.x, pb.x, gradient1)
     EX.x = Interpolate(pc.x, pd.x, gradient2)
     
-    DrawPoint_esq(SX.x, Y);
-    DrawPoint_esq(EX.x, Y);
+    putpixel(SX.x, Y);
+    putpixel(EX.x, Y);
 \end{verbatim}
 
 
-Como mencionamos $DrawTriangle_esq$ hará uso de esta función en los distintos casos que se nos presenten, ya que si observamos la figura 5 vemos que no siempre SX o EX se encuentran sobre la misma arista, en un caso SX esta en la arista correspondiente a P1 y P3 mientras que en el otro triangulo esta sobre la conformada por P2 y P1 esto nos lleva a plantearnos y analizar todos los casos antes de comenzar el proceso de crear las lineas.
+Como mencionamos $DrawTriangle\_m1$ hará uso de esta función en los distintos casos que se nos presenten, ya que si observamos la figura 5 vemos que no siempre SX o EX se encuentran sobre la misma arista, en un caso SX esta en la arista correspondiente a P1 y P3 mientras que en el otro triangulo esta sobre la conformada por P2 y P1 esto nos lleva a plantearnos y analizar todos los casos antes de comenzar el proceso de crear las lineas.
 
 
 Primero estableceremos una manera de distinguir cuando P1 se encuentra a la derecha de P2 o viceversa: 
@@ -560,7 +560,7 @@ Una vez planteadas las distintas situaciones podemos proceder con la rasterizaci
 El código fuente que describe el proceso anterior es el siguiente:
 
 \begin{verbatim}
-DrawTriangle_esq(v1,v2, v3): (CREO QUE SE PODRIA DEJAR LA EXPLICACION DE LOS CASOS ANTERIORES 
+DrawTriangle_m1(v1,v2, v3): (CREO QUE SE PODRIA DEJAR LA EXPLICACION DE LOS CASOS ANTERIORES 
 O ESTE PSEUDOCODIGO SOLAMENTE NO SE.....)
 
     Designar P1, P2 y P3 
@@ -570,21 +570,21 @@ O ESTE PSEUDOCODIGO SOLAMENTE NO SE.....)
     if (Primer Caso)
             for (Y = P1.y to P3.y)    	
                 if(Y < P2.y)
-                    ProcessScanLine(P1, P3, P1, P2, Y)
+                    ProcessScanLine_m1(P1, P3, P1, P2, Y)
                 else
-                    ProcessScanline(P1, P3, P2, P3, Y)
+                    ProcessScanline_m1(P1, P3, P2, P3, Y)
     if(Segundo Caso)
            for (Y = P1.y to P3.y)    	
                 if(Y < P2.y)
-                    ProcessScanLine(P1, P2, P1, P3, Y)
+                    ProcessScanLine_m1(P1, P2, P1, P3, Y)
            else
-                    ProcessScanline(P2, P3, P1, P3, Y)
+                    ProcessScanline_m1(P2, P3, P1, P3, Y)
     if (Tercer Caso)	
           for (Y = P1.y to P3.y)    	
                if(P1.x < P2.x)
-                    ProcessScanLine(P1, P3, P2, P3, Y)
+                    ProcessScanLine_m1(P1, P3, P2, P3, Y)
                else
-                    ProcessScanline(P2, P3, P1, P3, Y)
+                    ProcessScanline_m1(P2, P3, P1, P3, Y)
   					
 \end{verbatim}
 
@@ -599,9 +599,9 @@ Blender nos permite dentro del programa asignarles texturas a los distintos mode
 \par No solo podemos exportar los vértices sino que también las coordenadas UV de cada uno (si hemos pasado por el proceso de asignarle una textura previamente).
 \par Como requeriremos acceder a cada píxel de la imagen usaremos la función $SDL\_LoadBMP$ ( provista por SDL) la cual permite cargar una superficie desde un archivo del tipo .BMP y nos devuelve un puntero a la misma, al cual llamaremos $tex$.    
  
-\par Por lo que $DrawTriangle\_esq$ sera modificada a $DrawTriangle\_tex$ de manera que cada vez que llame a $ProcessScanLine\_tex$ (que sera una variante de $ProcessScanLine\_esq$) además pasara las coordenadas UV de los vértices utilizados y el puntero a la textura.
+\par Por lo que $DrawTriangle\_m1$ sera modificada a $DrawTriangle\_m2$ de manera que cada vez que llame a $ProcessScanLine\_m2$ (que sera una variante de $ProcessScanLine\_m1$) además pasara las coordenadas UV de los vértices utilizados y el puntero a la textura.
  
-\textbf{ProcessScanLine\_tex:} 
+\textbf{ProcessScanLine\_m2:} 
 
 
 Ahora esta función tendrá las coordenadas UV para cada vértice. En cada una de las lineas que vamos construyendo definimos dos puntos SX y EX y luego procedemos a calcular sus valores intermedios, ahora también sera necesario calcular las coordenadas UV asociadas a estos. La forma de calcularlos sera por medio de la interpolación. Si los puntos pa y pb nos permitían obtener SX y, pc y pd a EX de manera similar si utilizamos las coordenadas U asociadas a estos vértices podemos calcular un valor $su$ y $eu$ que indiquen el rango de valores que utilizaremos de la coordenada U; mientras que con las coordenadas del eje V podemos calcular $sv$ y $ev$ delimitando el rango de valores usados de V.
@@ -618,7 +618,7 @@ A partir de este modo implementaremos el uso del $depthBuffer$ mencionado en \re
 
 
 \begin{verbatim}
-ProcessScanLine_tex(pa, pb, pc, pd, Y, tex):
+ProcessScanLine_m2(pa, pb, pc, pd, Y, tex):
     gradient1 = if (pa.y != pb.y) 
                     (Y - pa.y) / (pb.y - pa.y)
                 else 1                          
@@ -638,7 +638,7 @@ ProcessScanLine_tex(pa, pb, pc, pd, Y, tex):
 
     for (x = SX.x to EX.x)
         gradient = (x - sx) / (float)(ex - sx)
-        z = Interpolate2(z1, z2, gradient)
+        z = Interpolate(z1, z2, gradient)
         u = Interpolate(su, eu, gradient)
         v = Interpolate(sv, ev, gradient)
         if (tex != NULL)
@@ -646,7 +646,7 @@ ProcessScanLine_tex(pa, pb, pc, pd, Y, tex):
         else
             textureColor = 0xfffffff;
     
-        DrawPoint(x, Y, z, textureColor)
+        putpixel(x, Y, z, textureColor)
 \end{verbatim}
 
 \subsection{Modo Textura + Sombra:} 
@@ -657,9 +657,9 @@ ProcessScanLine_tex(pa, pb, pc, pd, Y, tex):
 
 
 
-\textbf{DrawTriangle:} 
+\textbf{DrawTriangle\_m3:} 
 
- 	Extenderemos la versión anterior, Drawtriangle_tex, de manera que ahora calcule la luz que recibe cada vértice.
+ 	Extenderemos la versión anterior, $Drawtriangle\_m2$, de manera que ahora calcule la luz que recibe cada vértice.
 \par La idea de los vectores normales es que cuanto menor sea el ángulo entre estos y la dirección de la luz (figura 6) entonces la luz incidirá más sobre el vértice asociado y de esta manera la intensidad del color se mantendrá, en caso contrario tendera a un color mas oscuro para simular sombras. 
 	
 	
@@ -685,9 +685,9 @@ con $\parallel A \parallel$ y $\parallel B \parallel$ la distancia Euclidiana de
 
  
 Si normalizamos el vector A y B el denominador  sera igual a  1 y de este manera solo calculando el producto vectorial podemos obtener el coseno del ángulo. 
-Calcularemos $lightDirection$ junto con el coseno del ángulo asociado en una función auxiliar $ComputeNdotL$ que sera llamada en DrawTriangle para cada vértice, y utilizaremos estos valores para extender la función $ProcessScanLine\_tex$ en una nueva versión llamada $ProcessScanLine$.
+Calcularemos $lightDirection$ junto con el coseno del ángulo asociado en una función auxiliar $ComputeNdotL$ que sera llamada en DrawTriangle para cada vértice, y utilizaremos estos valores para extender la función $ProcessScanLine\_m2$ en una nueva versión llamada $ProcessScanLine\_m3$.
    
-\textbf{ ProcessScanLine:}
+\textbf{ ProcessScanLine\_m3:}
 
 Tenemos el porcentaje de luz para las coordenadas que representan a los vértices, solo nos falta para el resto de las que componen cada triangulo,  por lo que cada vez que interpolemos las coordenadas para rellenar el triangulo, también interpolaremos la luz que recibiría  basándonos en la que tienen los vértices. Por ultimo solo debemos multiplicar este valor por el color del punto interpolado.  
 
