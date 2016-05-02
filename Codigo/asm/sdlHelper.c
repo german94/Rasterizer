@@ -144,7 +144,7 @@ Uint32 Vec4ToUint32P(float _r, float _g, float _b)
     return (Uint32)value;
 }
 
-void ProcessScanLine_m3(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, int SW, int SH, SDL_Surface* sf, float* depthBuffer, ScanLineData* data,  SDL_Surface* tex)
+void ProcessScanLine_m3(Vec3 color, Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, int SW, int SH, SDL_Surface* sf, float* depthBuffer, ScanLineData* data,  SDL_Surface* tex)
 {
     
     Vec3 pa, pb, pc, pd;
@@ -205,20 +205,19 @@ void ProcessScanLine_m3(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, int SW, 
         {
             textureColor = Map(tex, u, v);
             Uint32ToVec4(textureColor, texColor);
+            VecByVec(texColor, color, texColor, 3);
         }
-       
         else
-        {
-            texColor[0] = 1.0; texColor[1] = 1.0; texColor[2] = 1.0;     //si no hay textura entonces pongo  color blanco 
+        {    
+            texColor[0] = color[0]; texColor[1] = color[1]; texColor[2] = color[2];     //si no hay textura entonces pongo  color blanco 
         }
-
         VecByScalar(texColor, ndotl, texColor, 3);
         textureColor = Vec4ToUint32P(texColor[2], texColor[1], texColor[0]);
         putpixel(x, data->currentY, z, depthBuffer, SW, SH, sf, textureColor);
     }  
 }
 
-void DrawTriangle_m3(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 p1w, Vec3 p2w, Vec3 p3w, int SW, int SH, SDL_Surface* sf, float* depthBuffer,  SDL_Surface* tex, Vec2 p1t, Vec2 p2t, Vec2 p3t, Vec3 lightPos)
+void DrawTriangle_m3(Vec3 color, Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Vec3 p1w, Vec3 p2w, Vec3 p3w, int SW, int SH, SDL_Surface* sf, float* depthBuffer,  SDL_Surface* tex, Vec2 p1t, Vec2 p2t, Vec2 p3t, Vec3 lightPos)
 {
     Vec3 temp, tempn, tempw;
     Vec2 tempt;
@@ -296,11 +295,11 @@ void DrawTriangle_m3(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Ve
     CopyVec(v1.coordinates, p1, 3);
     CopyVec(v2.coordinates, p2, 3);
     CopyVec(v3.coordinates, p3, 3);
-    if(tex != NULL)
+    if(tex != NULL){
     	CopyVec(v1.texCoordinates, p1t, 2);
     	CopyVec(v2.texCoordinates, p2t, 2);
     	CopyVec(v3.texCoordinates, p3t, 2);
-
+    }
 
 
     if(p1[1] != p2[1])
@@ -319,7 +318,7 @@ void DrawTriangle_m3(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Ve
                     data.ndotlb = nl3;
                     data.ndotlc = nl1;
                     data.ndotld = nl2;
-                    ProcessScanLine_m3(&v1, &v3, &v1, &v2, SW, SH, sf, depthBuffer, &data, tex);
+                    ProcessScanLine_m3( color, &v1, &v3, &v1, &v2, SW, SH, sf, depthBuffer, &data, tex);
                 }    
             	else
             	{
@@ -327,7 +326,7 @@ void DrawTriangle_m3(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Ve
                     data.ndotlb = nl3;
                     data.ndotlc = nl2;
                     data.ndotld = nl3;
-                    ProcessScanLine_m3(&v1, &v3, &v2, &v3, SW, SH, sf, depthBuffer, &data, tex);
+                    ProcessScanLine_m3( color, &v1, &v3, &v2, &v3, SW, SH, sf, depthBuffer, &data, tex);
                 }	
         	}
 		}
@@ -345,7 +344,7 @@ void DrawTriangle_m3(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Ve
                     data.ndotlb = nl2;
                     data.ndotlc = nl1;
                     data.ndotld = nl3;
-                    ProcessScanLine_m3(&v1, &v2, &v1, &v3, SW, SH, sf, depthBuffer, &data, tex);
+                    ProcessScanLine_m3( color, &v1, &v2, &v1, &v3, SW, SH, sf, depthBuffer, &data, tex);
                 }
             	else
         		{
@@ -353,7 +352,7 @@ void DrawTriangle_m3(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Ve
                     data.ndotlb = nl3;
                     data.ndotlc = nl1;
                     data.ndotld = nl3;
-                    ProcessScanLine_m3(&v2, &v3, &v1, &v3, SW, SH, sf, depthBuffer, &data, tex);
+                    ProcessScanLine_m3( color, &v2, &v3, &v1, &v3, SW, SH, sf, depthBuffer, &data, tex);
                 }
         	}
     	}
@@ -372,7 +371,7 @@ void DrawTriangle_m3(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Ve
                 data.ndotlb = nl3;
                 data.ndotlc = nl2;
                 data.ndotld = nl3;
-                ProcessScanLine_m3(&v1, &v3, &v2, &v3, SW, SH, sf, depthBuffer, &data, tex);
+                ProcessScanLine_m3( color, &v1, &v3, &v2, &v3, SW, SH, sf, depthBuffer, &data, tex);
                
         	}
         }
@@ -388,14 +387,14 @@ void DrawTriangle_m3(Vec3 p1, Vec3 p2, Vec3 p3, Vec3 p1n, Vec3 p2n, Vec3 p3n, Ve
                 data.ndotlb = nl3;
                 data.ndotlc = nl1;
                 data.ndotld = nl3;
-                ProcessScanLine_m3(&v2, &v3, &v1, &v3, SW, SH, sf, depthBuffer, &data, tex);
+                ProcessScanLine_m3( color, &v2, &v3, &v1, &v3, SW, SH, sf, depthBuffer, &data, tex);
         	}
         }
     } 
 }
 
 
-void ProcessScanLine_m2(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, int SW, int SH, SDL_Surface* sf, float* depthBuffer, ScanLineData* data,  SDL_Surface* tex)
+void ProcessScanLine_m2(Vec3 color, Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, int SW, int SH, SDL_Surface* sf, float* depthBuffer, ScanLineData* data,  SDL_Surface* tex)
 {
     Vec3 pa, pb, pc, pd;
     CopyVec(pa, va->coordinates, 3);
@@ -442,19 +441,25 @@ void ProcessScanLine_m2(Vertex* va, Vertex* vb, Vertex* vc, Vertex* vd, int SW, 
         float v = res[2];
 
         Uint32 textureColor;
+        Vec3 texColor;
 
         if (tex != NULL)
+        {
             textureColor = Map(tex, u, v);
-    
+            Uint32ToVec4(textureColor, texColor);
+            VecByVec(texColor, color, texColor, 3);
+        }
         else
-            textureColor = 0xfffffff;  //si no hay textura entonces pongo  color blanco 
+        {    
+            texColor[0] = color[0]; texColor[1] = color[1]; texColor[2] = color[2];     //si no hay textura entonces pongo  color blanco 
+        }
 
+        textureColor = Vec4ToUint32P(texColor[2], texColor[1], texColor[0]);
         putpixel(x, data->currentY, z, depthBuffer, SW, SH, sf, textureColor);
     }
-        
 }
 
-void DrawTriangle_m2(Vec3 p1, Vec3 p2, Vec3 p3, int SW, int SH, SDL_Surface* sf, float* depthBuffer,  SDL_Surface* tex, Vec2 p1t, Vec2 p2t, Vec2 p3t )
+void DrawTriangle_m2(Vec3 color, Vec3 p1, Vec3 p2, Vec3 p3, int SW, int SH, SDL_Surface* sf, float* depthBuffer,  SDL_Surface* tex, Vec2 p1t, Vec2 p2t, Vec2 p3t )
 {
     Vec3 temp;
     Vec2 tempt;
@@ -529,11 +534,11 @@ void DrawTriangle_m2(Vec3 p1, Vec3 p2, Vec3 p3, int SW, int SH, SDL_Surface* sf,
 
                 if (y < p2[1])
                 {
-                    ProcessScanLine_m2(&v1, &v3, &v1, &v2, SW, SH, sf, depthBuffer, &data, tex);
+                    ProcessScanLine_m2(color, &v1, &v3, &v1, &v2, SW, SH, sf, depthBuffer, &data, tex);
                 }    
                 else
                 {
-                    ProcessScanLine_m2(&v1, &v3, &v2, &v3, SW, SH, sf, depthBuffer, &data, tex);
+                    ProcessScanLine_m2(color, &v1, &v3, &v2, &v3, SW, SH, sf, depthBuffer, &data, tex);
                 }   
             }
         }
@@ -547,11 +552,11 @@ void DrawTriangle_m2(Vec3 p1, Vec3 p2, Vec3 p3, int SW, int SH, SDL_Surface* sf,
 
                 if (y < p2[1])
                 {
-                    ProcessScanLine_m2(&v1, &v2, &v1, &v3, SW, SH, sf, depthBuffer, &data, tex);
+                    ProcessScanLine_m2(color, &v1, &v2, &v1, &v3, SW, SH, sf, depthBuffer, &data, tex);
                 }
                 else
                 {
-                    ProcessScanLine_m2(&v2, &v3, &v1, &v3, SW, SH, sf, depthBuffer, &data, tex);
+                    ProcessScanLine_m2(color, &v2, &v3, &v1, &v3, SW, SH, sf, depthBuffer, &data, tex);
                 }
             }
         }
@@ -566,7 +571,7 @@ void DrawTriangle_m2(Vec3 p1, Vec3 p2, Vec3 p3, int SW, int SH, SDL_Surface* sf,
             {
                 data.currentY = y;
 
-                ProcessScanLine_m2(&v1, &v3, &v2, &v3, SW, SH, sf, depthBuffer, &data, tex);
+                ProcessScanLine_m2(color, &v1, &v3, &v2, &v3, SW, SH, sf, depthBuffer, &data, tex);
             }
         }
         else
@@ -577,7 +582,7 @@ void DrawTriangle_m2(Vec3 p1, Vec3 p2, Vec3 p3, int SW, int SH, SDL_Surface* sf,
             {
                 data.currentY = y;
 
-                ProcessScanLine_m2(&v2, &v3, &v1, &v3, SW, SH, sf, depthBuffer, &data, tex);
+                ProcessScanLine_m2(color, &v2, &v3, &v1, &v3, SW, SH, sf, depthBuffer, &data, tex);
             }
         }
     } 

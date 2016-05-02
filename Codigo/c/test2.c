@@ -8,7 +8,7 @@
 
  
 const int SCREEN_WIDTH = 800;
-const int SCREEN_HEIGHT = 600;
+const int SCREEN_HEIGHT = 800;
 
 extern void initDepthBufferASM(float *buffer, float *maxs, int tam);
 
@@ -24,12 +24,14 @@ bool m_esq;
 bool m_tex;
 bool m_tex_norm;
 float sx, sy, sz;
-float depthBuffer[800 * 600];       //no deja usar las consts por declararlo globalmente
+float depthBuffer[800 * 800];       //no deja usar las consts por declararlo globalmente
 Mat4 scale;
 float rotSpeed;
 bool showFPS;
 bool showInfo;
 Vec3 lightPos;
+Vec3 color = {1.0, 1.0, 1.0};
+
 
 void initDepthBuffer()
 {
@@ -57,8 +59,8 @@ bool init()
     font = TTF_OpenFont("DroidSans.ttf", 12);
 
     quit = false;
-    rotX = true;
-    rotY = false;
+    rotX = false;
+    rotY = true;
     rotZ = false;
     sx = 1.0f;
     sy = 1.0f;
@@ -66,9 +68,9 @@ bool init()
     rotSpeed = 0.01f;
     showFPS = true;
     showInfo = true;
-    m_esq = false;
+    m_esq = true;
 	m_tex = false;
-	m_tex_norm = true;
+	m_tex_norm = false;
 
     return true;
 }
@@ -135,6 +137,58 @@ void EventDetection()
                         m_tex_norm = !m_tex_norm;
                         m_esq = false;
                         m_tex = false;
+                        break;
+                    }
+
+                     case SDLK_KP_PLUS:
+                    {
+                        if (color[0] <= 1.0)
+                        {
+                            if(color[2] < 1.0)
+                                color[2] = color[2] + 0.2;
+                            else
+                            {
+                                if(color[1] < 1.0)
+                                {
+                                    color[1] = color[1] + 0.2;
+                                    color[2] = 0.0;
+                                }
+                                else
+                                {
+                                    if(color[0] < 1.0)
+                                    {
+                                        color[0] = color[0] + 0.2;
+                                        color[1] = 0.0; color[2] = 0.0;
+                                    }
+                                }
+                            }
+                        }   
+                        break;
+                    }
+
+                    case SDLK_KP_MINUS:
+                    {
+                        if (color[0] >= 0.2)
+                        {
+                            if(color[2] >= 0.2)
+                                color[2] = color[2] - 0.2;
+                            else
+                            {
+                                if(color[1] >= 0.2)
+                                {
+                                    color[1] = color[1] - 0.2;
+                                    color[2] = 1.0;
+                                }
+                                else
+                                {
+                                    if(color[0] > 0.2)
+                                    {
+                                        color[0] = color[0] - 0.2;
+                                        color[1] = 1.0; color[2] = 1.0;
+                                    }
+                                }   
+                            }        
+                        }   
                         break;
                     }
 
@@ -301,7 +355,7 @@ void ShowInfo(SDL_Surface* screen)
     RenderTextR(c, font, "6: mostrar modo texturas y normales", screenSurface, &r12);
 }
 
-int main( int argc, char* args[] )
+int main(int argc, char *argv[])
 {
 
     Mat4 view, proj, worldToCamera;
@@ -339,14 +393,24 @@ int main( int argc, char* args[] )
         Vec2DynamicArray Uvs;
         Vec4DynamicArray Normals;
         UInt3DynamicArray Faces;
+        Vec2_int max_distancias; //{indice x_max, indice y_max}
 
-        LoadModel("model.obj", &Vertices,  &Uvs,  &Normals, &Faces);
+
+        LoadModel("model.obj", &Vertices,  &Uvs,  &Normals, &Faces, max_distancias);
           
         SDL_Surface* tex;
         if(Uvs.size != 0)
-        	tex = SDL_LoadBMP("a.bmp");
+        {
+            if(argc == 2)
+                tex = SDL_LoadBMP(argv[1]);
+            else
+            {
+                printf("Falta textura.\n");
+                quit = true;
+            }
+        }
         else
-        	tex = NULL;
+            tex = NULL;
 
         Mat4 t;
 	
@@ -435,14 +499,16 @@ int main( int argc, char* args[] )
   
             a += rotSpeed;
       		
-            if(m_tex_norm)
-            	RenderFilledModel_m3(&Vertices,  &Uvs,  &Normals, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, worldt, tex,  lightPos); 
-           
+            if(Normals.size != 0)
+            {
+                if(m_tex_norm)
+            	   RenderFilledModel_m3(color, &Vertices,  &Uvs,  &Normals, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, worldt, tex,  lightPos, max_distancias); 
+            }
             if (m_tex)
-				RenderFilledModel_m2(&Vertices,  &Uvs, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, tex); 
+				RenderFilledModel_m2(color, &Vertices,  &Uvs, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, depthBuffer, tex, max_distancias); 
 
            	if (m_esq)
-            	RenderFilledModel_m1(&Vertices, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface); 
+            	RenderFilledModel_m1(&Vertices, &Faces, wvp, SCREEN_WIDTH, SCREEN_HEIGHT, screenSurface, max_distancias); 
 	
 
             deltaclock = SDL_GetTicks() - startclock;

@@ -8,6 +8,7 @@ typedef float Vec4[4];
 typedef float Vec3[3];
 typedef float Vec2[2];
 typedef int Pixel[2];
+typedef int Vec2_int[2];
 typedef unsigned int uint3[3];
 typedef float Mat4[4][4];
 typedef float Mat3[3][3];
