@@ -31,6 +31,7 @@ bool showFPS;
 bool showInfo;
 Vec3 lightPos;
 Vec3 color = {1.0, 1.0, 1.0};
+Mat4 t;
 
 
 void initDepthBuffer()
@@ -262,6 +263,42 @@ void EventDetection()
                         break;
                     }
 
+                     case SDLK_KP_2:
+                    {
+                        t[1][3] = t[1][3] - 0.1; 
+                        break;
+                    }
+
+                    case SDLK_KP_4:
+                    {
+                        t[0][3] = t[0][3] + 0.1;
+                        break;
+                    }
+
+                    case SDLK_KP_6:
+                    {
+                        t[0][3] = t[0][3] - 0.1;
+                        break;
+                    }
+
+                    case SDLK_KP_8:
+                    {
+                        t[1][3] = t[1][3] + 0.1;
+                        break;
+                    }
+
+                      case SDLK_KP_7:
+                    {
+                        t[2][3] = t[2][3] - 0.1;
+                        break;
+                    }
+
+                      case SDLK_KP_9:
+                    {
+                        t[2][3] = t[2][3] + 0.1;
+                        break;
+                    }
+
                     case SDLK_UP:
                     {
                         if (lightPos[1] > -SCREEN_HEIGHT/2)
@@ -412,10 +449,7 @@ int main(int argc, char *argv[])
         else
             tex = NULL;
 
-        Mat4 t;
-	
         CreateTranslationMatrix(t, 0.0f, 0.0f, 20.0f);
-        Traspose(t);      
         
         Mat4 worldt;
 
