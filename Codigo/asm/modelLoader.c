@@ -22,7 +22,7 @@ bool LoadModel(char* path, Vec4DynamicArray *outVertices, Vec2DynamicArray *outU
 		printf("Error al cargar el archivo.\n");
 		return false;
 	}
-	float maxy = 0.0; float maxx = 0.0;
+	float maxy = -FLT_MAX; float maxx = -FLT_MAX;
 	uint3 vertexIndex, normalIndex, uvIndex;
 	int indice = 0;
 	while(1)
