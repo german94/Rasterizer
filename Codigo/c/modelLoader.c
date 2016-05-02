@@ -4,16 +4,16 @@
 bool ESCALADO = false;
 float factor;
 
-bool LoadModel(char* path, Vec4DynamicArray *outVertices, Vec2DynamicArray *outUvs, Vec4DynamicArray *outNormals, UInt3DynamicArray* outFaces, Vec2_int max_dis)
+bool LoadModel(char* path, Model* data)
 {
 
-	initVec4DynamicArray(outNormals, 0);
+	initVec4DynamicArray(data->normals, 0);
 	
-	initUInt3DynamicArray(outFaces, 1);
+	initUInt3DynamicArray(data->faces, 1);
 	
-	initVec4DynamicArray(outVertices, 1);
+	initVec4DynamicArray(data->vertices, 1);
 
-	initVec2DynamicArray(outUvs, 0);
+	initVec2DynamicArray(data->uvs, 0);
 
 	FILE* file = fopen(path, "r");
 
@@ -43,42 +43,42 @@ bool LoadModel(char* path, Vec4DynamicArray *outVertices, Vec2DynamicArray *outU
 			if(v[0] >= maxx)
 			{
 				maxx = v[0];
-				max_dis[0] = indice; 
+				data->max_dis[0] = indice; 
 			}
 			if(v[1] >= maxy)
 			{	
 				maxy = v[1];	
-				max_dis[1] = indice;  
+				data->max_dis[1] = indice;  
 			}	
 
-			insertVec4DynamicArray(outVertices, v);
+			insertVec4DynamicArray(data->vertices, v);
 			indice++;
 
 		}
 		else if(strcmp(lineHeader, "vt") == 0)
 		{	
-			if(outUvs->size ==0) 
-				initVec2DynamicArray(outUvs, 1);
+			if(data->uvs->size ==0) 
+				initVec2DynamicArray(data->uvs, 1);
 
 			Vec2 uv;
 			fscanf(file, "%f %f\n", &uv[0], &uv[1]);
 			uv[1] = 1 - uv[1];
-			insertVec2DynamicArray(outUvs, uv);
+			insertVec2DynamicArray(data->uvs, uv);
 		}
 		else if(strcmp(lineHeader, "vn") == 0)
 		{
-			if(outNormals->size ==0) 
-				initVec4DynamicArray(outNormals, 1);
+			if(data->normals->size ==0) 
+				initVec4DynamicArray(data->normals, 1);
 
 			Vec4 normal;
 			fscanf(file, "%f %f %f\n", &normal[0], &normal[1], &normal[2]); normal[3] = 1.0f;
-			insertVec4DynamicArray(outNormals, normal);
+			insertVec4DynamicArray(data->normals, normal);
 		}
 		else if(strcmp(lineHeader, "f") == 0)
 		{	
 			int matches, cero_a, cero_b, cero_c, uno_a, uno_b, uno_c, dos_a, dos_b, dos_c, tres_a, tres_b, tres_c; 
 			
-			if(outUvs->size != 0 && outNormals->size !=0)
+			if(data->uvs->size != 0 && data->normals->size !=0)
 			{
 				matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d\n", &cero_a, &cero_b, &cero_c, &uno_a, &uno_b, &uno_c, &dos_a, &dos_b, &dos_c, &tres_a, &tres_b, &tres_c); 
 				if(matches != 12 && matches != 9)
@@ -87,7 +87,7 @@ bool LoadModel(char* path, Vec4DynamicArray *outVertices, Vec2DynamicArray *outU
 					return false;
 				}	
 			}
-			if(outUvs->size == 0 && outNormals->size !=0)
+			if(data->uvs->size == 0 && data->normals->size !=0)
 			{
 				matches = fscanf(file, "%d//%d %d//%d %d//%d %d//%d\n", &cero_a, &cero_c, &uno_a, &uno_c, &dos_a, &dos_c, &tres_a, &tres_c);
 				if(matches != 6 && matches!=8)
@@ -96,7 +96,7 @@ bool LoadModel(char* path, Vec4DynamicArray *outVertices, Vec2DynamicArray *outU
 					return false;
 				}
 			}
-			if(outUvs->size != 0 && outNormals->size ==0)
+			if(data->uvs->size != 0 && data->normals->size ==0)
 			{
 				matches = fscanf(file, "%d/%d %d/%d %d/%d %d/%d\n", &cero_a, &cero_b, &uno_a, &uno_b, &dos_a, &dos_b, &tres_a, &tres_b);
 				if(matches != 6 && matches!=8)
@@ -105,7 +105,7 @@ bool LoadModel(char* path, Vec4DynamicArray *outVertices, Vec2DynamicArray *outU
 					return false;
 				}
 			}
-			if(outUvs->size == 0 && outNormals->size == 0)
+			if(data->uvs->size == 0 && data->normals->size == 0)
 			{
 				matches = fscanf(file, "%d %d %d %d\n", &cero_a, &uno_a, &dos_a, &tres_a);
 				if(matches != 3 && matches!=4)
@@ -124,31 +124,31 @@ bool LoadModel(char* path, Vec4DynamicArray *outVertices, Vec2DynamicArray *outU
 			vertexIndex[0] = cero_a ; vertexIndex[1] = uno_a; vertexIndex[2] = dos_a;
 			uvIndex[0] =  cero_b; uvIndex[1] = uno_b; uvIndex[2] = dos_b;	
 			normalIndex[0] =  cero_c; normalIndex[1] = uno_c; normalIndex[2] = dos_c;
-			insertUInt3DynamicArray(outFaces, vertexIndex);
-			insertUInt3DynamicArray(outFaces, uvIndex);
-			insertUInt3DynamicArray(outFaces, normalIndex);
+			insertUInt3DynamicArray(data->faces, vertexIndex);
+			insertUInt3DynamicArray(data->faces, uvIndex);
+			insertUInt3DynamicArray(data->faces, normalIndex);
 
 			if(matches== 8 || matches == 12 || matches == 4)
 			{
 				vertexIndex[0] = cero_a ; vertexIndex[1] = dos_a; vertexIndex[2] = tres_a;
 				uvIndex[0] =  cero_b; uvIndex[1] = dos_b; uvIndex[2] = tres_b;	
 				normalIndex[0] =  cero_c; normalIndex[1] = dos_c; normalIndex[2] = tres_c;
-				insertUInt3DynamicArray(outFaces, vertexIndex);
-				insertUInt3DynamicArray(outFaces, uvIndex);
-				insertUInt3DynamicArray(outFaces, normalIndex);
+				insertUInt3DynamicArray(data->faces, vertexIndex);
+				insertUInt3DynamicArray(data->faces, uvIndex);
+				insertUInt3DynamicArray(data->faces, normalIndex);
 			}
 		}
 	}
 }
     
-void escalando(Vec4DynamicArray *vertices, Mat4 wvp, int swidth, int sheight, Vec2_int max_dis)
+void escalando(Model* data, int swidth, int sheight)
 {
 	Vec4 maxx, maxy, resx, resy;
 	float escalado_x, escalado_y;
-	CopyVec(maxx, vertices->array[max_dis[0]], 4);
-	CopyVec(maxy, vertices->array[max_dis[1]], 4);
+	CopyVec(maxx, data->vertices->array[data->max_dis[0]], 4);
+	CopyVec(maxy, data->vertices->array[data->max_dis[1]], 4);
 	  
-	Vec4Mat4Product(maxx, wvp, resx);
+	Vec4Mat4Product(maxx, data->wvp, resx);
 	float x_final = (resx[0]/resx[3])*swidth + swidth*0.5 ;
 	if (x_final < swidth*0.7)
 		escalado_x = 1.0;
@@ -158,7 +158,7 @@ void escalando(Vec4DynamicArray *vertices, Mat4 wvp, int swidth, int sheight, Ve
 	if(x_final < swidth*0.6)
 		escalado_x = 1.7;
 	
-	Vec4Mat4Product(maxy, wvp, resy);
+	Vec4Mat4Product(maxy, data->wvp, resy);
 	float y_final = -(resy[1]/resy[3])*sheight + sheight*0.7 ;
 	if (y_final > 0 )
 		escalado_y = 1.0;
@@ -176,160 +176,160 @@ void escalando(Vec4DynamicArray *vertices, Mat4 wvp, int swidth, int sheight, Ve
 	ESCALADO = true;  
 }
 
-void RenderFilledModel_m3(Vec3 color, Vec4DynamicArray *vertices, Vec2DynamicArray *uvs, Vec4DynamicArray *normals, UInt3DynamicArray* faces, Mat4 wvp, int swidth, int sheight, SDL_Surface* sf, float* depthBuffer, Mat4 world,  SDL_Surface* tex,  Vec3 lightPos, Vec2_int max_dis)
+void RenderFilledModel_m3(Model* data, SDL_Surface* sf, float* depthBuffer, SDL_Surface* tex,  Vec3 lightPos)
 {	
 	int  j;
 	if (!ESCALADO)
-    	escalando(vertices, wvp, swidth, sheight, max_dis);
-	for(j = 0; j < faces->used; j= j+3)//NOTAR QUE COMO GUARDA PARA CADA TRIANGULO LE CORRESPONDEN 3 LUGARES
+    	escalando(data, sf->w, sf->h);
+	for(j = 0; j < data->faces->used; j= j+3)//NOTAR QUE COMO GUARDA PARA CADA TRIANGULO LE CORRESPONDEN 3 LUGARES
     {   	   
 	    Vec4 res1, res2, res3, res1n, res2n, res3n, res1w, res2w, res3w;
 	    Vec3 v1, v2, v3, v1n, v2n, v3n, v1w, v2w, v3w;
 
 	    Vec4 vertexA, vertexB, vertexC;
-		CopyVec(vertexA, vertices->array[faces->array[j][0]], 4);
-		CopyVec(vertexB, vertices->array[faces->array[j][1]], 4);
-		CopyVec(vertexC, vertices->array[faces->array[j][2]], 4);
+		CopyVec(vertexA, data->vertices->array[data->faces->array[j][0]], 4);
+		CopyVec(vertexB, data->vertices->array[data->faces->array[j][1]], 4);
+		CopyVec(vertexC, data->vertices->array[data->faces->array[j][2]], 4);
 		VecByScalar(vertexA, factor, vertexA, 3);
         VecByScalar(vertexB, factor, vertexB, 3);
         VecByScalar(vertexC, factor, vertexC, 3);
 
 
-	    Vec4Mat4Product(vertexA, wvp, res1);
-	    v1[0] = (res1[0]/res1[3])*swidth + swidth*0.5 ;
-	    v1[1] = (-res1[1]/res1[3])*sheight+ sheight*0.7; 
+	    Vec4Mat4Product(vertexA, data->wvp, res1);
+	    v1[0] = (res1[0]/res1[3])*sf->w + sf->w*0.5 ;
+	    v1[1] = (-res1[1]/res1[3])*sf->h+ sf->h*0.7; 
 	    v1[2] = res1[2] / res1[3];
 
-	    Vec4Mat4Product(vertexB, wvp, res2);
-	    v2[0] = (res2[0]/res2[3])*swidth + swidth*0.5 ;
-	    v2[1] = (-res2[1]/res2[3])*sheight + sheight*0.7; 
+	    Vec4Mat4Product(vertexB, data->wvp, res2);
+	    v2[0] = (res2[0]/res2[3])*sf->w + sf->w*0.5 ;
+	    v2[1] = (-res2[1]/res2[3])*sf->h + sf->h*0.7; 
 	    v2[2] = res2[2] / res2[3];
 
-	    Vec4Mat4Product(vertexC, wvp, res3);
-	    v3[0] = (res3[0]/res3[3])*swidth + swidth*0.5 ;
-	    v3[1] = (-res3[1]/res3[3])*sheight + sheight*0.7; 
+	    Vec4Mat4Product(vertexC, data->wvp, res3);
+	    v3[0] = (res3[0]/res3[3])*sf->w + sf->w*0.5 ;
+	    v3[1] = (-res3[1]/res3[3])*sf->h + sf->h*0.7; 
 	 	v3[2] = res3[2] / res3[3];
 
 	 	///////////////////////////
- 		Vec4Mat4Product(vertexA, world, res1w);
+ 		Vec4Mat4Product(vertexA, data->world, res1w);
  		v1w[0] = res1w[0]; v1w[1] = res1w[1]; v1w[2] = res1w[2];
 
-        Vec4Mat4Product(vertexB, world, res2w);
+        Vec4Mat4Product(vertexB, data->world, res2w);
 		v2w[0] = res2w[0]; v2w[1] = res2w[1]; v2w[2] = res2w[2];
 
-        Vec4Mat4Product(vertexC, world, res3w);
+        Vec4Mat4Product(vertexC, data->world, res3w);
         v3w[0] = res3w[0]; v3w[1] = res3w[1]; v3w[2] = res3w[2];        ////////////
 
         ////////////////////////////
 
         Vec4 vertexAn, vertexBn, vertexCn;
-		CopyVec(vertexAn, normals->array[faces->array[j+2][0]], 4);
-		CopyVec(vertexBn, normals->array[faces->array[j+2][1]], 4);
-		CopyVec(vertexCn, normals->array[faces->array[j+2][2]], 4);
+		CopyVec(vertexAn, data->normals->array[data->faces->array[j+2][0]], 4);
+		CopyVec(vertexBn, data->normals->array[data->faces->array[j+2][1]], 4);
+		CopyVec(vertexCn, data->normals->array[data->faces->array[j+2][2]], 4);
 
 
-        Vec4Mat4Product(vertexAn, world, res1n);
+        Vec4Mat4Product(vertexAn, data->world, res1n);
         v1n[0] = res1n[0]; v1n[1] = res1n[1]; v1n[2] = res1n[2];        ////////////
 
-        Vec4Mat4Product(vertexBn, world, res2n);
+        Vec4Mat4Product(vertexBn, data->world, res2n);
 		v2n[0] = res2n[0]; v2n[1] = res2n[1]; v2n[2] = res2n[2]; 
 
-        Vec4Mat4Product(vertexCn, world, res3n);
+        Vec4Mat4Product(vertexCn, data->world, res3n);
 		v3n[0] = res3n[0]; v3n[1] = res3n[1]; v3n[2] = res3n[2];  
 
 		Vec2 v1t, v2t, v3t;
 		if(tex != NULL)
 		{
-			CopyVec(v1t, uvs->array[faces->array[j+1][0]], 2);
-			CopyVec(v2t, uvs->array[faces->array[j+1][1]], 2);
-			CopyVec(v3t, uvs->array[faces->array[j+1][2]], 2);
+			CopyVec(v1t, data->uvs->array[data->faces->array[j+1][0]], 2);
+			CopyVec(v2t, data->uvs->array[data->faces->array[j+1][1]], 2);
+			CopyVec(v3t, data->uvs->array[data->faces->array[j+1][2]], 2);
 		}
 		
-		DrawTriangle_m3(color, v1, v2, v3, v1n, v2n, v3n, v1w, v2w, v3w, swidth, sheight, sf, depthBuffer, tex, v1t, v2t, v3t,  lightPos);
+		DrawTriangle_m3(data->color, v1, v2, v3, v1n, v2n, v3n, v1w, v2w, v3w, sf->w, sf->h, sf, depthBuffer, tex, v1t, v2t, v3t,  lightPos);
 	}
 }
 
-void RenderFilledModel_m2(Vec3 color, Vec4DynamicArray *vertices, Vec2DynamicArray *uvs, UInt3DynamicArray* faces, Mat4 wvp, int swidth, int sheight, SDL_Surface* sf, float* depthBuffer, SDL_Surface* tex, Vec2_int max_dis)
+void RenderFilledModel_m2(Model* data, SDL_Surface* sf, float* depthBuffer, SDL_Surface* tex)
 {	
 	int  j;
 	if (!ESCALADO)
-    	escalando(vertices, wvp, swidth, sheight, max_dis);
-	for(j = 0; j < faces->used; j= j+3)//NOTAR QUE COMO GUARDA PARA CADA TRIANGULO LE CORRESPONDEN 3 LUGARES
+    	escalando(data, sf->w, sf->h);
+	for(j = 0; j < data->faces->used; j= j+3)//NOTAR QUE COMO GUARDA PARA CADA TRIANGULO LE CORRESPONDEN 3 LUGARES
     {   	   
 	    Vec4 res1, res2, res3;
 	    Vec3 v1, v2, v3;
 
 	    Vec4 vertexA, vertexB, vertexC;
-		CopyVec(vertexA, vertices->array[faces->array[j][0]], 4);
-		CopyVec(vertexB, vertices->array[faces->array[j][1]], 4);
-		CopyVec(vertexC, vertices->array[faces->array[j][2]], 4);
+		CopyVec(vertexA, data->vertices->array[data->faces->array[j][0]], 4);
+		CopyVec(vertexB, data->vertices->array[data->faces->array[j][1]], 4);
+		CopyVec(vertexC, data->vertices->array[data->faces->array[j][2]], 4);
 		VecByScalar(vertexA, factor, vertexA, 3);
         VecByScalar(vertexB, factor, vertexB, 3);
         VecByScalar(vertexC, factor, vertexC, 3);
 
 
-	    Vec4Mat4Product(vertexA, wvp, res1);
-	    v1[0] = (res1[0]/res1[3])*swidth + swidth*0.5 ;
-	    v1[1] = (-res1[1]/res1[3])*sheight+ sheight*0.7; 
+	    Vec4Mat4Product(vertexA, data->wvp, res1);
+	    v1[0] = (res1[0]/res1[3])*sf->w + sf->w*0.5 ;
+	    v1[1] = (-res1[1]/res1[3])*sf->h+ sf->h*0.7; 
 	    v1[2] = res1[2] / res1[3];
 
-	    Vec4Mat4Product(vertexB, wvp, res2);
-	    v2[0] = (res2[0]/res2[3])*swidth + swidth*0.5 ;
-	    v2[1] = (-res2[1]/res2[3])*sheight + sheight*0.7; 
+	    Vec4Mat4Product(vertexB, data->wvp, res2);
+	    v2[0] = (res2[0]/res2[3])*sf->w + sf->w*0.5 ;
+	    v2[1] = (-res2[1]/res2[3])*sf->h + sf->h*0.7; 
 	    v2[2] = res2[2] / res2[3];
 
-	    Vec4Mat4Product(vertexC, wvp, res3);
-	    v3[0] = (res3[0]/res3[3])*swidth + swidth*0.5 ;
-	    v3[1] = (-res3[1]/res3[3])*sheight + sheight*0.7; 
+	    Vec4Mat4Product(vertexC, data->wvp, res3);
+	    v3[0] = (res3[0]/res3[3])*sf->w + sf->w*0.5 ;
+	    v3[1] = (-res3[1]/res3[3])*sf->h + sf->h*0.7; 
 	 	v3[2] = res3[2] / res3[3];
 
 	 	///////////////////////////
 		Vec2 v1t, v2t, v3t;
 		if(tex != NULL)
 		{
-			CopyVec(v1t, uvs->array[faces->array[j+1][0]], 2);
-			CopyVec(v2t, uvs->array[faces->array[j+1][1]], 2);
-			CopyVec(v3t, uvs->array[faces->array[j+1][2]], 2);
+			CopyVec(v1t, data->uvs->array[data->faces->array[j+1][0]], 2);
+			CopyVec(v2t, data->uvs->array[data->faces->array[j+1][1]], 2);
+			CopyVec(v3t, data->uvs->array[data->faces->array[j+1][2]], 2);
 		}
 
-		DrawTriangle_m2(color, v1, v2, v3, swidth, sheight, sf, depthBuffer, tex, v1t, v2t, v3t);
+		DrawTriangle_m2(data->color, v1, v2, v3, sf->w, sf->h, sf, depthBuffer, tex, v1t, v2t, v3t);
 	}
 }
 
 
-void RenderFilledModel_m1(Vec4DynamicArray *vertices, UInt3DynamicArray* faces, Mat4 wvp, int swidth, int sheight, SDL_Surface* sf, Vec2_int max_dis)
+void RenderFilledModel_m1(Model* data, SDL_Surface* sf)
 {	
 	int  j;
 	if (!ESCALADO)
-    	escalando(vertices, wvp, swidth, sheight, max_dis);
-	for(j = 0; j < faces->used; j= j+3)//NOTAR QUE COMO GUARDA PARA CADA TRIANGULO LE CORRESPONDEN 3 LUGARES
+    	escalando(data, sf->w, sf->h);
+	for(j = 0; j < data->faces->used; j= j+3)//NOTAR QUE COMO GUARDA PARA CADA TRIANGULO LE CORRESPONDEN 3 LUGARES
     {   	   
 	    Vec4 res1, res2, res3;
 	    Vec3 v1, v2, v3;
 
 	    Vec4 vertexA, vertexB, vertexC;
-		CopyVec(vertexA, vertices->array[faces->array[j][0]], 4);
-		CopyVec(vertexB, vertices->array[faces->array[j][1]], 4);
-		CopyVec(vertexC, vertices->array[faces->array[j][2]], 4);
+		CopyVec(vertexA, data->vertices->array[data->faces->array[j][0]], 4);
+		CopyVec(vertexB, data->vertices->array[data->faces->array[j][1]], 4);
+		CopyVec(vertexC, data->vertices->array[data->faces->array[j][2]], 4);
 		VecByScalar(vertexA, factor, vertexA, 3);
         VecByScalar(vertexB, factor, vertexB, 3);
         VecByScalar(vertexC, factor, vertexC, 3);
 
-	    Vec4Mat4Product(vertexA, wvp, res1);
-	    v1[0] = (res1[0]/res1[3])*swidth + swidth*0.5 ;
-	    v1[1] = (-res1[1]/res1[3])*sheight+ sheight*0.7; 
+	    Vec4Mat4Product(vertexA, data->wvp, res1);
+	    v1[0] = (res1[0]/res1[3])*sf->w + sf->w*0.5 ;
+	    v1[1] = (-res1[1]/res1[3])*sf->h+ sf->h*0.7; 
 	    v1[2] = res1[2] / res1[3];
 
-	    Vec4Mat4Product(vertexB, wvp, res2);
-	    v2[0] = (res2[0]/res2[3])*swidth + swidth*0.5 ;
-	    v2[1] = (-res2[1]/res2[3])*sheight + sheight*0.7; 
+	    Vec4Mat4Product(vertexB, data->wvp, res2);
+	    v2[0] = (res2[0]/res2[3])*sf->w + sf->w*0.5 ;
+	    v2[1] = (-res2[1]/res2[3])*sf->h + sf->h*0.7; 
 	    v2[2] = res2[2] / res2[3];
 
-	    Vec4Mat4Product(vertexC, wvp, res3);
-	    v3[0] = (res3[0]/res3[3])*swidth + swidth*0.5 ;
-	    v3[1] = (-res3[1]/res3[3])*sheight + sheight*0.7; 
+	    Vec4Mat4Product(vertexC, data->wvp, res3);
+	    v3[0] = (res3[0]/res3[3])*sf->w + sf->w*0.5 ;
+	    v3[1] = (-res3[1]/res3[3])*sf->h + sf->h*0.7; 
 	 	v3[2] = res3[2] / res3[3];
 
-		DrawTriangle_m1(v1, v2, v3, swidth, sheight, sf);
+		DrawTriangle_m1(v1, v2, v3, sf->w, sf->h, sf);
 	}
 }
