@@ -442,8 +442,6 @@ Generalmente se utiliza es suponer que la ventana de proyección es un cuadrado 
     \label{fig:mesh1}
 \end{figure}
 
-\pagebreak
-
 Dado que la parte observable de nuestro mundo 3D puede variar de acuerdo al valor de FOV, debemos incluirlo de alguna manera en nuestro cambio de coordenadas. Sin entrar en detalle en la trigonometría que hay detras de esto, se utiliza el valor $P = 1 \ / \ tan(FOV * 0.5)$. Esto nos va a permitir escalar las coordenadas para poder definir la visibilidad de los vértices de acuerdo a este ángulo y no solo al posicionamiento de los mismos.
 La matriz de proyección entonces queda de la siguiente forma:
 
@@ -473,41 +471,46 @@ Donde $width$ y $height$ representa el ancho y alto de nuestra pantall. Notar qu
 En el archivo mathHelper.h declaramos numerosas funciones matemáticas que luego definimos en mathHelper.c. Estas funciones van desde cálculos básicos como el producto cruzado, el producto escalar, normalizaciones y productos de matrices hasta la construcción de matrices específicas como de rotación, escala, vista y proyección.
 \par Existen cálculos que se repiten mucho a lo largo del código y que, en algunos casos, es necesario realizarlos por cada ejecución del ciclo principal por ejemplo. En estos casos decidimos implementar también una versión de los mismos en Assembler con el objetivo de optimizar la performance y poder realizar mediciones y comparaciones con las versiones de estas funciones en C. Las funciones matemáticas que decidimos implementar en Assembler son las siguientes: producto escalar (ScalarProdASM), interpolación (InterpolateASM, hablaremos del uso de esta función más adelante) y producto de vector por matriz (Vec4Mat4ProductASM). También existen otras funciones que decidimos implementar en Assembler, que no realizan cálculos matemáticos pero que se ve reflejado en la experimentación que haberlas programado en Assembler mejoró notablemente la performance, hablaremos de ellas más adelante.
 
+\subsection{Model Loader:}
+Cada modelo se encuentra conformado por un conjunto de polígonos, en especial triángulos. Dado que elaboraremos tres modos, de manera de aplicar distintos efectos sobre los modelos, para poder graficar cada uno de los triángulos no solo sera necesario tener las coordenadas de sus vértices, sino que dependiendo del modo requerirán datos adicionales. 
+
+
+\subsubsection{Modo 1:}  
+Este método sera el mas básico, se encargara de dibujar cada uno de los triángulos (vértices y aristas) que conforman al modelo. 
+\par Comenzaremos con una función a la que llamaremos "$RenderFilledModel\_m1$". Inicialmente se encargara de calcular ,para cada triangulo, la transformación final (descripta en la sección \ref{projection}) de las coordenadas dentro del $Model$ $Space$ a vectores bidimensionales que van a representar los píxeles en nuestra pantalla 2D.  
+\par Sean v1,v2,v3 los tres vértices que forman un triangulo, renombraremos dichos vértices como P1, P2, P3 de manera que P1 sea el que se encuentre en una posición menor o igual que P2 respecto del eje y;  P2 a su vez sera aquel que se encuentre en una posición menor o igual que P3 respecto del mismo eje. Para calcular y graficar las aristas entre cada vértice utilizaremos la función $DrawTriangle\_m1$ descripto en la posterior sección \ref{sdlmodo1} 
+
+
+\subsubsection{Modo 2:}  
+En el segundo modo procederemos a rellenar los triángulos. Esto es posible ya sea tomando píxeles de una imagen de forma tal que el modelo final obtenga la textura de la imagen o bien definiendo un conjunto de pixels con el mismo color para todos. Para el primer caso Blender nos permite asignarles texturas a los distintos modelos, una de las formas es tomando como input una imagen y utilizando el Mapeo UV ($UV$ $mapping$). Esta técnica permite asignar una textura en 2D a una superficie 3D. 
+\par A cada vértice ,de los polígonos que componen el modelo, le sera asignado un par de coordenadas 2D llamas UV. Este nuevo par de coordenadas definen que área de la imagen es mapeada a cada triangulo es decir, permitirá pintar cada triangulo con el color de una imagen. 
+\par Por lo que modificaremos la función $RenderFilledModel_m1$ a $RenderFilledModel_m2$ y $DrawTriangle\_m1$ a $DrawTriangle\_m2$ de manera de no solo exportar los vértices sino que también las coordenadas UV de cada uno.
+\par Como requeriremos acceder a cada píxel de la imagen usaremos la función $SDL\_LoadBMP$ ( provista por SDL) la cual permite cargar una superficie desde un archivo del tipo .BMP y nos devuelve un puntero a la misma, al cual llamaremos $tex$.
+
+
+\subsubsection{Modo 3:}  
+
+Redefiniremos $RenderFilledModel\_m2$, agregandole nuevas funcionalidades, a $RenderFilledModel\_m3$. Este nuevo modo se basa en simular efectos de luz sobre la superficie del objeto. Para esto sera necesario contar con un punto que sera desde donde iluminaremos nuestro modelo, lo llamaremos $lightPos$. Para calcular la luminosidad nos basaremos en la técnica Gouraud Shading, la misma utiliza 3 vectores normales por cada triangulo que compone a nuestro modelo. Estos vectores serán normales pero, a los vértices de cada uno. Otros métodos utilizan solo un vector normal a la superficie de los triángulos pero de esta forma toda la superficie obtiene la misma intensidad de color en cambio la técnica que emplearemos nos permite tener variaciones de intensidad sobre una misma superficie. 
+\par Como podemos iluminar a nuestro modelo desde cualquier punto del espacio donde vive nuestro modelo y no específicamente desde nuestro punto de vista, sera necesario entonces definir $lightPos$ teniendo en cuenta que se utiliza las coordenadas del World Space así también como los vectores normales (que serán exportados por Blender) y los vértices asociados. Como mencionamos, originalmente los vértices y, en este caso, las normales viven dentro del $Model$ $Space$ para convertirlas a $World$ $Space$ solo necesitaremos multiplicar por la $World$ $Matrix$.  Luego de tener las coordenadas en los respectivos espacios llamaremos a la nueva función $DrawTriangle\_m3$.
+
+
 \subsection{sdlHelper: }
+\subsubsection{Modo 1:} \label{sdlmodo1}
 
 
-
-Luego de tener las coordenadas como vectores bidimensionales procederemos a la rasterización de los mismos,  es decir trasformar los vectores de coordenadas en píxeles. Recordemos que los vértices de nuestro modelo están agrupados de  modo que forman un triángulo entre si. Elaboraremos tres modos que aplicaran distintos efectos sobre el modelo. 
-
-
-\subsection{Modo 1:}
-
-
-
-\par Inicialmente nuestro modelo esta conformado por polígonos mas específicamente triángulos. Blender nos permite obtener los vértices de los mismos por lo que el primer modo se encargara de reconstruir los polígonos.
-\par Construiremos una nueva función llamada $DrawTriangle\_m1$ que sera la encargada de transformar los puntos bidimensionales proyectando y rellenando los triángulos en nuestra pantalla.
-
+Para continuar con la renderización de nuestros modelos construiremos una nueva función llamada $DrawTriangle\_m1$ 
 \textbf{DrawTriangle\_m1 y ProcessScanLine\_m1:}
-
-\par  Sean v1,v2,v3 los tres vértices que forman un triangulo, la función renombrara dichos vértices como P1, P2, P3 de manera que P1 sea el que se encuentre en una posición menor o igual que P2 respecto del eje y;  P2 a su vez sera aquel que se encuentre en una posición menor o igual que P3 respecto del mismo eje. 
-\par Definiremos P1.y como el valor en la coordenada y de P1, P1.x como el valor en el eje x y de manera análoga para P2, P3, SX y EX. 
-\par La idea para crear las aristas es definir para cada valor Y entre P1.y y P3.y dos puntos SX y EX como se observa en la figura 5 de esta manera la sucesion de puntos creara la idea de aristas.
-
-
+\par Sean  P1, P2, P3 tres vértices de un triangulo ubicado en un valor menor del eje y respecto del siguiente vértice, definiremos P1.y como el valor en la coordenada y de P1, P1.x como el valor en el eje x, de manera análoga para P2, P3 y posteriormente para SX y EX. 
+\par La idea para crear las aristas es definir para cada valor Y entre P1.y y P3.y dos puntos SX y EX como se observa en la figura 5 de esta manera la sucesión de puntos creara la idea de aristas.
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.50\textwidth]{Imagenes/e.png}
     \caption{Alguno de los posibles triángulos que se pueden formar con los valores del eje y aumentando hacia abajo y los del eje x hacia la derecha.}
     \label{fig:mesh1}
 \end{figure}
-
-\par La principal incógnita que se nos plantea es encontrar el valor SX.x y EX.x (ya que SX.y y EX.y es igual al valor Y de la iteración) de manera que se ubique dentro de la recta que los uniría. Para esto utilizaremos la formula de interpolación a partir de conocer el valor del eje y; mientras que los puntos que requiere la función seran los que conformen la recta sobre la cual se encuentren SX y EX.
+\par La principal incógnita que se nos plantea es encontrar el valor SX.x y EX.x (ya que SX.y y EX.y es igual al valor Y de la iteración) de manera que se ubique dentro de la recta que los uniría. Para esto utilizaremos la formula de interpolación a partir de conocer el valor del eje y; mientras que los puntos que requiere la función serán los que conformen la recta sobre la cual se encuentren SX y EX.
 \par La función encargada de usar la interpolación de los puntos y proceder con la creación de las lineas la denominaremos $ProcessScanLine\_m1$ quien sera llamada por $DrawTriangle\_m1$ en los diferentes escenarios que se nos planteen.
-
-
 Sea pa, pb los puntos que me permiten interpolar SX y pc y pd los que interpolan a EX podemos definir: 
-
-
 \begin{verbatim}
 ProcessScanLine_m1(pa, pb, pc, pd, Y):
     gradient1 = if (pa.y != pb.y) 
@@ -523,83 +526,59 @@ ProcessScanLine_m1(pa, pb, pc, pd, Y):
     putpixel(SX.x, Y);
     putpixel(EX.x, Y);
 \end{verbatim}
-
-
 Como mencionamos $DrawTriangle\_m1$ hará uso de esta función en los distintos casos que se nos presenten, ya que si observamos la figura 5 vemos que no siempre SX o EX se encuentran sobre la misma arista, en un caso SX esta en la arista correspondiente a P1 y P3 mientras que en el otro triangulo esta sobre la conformada por P2 y P1 esto nos lleva a plantearnos y analizar todos los casos antes de comenzar el proceso de crear las lineas.
-
-
 Primero estableceremos una manera de distinguir cuando P1 se encuentra a la derecha de P2 o viceversa: 
-
 dP1P2 = (P2.x - P1.x) / (P2.y - P1.y) 
-
 dP1P3 = (P3.x - P1.x) / (P3.y - P1.y)
-
-
-Que representan las pendientes inversas de los puntos que se utilicen. Dado que el valor del eje y se incrementa hacia abajo dP1P2 sera positivo cuando P2 este a la derecha de P1 mientras que dP1P3 sera negativo, cumpliendose que dP1P2 $>$ dP1P3; y para el caso de P2 a la izquierda de P1 tenemos que dP1P2 $<$ dP1P3. \par Dado que P2.y podria ser igual a P1.y o P3.y igual a P1.y entonces asignaremos el valor cero a dP1P2 y dP1P3 correspondientemente.
-
-
-
-Continuando con los posibles escenarios, decidimos divir los casos que se presentan cuando P2.y es distinto de P1.y y cuando es igual.\newline
+Que representan las pendientes inversas de los puntos que se utilicen. Dado que el valor del eje y se incrementa hacia abajo dP1P2 sera positivo cuando P2 este a la derecha de P1 mientras que dP1P3 sera negativo, cumpliéndose que dP1P2 $>$ dP1P3; y para el caso de P2 a la izquierda de P1 tenemos que dP1P2 $<$ dP1P3. \par Dado que P2.y podría ser igual a P1.y o P3.y igual a P1.y entonces asignaremos el valor cero a dP1P2 y dP1P3 correspondientemente.
+Continuando con los posibles escenarios, decidimos dividir los casos que se presentan cuando P2.y es distinto de P1.y y cuando es igual.\newline
 \par Cuando P2.y es distinto a P1.y se nos presentan los primeros dos casos:
  
 \begin{itemize}
 \item Primer caso: P1 se encuentra a la derecha de P2 (dP1P2 $>$ dP1P3). Se puede observar en el triangulo izquierdo de la figura 5. SX.x se obtiene a partir de los puntos P1 y P3, en cambio EX hasta el valor P2.y puede ser calculado con P1 y P2 pero luego se utilizara a P2 y P3.
-
-\item Segundo caso: P1 se encuentra a la izquierda de P2 (dP1P2 $<$ dP1P3). Correspondiendose al lado derecho de la figura, vemos que EX.x se obtiene a partir de P1 y P3, mientras que SX.x con P1 y P2 hasta que se llegue al valor Y $=$ P2.y y luego con P2 y P3. 
-
+\item Segundo caso: P1 se encuentra a la izquierda de P2 (dP1P2 $<$ dP1P3). Correspondiéndose al lado derecho de la figura, vemos que EX.x se obtiene a partir de P1 y P3, mientras que SX.x con P1 y P2 hasta que se llegue al valor Y $=$ P2.y y luego con P2 y P3. 
 Cuando P2.y es igual a P1.y tenemos que evaluar lo siguiente:
-
 \item Tercer caso:  SX.x se obtiene por los puntos P1 y P3 , mientras que EX.x por P2 y P3 si P1.x es menor a P2.x en caso contrario SX.x es consecuencia de P2 y P3 mientras que EX.x de P1 y P3 
-
-
 \end{itemize}
-
-
 Una vez planteadas las distintas situaciones podemos proceder con la rasterización de los triángulos. 
   
 El código fuente que describe el proceso anterior es el siguiente:
-
 \begin{verbatim}
-DrawTriangle_m1(v1,v2, v3): (CREO QUE SE PODRIA DEJAR LA EXPLICACION DE LOS CASOS ANTERIORES 
-O ESTE PSEUDOCODIGO SOLAMENTE NO SE.....)
-
+DrawTriangle_m1(v1,v2, v3): (CREO QUE SE PODRÍA DEJAR LA EXPLICACIÓN DE LOS CASOS ANTERIORES 
+O ESTE PSEUDOCÓDIGO SOLAMENTE NO SE.....)
     Designar P1, P2 y P3 
     
     Calcular dP1P2 y dP1P3
     
     if (Primer Caso)
-            for (Y = P1.y to P3.y)    	
+            for (Y = P1.y to P3.y)      
                 if(Y < P2.y)
                     ProcessScanLine_m1(P1, P3, P1, P2, Y)
                 else
                     ProcessScanline_m1(P1, P3, P2, P3, Y)
     if(Segundo Caso)
-           for (Y = P1.y to P3.y)    	
+           for (Y = P1.y to P3.y)       
                 if(Y < P2.y)
                     ProcessScanLine_m1(P1, P2, P1, P3, Y)
            else
                     ProcessScanline_m1(P2, P3, P1, P3, Y)
-    if (Tercer Caso)	
-          for (Y = P1.y to P3.y)    	
+    if (Tercer Caso)    
+          for (Y = P1.y to P3.y)        
                if(P1.x < P2.x)
                     ProcessScanLine_m1(P1, P3, P2, P3, Y)
                else
                     ProcessScanline_m1(P2, P3, P1, P3, Y)
-  					
+                                        
 \end{verbatim}
 
 
 \subsection{Modo Textura:} 
 
+
 \par En el segundo modo procederemos a rellenar los triángulos adoptando la idea del algoritmo Scan Line. El mismo se basa en rellenar cada triangulo de izquierda a derecha por medio de un conjunto de pixels (que representaría la linea azul en la figura 5) y, continuando con la notación del modo anterior, descendiendo desde P1.y hasta P3.y.  
 \par Comenzaremos sobre el punto SX ubicado sobre las aristas del lado izquierdo de los triángulos y procederemos a crear una sucesión de puntos, incrementando el valor de SX.x, hasta llegar al extremo derecho es decir, al punto EX.x. Esta idea la aplicaremos empezando a iterar desde un valor Y igual a P1.y y cada vez que se completa una linea procederemos a aumentar el valor Y para crear una nueva, hasta que llegar a P3.y. 
 La técnica para rellenar los triángulos sera la definida anteriormente ahora tenemos que definir los valores que tendrán esos pixels es decir, su color y mas aun su textura (en el caso de tener la información necesaria).
-Blender nos permite dentro del programa asignarles texturas a los distintos modelos, una de las formas es tomando como input una imagen y utilizando la Mapeo UV ($UV$ $mapping$). Esta técnica permite asignar una textura en 2D a una superficie 3D. 
-\par A cada vértice ,de los polígonos que componen el modelo, le sera asignado un par de coordenadas 2D llamas UV. Este nuevo par de coordenadas definen que área de la imagen es mapeada a cada triangulo es decir, permitirá pintar cada triangulo con el color de una imagen. 
-\par No solo podemos exportar los vértices sino que también las coordenadas UV de cada uno (si hemos pasado por el proceso de asignarle una textura previamente).
-\par Como requeriremos acceder a cada píxel de la imagen usaremos la función $SDL\_LoadBMP$ ( provista por SDL) la cual permite cargar una superficie desde un archivo del tipo .BMP y nos devuelve un puntero a la misma, al cual llamaremos $tex$.    
- 
-\par Por lo que $DrawTriangle\_m1$ sera modificada a $DrawTriangle\_m2$ de manera que cada vez que llame a $ProcessScanLine\_m2$ (que sera una variante de $ProcessScanLine\_m1$) además pasara las coordenadas UV de los vértices utilizados y el puntero a la textura.
+\par Finalmente definiremos $ProcessScanLine\_m2$ que sera una variante de $ProcessScanLine\_m1$ a la cual se le exportaran las coordenadas UV de los vértices utilizados y el puntero a la textura.
  
 \textbf{ProcessScanLine\_m2:} 
 
@@ -608,15 +587,9 @@ Ahora esta función tendrá las coordenadas UV para cada vértice. En cada una d
 \par Una vez calculados $su$, $eu$ podremos interpolar los valores intermedios para calcular las coordenadas U de los puntos entre SX.x y EX.x e interpolando con $sv$ y $ev$ obtendremos los valores del eje V.
 \par Dado que las coordenadas en los ejes UV están entre los valores cero y uno, una vez calculadas las coordenadas UV de cada punto sera necesario escalarlas para acceder correctamente en $tex$. Solucionaremos esto definiendo la función $map$ que realiza el producto del ancho de la imagen con el valor de la coordenada U y el producto del alto de la imagen con la coordenada V e indexara en $tex$.
 Por ultimo dibujar cada punto con el color asociado estará a cargo de $Draw\_point$. En caso de no tener una textura cargada simplemente asignaremos un numero de color arbitrario.  
-
 A partir de este modo implementaremos el uso del $depthBuffer$ mencionado en \ref{putpixel} por lo que sera necesario además interpolar el valor z asociado a cada punto para luego poder comparar y así dibujar o no un píxel.
-
  
 \par finalmente podemos expresar la función por medio de siguiente pseudocódigo: 
-
-
-
-
 \begin{verbatim}
 ProcessScanLine_m2(pa, pb, pc, pd, Y, tex):
     gradient1 = if (pa.y != pb.y) 
@@ -628,14 +601,13 @@ ProcessScanLine_m2(pa, pb, pc, pd, Y, tex):
             
     SX.x = Interpolate(pa.c, pb.c, gradient1) //.c coordenadas luego del producto por WVP
     EX.x = Interpolate(pc.c, pd.c, gradient2)
-    su = Interpolate(pa.U, pb.U, gradient1) //.U denota al valor en la coodenadas U
+    su = Interpolate(pa.U, pb.U, gradient1) //.U denota al valor en la coordenadas U
     eu = Interpolate(pc.U, pd.U, gradient2)
-    sv = Interpolate(pa.V, pb.V, gradient1).V denota al valor en la coodenadas V
+    sv = Interpolate(pa.V, pb.V, gradient1).V denota al valor en la coordenadas V
     ev = Interpolate(pc.V, pd.V, gradient2)
     z1 = Interpolate(pa.z, pb.z, gradient1)
     z2 = Interpolate(pc.z, pd.z, gradient2)
    
-
     for (x = SX.x to EX.x)
         gradient = (x - sx) / (float)(ex - sx)
         z = Interpolate(z1, z2, gradient)
@@ -648,48 +620,34 @@ ProcessScanLine_m2(pa, pb, pc, pd, Y, tex):
     
         putpixel(x, Y, z, textureColor)
 \end{verbatim}
-
 \subsection{Modo Textura + Sombra:} 
-
-	El tercer modo se basa en simular efectos de luz sobre la superficie del objeto. Para esto definiremos un punto que sera desde donde iluminaremos nuestro modelo, lo llamaremos $lightPos$. Para calcular la luminosidad nos basaremos en la técnica Gouraud Shading, la misma utiliza 3 vectores normales por cada triangulo que compone a nuestro modelo. Estos vectores serán normales pero, a los vértices de cada uno. Otros métodos utilizan solo un vector normal a la superficie de los triángulos pero de esta forma toda la superficie obtiene la misma intensidad de color en cambio la técnica que emplearemos nos permite tener variaciones de intensidad sobre una misma superficie. 
-\par Como podemos iluminar a nuestro modelo desde cualquier punto del espacio donde vive nuestro modelo y no específicamente desde nuestro punto de vista, sera necesario entonces definir $lightPos$ teniendo en cuenta que se utiliza las coordenadas del World Space así también como los vectores normales (que serán exportados por Blender) y los vértices asociados. Como mencionamos, originalmente los vértices y, en este caso, las normales viven dentro del Model Space para convertirlas a World Space solo necesitaremos multiplicar por la World Matrix.   Luego de tener las coordenadas en los respectivos espacios llamaremos a la función DrawTriangle.
-
-
 
 
 \textbf{DrawTriangle\_m3:} 
 
- 	Extenderemos la versión anterior, $Drawtriangle\_m2$, de manera que ahora calcule la luz que recibe cada vértice.
+
+        Extenderemos la versión anterior, $Drawtriangle\_m2$, de manera que ahora calcule la luz que recibe cada vértice.
 \par La idea de los vectores normales es que cuanto menor sea el ángulo entre estos y la dirección de la luz (figura 6) entonces la luz incidirá más sobre el vértice asociado y de esta manera la intensidad del color se mantendrá, en caso contrario tendera a un color mas oscuro para simular sombras. 
-	
-	
-	\begin{figure}[h]
+        
+        
+        \begin{figure}[h]
     \centering
     \includegraphics[width=0.50\textwidth]{Imagenes/f.png}
     \caption{}
     \label{fig:mesh1}
 \end{figure}
-
-
-	Dado que no tenemos el vector dirección de la luz pero si la posición y la coordenada sobre la cual incide ($centerPoint$) procederemos a calcular la dirección como:
-
+        Dado que no tenemos el vector dirección de la luz pero si la posición y la coordenada sobre la cual incide ($centerPoint$) procederemos a calcular la dirección como:
  $lightDirection$  = $lightPos$ – $centerPoint$
-
-
-	Una de las formas que podemos calcular la intensidad de luz que llega a cada vértice es con el coseno del ángulo formado por lightDirection y cada vector normal. Cuando el ángulo es cero entonces el coseno es igual a uno, lo de que denotara la idea de luminosidad máxima; si bien la función coseno tiene como imagen valores entre [-1; 1] fijaremos como valor mínimo cero que representara luminosidad nula. De esta forma podemos observar que si multiplicamos el color por 1, valor de luz máxima, se sigue manteniendo igual el color mientras que si el valor decrece el color sera mas oscuro hasta llegar  a 0 por lo que obtendremos el color negro. 
+        Una de las formas que podemos calcular la intensidad de luz que llega a cada vértice es con el coseno del ángulo formado por lightDirection y cada vector normal. Cuando el ángulo es cero entonces el coseno es igual a uno, lo de que denotara la idea de luminosidad máxima; si bien la función coseno tiene como imagen valores entre [-1; 1] fijaremos como valor mínimo cero que representara luminosidad nula. De esta forma podemos observar que si multiplicamos el color por 1, valor de luz máxima, se sigue manteniendo igual el color mientras que si el valor decrece el color sera mas oscuro hasta llegar  a 0 por lo que obtendremos el color negro. 
 \par El coseno de un ángulo $\theta$ formado por dos vectores A y B se puede calcular como:
-
 cos($\theta$) = $\frac{A*B}{\parallel A \parallel*\parallel B \parallel}$ 
-
 con $\parallel A \parallel$ y $\parallel B \parallel$ la distancia Euclidiana de A y B respectivamente.
-
  
 Si normalizamos el vector A y B el denominador  sera igual a  1 y de este manera solo calculando el producto vectorial podemos obtener el coseno del ángulo. 
 Calcularemos $lightDirection$ junto con el coseno del ángulo asociado en una función auxiliar $ComputeNdotL$ que sera llamada en DrawTriangle para cada vértice, y utilizaremos estos valores para extender la función $ProcessScanLine\_m2$ en una nueva versión llamada $ProcessScanLine\_m3$.
    
 \textbf{ ProcessScanLine\_m3:}
-
-Tenemos el porcentaje de luz para las coordenadas que representan a los vértices, solo nos falta para el resto de las que componen cada triangulo,  por lo que cada vez que interpolemos las coordenadas para rellenar el triangulo, también interpolaremos la luz que recibiría  basándonos en la que tienen los vértices. Por ultimo solo debemos multiplicar este valor por el color del punto interpolado.
+Tenemos el porcentaje de luz para las coordenadas que representan a los vértices, solo nos falta para el resto de las que componen cada triangulo,  por lo que cada vez que interpolemos las coordenadas para rellenar el triangulo, también interpolaremos la luz que recibiría  basándonos en la que tienen los vértices. Por ultimo solo debemos multiplicar este valor por el color del punto interpolado.  
 
 \section{Análisis de performance y experimentación}
 En esta sección vamos a presentar varios resultados de distintos tipos de mediciones que realizamos. Observando estos datos vamos a poder explicar el porqué de la definición de algunas funciones en Assembler y otras en C que sustituyen a otras funciones originales de la aplicación que realizan un mayor consumo de cómputo.
