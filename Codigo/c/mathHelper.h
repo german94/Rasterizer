@@ -15,10 +15,10 @@ typedef float Mat3[3][3];
 
 void VecByScalar(float* in, float scalar, float* out, int d);
 void VecByVec(float* in1, float* in2, float* out, int d);
-float Dot3Prod(Vec3 v1, Vec3 v2);
+float Dot3Prod(float* v1, Vec3 v2);
 void Cross3Prod(Vec3 v1, Vec3 v2, Vec3 r);
-void Sub3(Vec3 v1, Vec3 v2, Vec3 r);
-void Normalize3(Vec3 v);
+void Sub3(float* v1, float* v2, Vec3 r);
+void Normalize3(float* v);
 void Identity(Mat4 m);
 void Mat4Product(Mat4 m1, Mat4 m2, Mat4 res);
 void Vec4Mat4Product(Vec4 v, Mat4 m, Vec4 r);

@@ -16,7 +16,7 @@ void VecByVec(float* in1, float* in2, float* out, int d)
 		out[i] = in1[i] * in2[i];
 }
 
-float Dot3Prod(Vec3 v1, Vec3 v2)//dot produc or scalar product
+float Dot3Prod(float* v1, Vec3 v2)//dot produc or scalar product
 {
 	return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
 }
@@ -28,14 +28,14 @@ void Cross3Prod(Vec3 v1, Vec3 v2, Vec3 r)//producto determinante
 	r[2] = v1[0] * v2[1] - v1[1] * v2[0];
 }
 
-void Sub3(Vec3 v1, Vec3 v2, Vec3 r)
+void Sub3(float* v1, float* v2, Vec3 r)
 {
 	r[0] = v1[0] - v2[0];
 	r[1] = v1[1] - v2[1];
 	r[2] = v1[2] - v2[2];
 }
 
-void Normalize3(Vec3 v)
+void Normalize3(float* v)
 {
 	float n = sqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 	v[0] /= n;

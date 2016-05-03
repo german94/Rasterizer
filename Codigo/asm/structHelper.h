@@ -9,9 +9,9 @@ typedef int bool;
 
 typedef struct
 {
-	Vec3 normal;
+	Vec4 normal;
 	Vec3 coordinates;
-	Vec3 wcoordinates;
+	Vec4 wcoordinates;
 	Vec2 texCoordinates;
 } Vertex;
 
@@ -74,5 +74,21 @@ typedef struct {
  void initVec4DynamicArray(Vec4DynamicArray*, size_t);
  void insertVec4DynamicArray(Vec4DynamicArray*, Vec4);
  void freeVec4DynamicArray(Vec4DynamicArray*);
+
+ typedef struct
+{
+    Vec4DynamicArray* vertices;
+    Vec2DynamicArray* uvs;
+    Vec4DynamicArray* normals;
+    UInt3DynamicArray* faces;
+
+    float* color;
+
+    float** wvp;
+    float** world;
+
+    int* max_dis;
+
+} Model;
 
 #endif

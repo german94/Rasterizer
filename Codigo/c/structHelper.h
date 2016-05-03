@@ -9,9 +9,9 @@ typedef int bool;
 
 typedef struct
 {
-	Vec3 normal;
+	Vec4 normal;
 	Vec3 coordinates;
-	Vec3 wcoordinates;
+	Vec4 wcoordinates;
 	Vec2 texCoordinates;
 } Vertex;
 

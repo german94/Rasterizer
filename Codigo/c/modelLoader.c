@@ -183,10 +183,11 @@ void RenderFilledModel_m3(Model* data, SDL_Surface* sf, float* depthBuffer, SDL_
     	escalando(data, sf->w, sf->h);
 	for(j = 0; j < data->faces->used; j= j+3)//NOTAR QUE COMO GUARDA PARA CADA TRIANGULO LE CORRESPONDEN 3 LUGARES
     {   	   
-	    Vec4 res1, res2, res3, res1n, res2n, res3n, res1w, res2w, res3w;
-	    Vec3 v1, v2, v3, v1n, v2n, v3n, v1w, v2w, v3w;
+	    Vec4 res1, res2, res3;
+	    Vec3 v1, v2, v3;
 
 	    Vec4 vertexA, vertexB, vertexC;
+	    Vertex p1, p2, p3;
 		CopyVec(vertexA, data->vertices->array[data->faces->array[j][0]], 4);
 		CopyVec(vertexB, data->vertices->array[data->faces->array[j][1]], 4);
 		CopyVec(vertexC, data->vertices->array[data->faces->array[j][2]], 4);
@@ -210,15 +211,16 @@ void RenderFilledModel_m3(Model* data, SDL_Surface* sf, float* depthBuffer, SDL_
 	    v3[1] = (-res3[1]/res3[3])*sf->h + sf->h*0.7; 
 	 	v3[2] = res3[2] / res3[3];
 
+	 	CopyVec(p1.coordinates, v1, 3);
+	 	CopyVec(p2.coordinates, v2, 3);
+	 	CopyVec(p3.coordinates, v3, 3);
+
 	 	///////////////////////////
- 		Vec4Mat4Product(vertexA, data->world, res1w);
- 		v1w[0] = res1w[0]; v1w[1] = res1w[1]; v1w[2] = res1w[2];
+ 		Vec4Mat4Product(vertexA, data->world, p1.wcoordinates);
 
-        Vec4Mat4Product(vertexB, data->world, res2w);
-		v2w[0] = res2w[0]; v2w[1] = res2w[1]; v2w[2] = res2w[2];
+        Vec4Mat4Product(vertexB, data->world, p2.wcoordinates);
 
-        Vec4Mat4Product(vertexC, data->world, res3w);
-        v3w[0] = res3w[0]; v3w[1] = res3w[1]; v3w[2] = res3w[2];        ////////////
+        Vec4Mat4Product(vertexC, data->world, p3.wcoordinates);
 
         ////////////////////////////
 
@@ -227,25 +229,29 @@ void RenderFilledModel_m3(Model* data, SDL_Surface* sf, float* depthBuffer, SDL_
 		CopyVec(vertexBn, data->normals->array[data->faces->array[j+2][1]], 4);
 		CopyVec(vertexCn, data->normals->array[data->faces->array[j+2][2]], 4);
 
+        Vec4Mat4Product(vertexAn, data->world, p1.normal);
+        Vec4Mat4Product(vertexBn, data->world, p2.normal);
+        Vec4Mat4Product(vertexCn, data->world, p3.normal);
 
-        Vec4Mat4Product(vertexAn, data->world, res1n);
-        v1n[0] = res1n[0]; v1n[1] = res1n[1]; v1n[2] = res1n[2];        ////////////
-
-        Vec4Mat4Product(vertexBn, data->world, res2n);
-		v2n[0] = res2n[0]; v2n[1] = res2n[1]; v2n[2] = res2n[2]; 
-
-        Vec4Mat4Product(vertexCn, data->world, res3n);
-		v3n[0] = res3n[0]; v3n[1] = res3n[1]; v3n[2] = res3n[2];  
-
-		Vec2 v1t, v2t, v3t;
 		if(tex != NULL)
 		{
-			CopyVec(v1t, data->uvs->array[data->faces->array[j+1][0]], 2);
-			CopyVec(v2t, data->uvs->array[data->faces->array[j+1][1]], 2);
-			CopyVec(v3t, data->uvs->array[data->faces->array[j+1][2]], 2);
+			CopyVec(p1.texCoordinates, data->uvs->array[data->faces->array[j+1][0]], 2);
+			CopyVec(p2.texCoordinates, data->uvs->array[data->faces->array[j+1][1]], 2);
+			CopyVec(p3.texCoordinates, data->uvs->array[data->faces->array[j+1][2]], 2);
 		}
-		
-		DrawTriangle_m3(data->color, v1, v2, v3, v1n, v2n, v3n, v1w, v2w, v3w, sf->w, sf->h, sf, depthBuffer, tex, v1t, v2t, v3t,  lightPos);
+	
+		if(v1[1] <= v2[1] && v2[1] <= v3[1])
+			DrawTriangle_m3(data->color, &p1, &p2, &p3, sf, depthBuffer, tex, lightPos);
+		else if(v1[1] <= v3[1] && v3[1] <= v2[1])
+			DrawTriangle_m3(data->color, &p1, &p3, &p2, sf, depthBuffer, tex, lightPos);
+		else if(v2[1] <= v1[1] && v1[1] <= v3[1])
+			DrawTriangle_m3(data->color, &p2, &p1, &p3, sf, depthBuffer, tex, lightPos);
+		else if(v2[1] <= v3[1] && v3[1] <= v1[1])
+			DrawTriangle_m3(data->color, &p2, &p3, &p1, sf, depthBuffer, tex, lightPos);
+		else if(v3[1] <= v2[1] && v2[1] <= v1[1])
+			DrawTriangle_m3(data->color, &p3, &p2, &p1, sf, depthBuffer, tex, lightPos);
+		else if(v3[1] <= v1[1] && v1[1] <= v2[1])
+			DrawTriangle_m3(data->color, &p3, &p1, &p2, sf, depthBuffer, tex, lightPos);
 	}
 }
 
@@ -258,6 +264,7 @@ void RenderFilledModel_m2(Model* data, SDL_Surface* sf, float* depthBuffer, SDL_
     {   	   
 	    Vec4 res1, res2, res3;
 	    Vec3 v1, v2, v3;
+	    Vertex p1, p2, p3;
 
 	    Vec4 vertexA, vertexB, vertexC;
 		CopyVec(vertexA, data->vertices->array[data->faces->array[j][0]], 4);
@@ -283,16 +290,30 @@ void RenderFilledModel_m2(Model* data, SDL_Surface* sf, float* depthBuffer, SDL_
 	    v3[1] = (-res3[1]/res3[3])*sf->h + sf->h*0.7; 
 	 	v3[2] = res3[2] / res3[3];
 
+	 	CopyVec(p1.coordinates, v1, 3);
+	 	CopyVec(p2.coordinates, v2, 3);
+	 	CopyVec(p3.coordinates, v3, 3);
+
 	 	///////////////////////////
-		Vec2 v1t, v2t, v3t;
 		if(tex != NULL)
 		{
-			CopyVec(v1t, data->uvs->array[data->faces->array[j+1][0]], 2);
-			CopyVec(v2t, data->uvs->array[data->faces->array[j+1][1]], 2);
-			CopyVec(v3t, data->uvs->array[data->faces->array[j+1][2]], 2);
+			CopyVec(p1.texCoordinates, data->uvs->array[data->faces->array[j+1][0]], 2);
+			CopyVec(p2.texCoordinates, data->uvs->array[data->faces->array[j+1][1]], 2);
+			CopyVec(p3.texCoordinates, data->uvs->array[data->faces->array[j+1][2]], 2);
 		}
 
-		DrawTriangle_m2(data->color, v1, v2, v3, sf->w, sf->h, sf, depthBuffer, tex, v1t, v2t, v3t);
+		if(v1[1] <= v2[1] && v2[1] <= v3[1])
+			DrawTriangle_m2(data->color, &p1, &p2, &p3, sf, depthBuffer, tex);
+		else if(v1[1] <= v3[1] && v3[1] <= v2[1])
+			DrawTriangle_m2(data->color, &p1, &p3, &p2, sf, depthBuffer, tex);
+		else if(v2[1] <= v1[1] && v1[1] <= v3[1])
+			DrawTriangle_m2(data->color, &p2, &p1, &p3, sf, depthBuffer, tex);
+		else if(v2[1] <= v3[1] && v3[1] <= v1[1])
+			DrawTriangle_m2(data->color, &p2, &p3, &p1, sf, depthBuffer, tex);
+		else if(v3[1] <= v2[1] && v2[1] <= v1[1])
+			DrawTriangle_m2(data->color, &p3, &p2, &p1, sf, depthBuffer, tex);
+		else if(v3[1] <= v1[1] && v1[1] <= v2[1])
+			DrawTriangle_m2(data->color, &p3, &p1, &p2, sf, depthBuffer, tex);
 	}
 }
 
@@ -330,6 +351,6 @@ void RenderFilledModel_m1(Model* data, SDL_Surface* sf)
 	    v3[1] = (-res3[1]/res3[3])*sf->h + sf->h*0.7; 
 	 	v3[2] = res3[2] / res3[3];
 
-		DrawTriangle_m1(v1, v2, v3, sf->w, sf->h, sf);
+		DrawTriangle_m1(v1, v2, v3, sf);
 	}
 }

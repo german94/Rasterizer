@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
         data.max_dis = max_distancias;  
 
 
-        LoadModel("../alfred.obj", &data);
+        LoadModel("model.obj", &data);
           
         SDL_Surface* tex;
         if(Uvs.size != 0)
@@ -103,8 +103,6 @@ int main(int argc, char *argv[])
         int contador = 0;
 		while(!quit)
 		{
-			contador ++;
-
             startclock = SDL_GetTicks();
 
 			EventDetection();
@@ -120,7 +118,7 @@ int main(int argc, char *argv[])
             Mat4 world1, world, wv, wvp;
             Identity(world);
             data.wvp = wvp;
-            data.world = world;
+            data.world = worldt;
 
             if(rotY)
             {
