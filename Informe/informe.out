@@ -15,3 +15,10 @@
 \BOOKMARK [2][-]{subsection.4.2}{Matriz de vista \(View Matrix\)}{section.4}% 15
 \BOOKMARK [2][-]{subsection.4.3}{Matriz de proyecci\363n \(Projection Matrix\)}{section.4}% 16
 \BOOKMARK [2][-]{subsection.4.4}{mathHelper}{section.4}% 17
+\BOOKMARK [2][-]{subsection.4.5}{sdlHelper: }{section.4}% 18
+\BOOKMARK [2][-]{subsection.4.6}{Modo 1:}{section.4}% 19
+\BOOKMARK [2][-]{subsection.4.7}{Modo Textura:}{section.4}% 20
+\BOOKMARK [2][-]{subsection.4.8}{Modo Textura + Sombra:}{section.4}% 21
+\BOOKMARK [1][-]{section.5}{An\341lisis de performance y experimentaci\363n}{}% 22
+\BOOKMARK [2][-]{subsection.5.1}{Optimizaci\363n del c\363digo encargado de la interpolaci\363n}{section.5}% 23
+\BOOKMARK [2][-]{subsection.5.2}{Optimizaciones en Assembler}{section.5}% 24

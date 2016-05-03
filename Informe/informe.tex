@@ -689,6 +689,76 @@ Calcularemos $lightDirection$ junto con el coseno del ángulo asociado en una fu
    
 \textbf{ ProcessScanLine\_m3:}
 
-Tenemos el porcentaje de luz para las coordenadas que representan a los vértices, solo nos falta para el resto de las que componen cada triangulo,  por lo que cada vez que interpolemos las coordenadas para rellenar el triangulo, también interpolaremos la luz que recibiría  basándonos en la que tienen los vértices. Por ultimo solo debemos multiplicar este valor por el color del punto interpolado.  
+Tenemos el porcentaje de luz para las coordenadas que representan a los vértices, solo nos falta para el resto de las que componen cada triangulo,  por lo que cada vez que interpolemos las coordenadas para rellenar el triangulo, también interpolaremos la luz que recibiría  basándonos en la que tienen los vértices. Por ultimo solo debemos multiplicar este valor por el color del punto interpolado.
+
+\section{Análisis de performance y experimentación}
+En esta sección vamos a presentar varios resultados de distintos tipos de mediciones que realizamos. Observando estos datos vamos a poder explicar el porqué de la definición de algunas funciones en Assembler y otras en C que sustituyen a otras funciones originales de la aplicación que realizan un mayor consumo de cómputo.
+
+Dado que se trata de una aplicación interactiva en el sentido de que no es el tipo de software que se ejecuta, devuelve un output y termina, realizar mediciones puede ser un poco más complicado. Lo que nosotros decidimos hacer fue poner una cota superior a la cantidad de iteraciones que realiza el ciclo principal de la aplicación (mencionado en la sección 2) ya que es el encargado de ejecutar toda la funcionalidad que se provee. Una vez que se alcanza esa cota, la aplicación termina.
+
+Además, dado que existen varios modos de renderizado y trasnformaciones que le podemos hacer a nuestro modelo mientras la aplicación está corriendo, es necesario elegir alguna configuración posible para poder realizar las mediciones. En nuestro caso el modo de renderizado 1 (esqueleto) no lo vamos a utilizar ya que necesita muy poco poder de cómputo para poder ejecutarse, en cambio los modos 2 (con textura) y 3 (con textura y sombra) sí los vamos a usar. Además, vamos a hacer que el modelo rote en las tres direcciones (hacemos esto para aumentar la cantidad de operaciones matriciales que realiza la aplicación), con la velocidad de rotación que viene por default. No se va a realizar escalado una vez que el modelo ya esté dibujado, es decir, el modelo va a conservar el tamaño original o el que configuremos al cargarlo si es necesario aplicar un reescalado para que entre en la pantalla. El modelo que vamos a utilizar para realizar las mediciones va a ser alfred.obj, con su correspondiente textura alfred.bmp.
+
+La herramienta gprof nos provee un informe detallado del consumo de cada una de las funciones de la aplicación. De esta manera, luego de correr gprof obtenemos, entre otras cosas, una tabla con el porcenaje de tiempo consumido por cada función. Nosotros nos vamos a concentrar en las funciones que más tiempo consumieron, ignorando así otras donde el consumo es mínimo y no nos proveen información relevante.
+
+\subsection{Optimización del código encargado de la interpolación}
+Comencemos haciendo una corrida de gprof a nuestra aplicación con el código hecho exclusivamente en C y veamos si podemos mejorar algo a partir de eso. 
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Imagenes/gprof1.png}
+    \caption{Código puramente en C, rotación en los tres ejes, renderizado en modo 2 y 1000 iteraciones del ciclo principal.}
+    \label{fig:mesh1}
+\end{figure}
+
+
+Podemos ver que la función Interpolate2 es la que más consumo de tiempo realiza y le siguen ProcessScanLine_m2 y Clamp. Recordemos que tanto Interpolate2 como Clamp, son funciones matemáticas que son llamadas durante el proceso de rasterización. Más aún, Interpolate2 realiza una llamada a Clamp en su definición y a su vez ProcessScanLine_m2 llama sucesivas veces (14 para ser exactos) a Interpolate2. Claramente estas tres funciones están muy vinculadas entre sí y debido a las numerosas llamadas a Interpolate2, la idea va ser optimizar ésta función.
+
+En cuanto a las otras funciones, Map y getpixel están muy relacionadas con SDL ya que Map lo que hace es simplemente realizar un cálculo con el ancho y el alto de una textura y ciertas coordenadas para obtener otras coordenadas (en píxeles), llamar a getpixel y devolver el valor del píxel precisado. En principio es dificil pensar una manera de optimizar esto porque además Map es llamada una sola vez (en ProcessScanLine_m2) y getpixel también (en Map). Finalmente Uint32ToVec4 hace algo bastante simple que es convertir un color en formato uint32 (con el que trabaja SDL) a vector de float que es el tipo de dato que utilizamos nosotros en nuestras funciones. Lo hace mediante ANDs, shifteos y divisiones con lo cual también se trata de una función bastante minimal en cuanto a operaciones que realiza.
+
+Para tratar de mejorar Interpolate2 lo que vamos a hacer es que no llame a Clamp. Es decir, la función Clamp también tiene un consumo considerable y el hecho de que Interpolate2 se llama tantas veces y ésta a su vez llama a Clamp puede evitarse haciendo Clamp dentro de interpolate. Para esto, vamos a definir entonces Interpolate1 y veamos que resultados nos arroja gprof ahora:
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Imagenes/gprof2.png}
+    \caption{Misma configuración de parámetros iniciales, ahora Clamp está dentro de Interpolate1.}
+    \label{fig:mesh1}
+\end{figure}
+
+Se puede ver que el porcentaje de tiempo consumido es un poco mayor en Interpolate1 que antes en Interpolate2 y lo mismo sucede con ProcessScanLine_m2. En principio, pareciera que lo que hicimos empeoró las cosas, sin embargo sucedió todo lo contrario. El porcentaje de aumento que se registró en estas funciones se debe a que gracias a que ahora no existe Clamp, el tiempo total que tarda el programa en realizar las 1000 iteraciones es menor. Dado que la cota de iteraciones no cambió, la cantidad de veces que se ejecuta cada función sigue siendo la misma y en consecuencia el porcentaje del tiempo de consumo de las funciones que quedaron aumentó.
+
+Para corroborar este hecho observamos además que los FPS aumentaron aproximadamente el doble con Interpolate1 y el tiempo que tardó la aplicación en llegar a las 1000 iteraciones fue considerablemente menor también.
+
+Ahora veamos que datos obtenemos renderizando en modo 3 con la misma configuración de parámetros y hagamos la comparación entre estas dos versiones de Interpolate.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Imagenes/gprof3.png}
+    \caption{Misma configuración de parámetros iniciales salvo que ahora renderizamos en modo 3.}
+    \label{fig:mesh1}
+\end{figure}
+
+Vemos que la comparación en este modo es muy similar a la del modo anterior. En cuanto a tiempos y FPS pasa algo similar (el tiempo disminuye y los FPS aumentan considerablemente al utilizar Interpolate1) solo que en este caso los tiempos son un poco mayores debido a que es el modo más costoso por los cálculos con las normales.
+
+\subsection{Optimizaciones en Assembler}
+Como explicamos en la sección anterior, las mediciones realizadas hasta ahora fueron hechas sobre el código en C. Decidimos implementar varias funciones en Assembler, sobre todo las que hacen procesamiento matricial pero también otras como la encargada de la interpolación y la de limpiar el depth buffer y ver si esto efectivamente representa una mejora en la performance. A continuación mostramos los resultados que arroja gprof con las funciones que venimos analizando hasta ahora.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Imagenes/gprof4.png}
+    \caption{Misma configuración de parámetros iniciales, modo 2.}
+    \label{fig:mesh1}
+\end{figure}
+
+El consumo que realiza InterpolateASM ahora es significativamente menor comparado con el que realizaba Interpolate1 e Interpolate2. Esta nueva implementación en Assembler efectivamente reduce los recursos que necesita esta función para ejecutarse.
+
+Como dijimos antes existen otras funciones que decidimos implementar en Assembler, no podemos mostrar sus porcentajes de consumo aca porque el gprof no arroja esos resultados. Esto puede ser porque son muy pequeños (ya eran relativamente pequeños en sus versiones de C) y no los tiene en cuenta. Sin embargo, el tiempo total que tarda en ejecutar las 1000 iteraciones esta versión en Assembler es considerablemente menor, sobre todo cuando estamos en modo 3. El siguiente gráfico muestra los tiempos en segundos de cada una de las versiones con los distintos modos:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Imagenes/tiemposTotales.png}
+    \caption{Tiempos totales en finalizar las 1000 iteraciones con las distintas versiones. Fueron medidos en un procesador i5 con 8gb de RAM.}
+    \label{fig:mesh1}
+\end{figure}
+
 
 \end{document}
