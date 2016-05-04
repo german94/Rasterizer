@@ -676,11 +676,62 @@ Comencemos haciendo una corrida de gprof a nuestra aplicación con el código he
 \end{figure}
 
 
-Podemos ver que la función Interpolate2 es la que más consumo de tiempo realiza y le siguen ProcessScanLine_m2 y Clamp. Recordemos que tanto Interpolate2 como Clamp, son funciones matemáticas que son llamadas durante el proceso de rasterización. Más aún, Interpolate2 realiza una llamada a Clamp en su definición y a su vez ProcessScanLine_m2 llama sucesivas veces (14 para ser exactos) a Interpolate2. Claramente estas tres funciones están muy vinculadas entre sí y debido a las numerosas llamadas a Interpolate2, la idea va ser optimizar ésta función.
+Podemos ver que la función $Interpolate2$ es la que más consumo de tiempo realiza y le siguen $ProcessScanLine\_m2$ y $Clamp$. Recordemos que tanto $Interpolate2$ como $Clamp$, son funciones matemáticas que son llamadas durante el proceso de rasterización. Más aún, $Interpolate2$ realiza una llamada a $Clamp$ en su definición y a su vez $ProcessScanLine\_m2$ llama sucesivas veces (11 para ser exactos) a Interpolate2. Claramente estas tres funciones están muy vinculadas entre sí y debido a las numerosas llamadas a $Interpolate2$, la idea va ser optimizar ésta función.
+\par Dado que $interpolate2$ nos da como resultado un float (4 bytes) y la idea de utilizar ASM es para emplear las instrucciones SIMD, que nos permiten cargar en un registro 16 bytes, aprovecharemos la cantidad de veces que se utiliza esta función dentro de $ProcessScanLine\_2$. 
+\par  $InterpolateASM$ sera la versión en ASM de la función, por cada llamada a esta función calcularemos, cuando  sea posible, cuatros valores de los que se deben interpolar. Entonces la función recibira los valores necesarios para interpolar dentro de distintos vectores, donde cada posición representa los valores necesarios para calcular los distintos puntos a interpolar. 
+\par Básicamente podemos representar esta función con el siguiente pseudocódigo:
+
+Si en xmm0 tenemos cargado los distintos $gradient$, en xmm1 cada 4 bytes se encuentra uno de los puntos que necesario para la interpolación (a los que llamaremos min ) , en xmm2 el segundo valor que se necesita (llamados max) y en xmm3 cuatros valores 1 representado cada uno con 4 bytes luego:   
+\begin{verbatim}
+        
+        xorps xmm4, xmm4; 0 |0 |0 |0
+        movdqu xmm5, xmm0; gradient1 | gradient2 | gradient3 | gradient4 |      
+        movdqu xmm6, xmm0; gradient1 | gradient2 | gradient3 | gradient4 |
+        subps xmm2, xmm1 ; max1 - min1 | max2 - min2 | max3 - min3 | max4 - min4 
+        ;A continuación se procede a implementar lo realizado por la función clamp
+        pcmpgtd xmm0, xmm4 ; gradient1 > 0 | gradient2 > 0 | gradient3 > 0 |gradient4 > 0
+        pcmpeqd xmm5, xmm3; gradient1==1 | gradient2==1 | gradient3==1 | gradient4==1  
+        pcmpgtd xmm3, xmm6 ; 1 > gradient1 | 1 > gradient2 | 1 > gradient3 | 1 > gradient4
+        orps xmm3, xmm5 ; FFFF para los gradient >= 1 en caso contrario 0000  
+        andps xmm3, xmm0 ; FFFF cuando 1 >= gradient > en caso contrario 0000
+        andps xmm3, xmm6 ; clamp1 | clamp2 | clamp3 | clamp1 
+        ;finalmente se realiza el producto entre el gradiente correspondiente
+        mulps xmm2, xmm3 ; (max - min)*clamp
+        addps xmm1, xmm2 ; min + (max - min)*clamp
+        ;procedemos a mover el resultado
+        movdqu [r8], xmm1
+\end{verbatim}
+ 
+En este caso r8 contiene la dirección inicial de un vector que usaremos para almacenar los distintos puntos interpolados por lo que luego de llamar a $interpolateASM$ habremos calculados 4 puntos. Si bien para esta versión son necesarios vectores adicionales, creemos que aun así obtendríamos una mejor perfomance respecto al tiempo necesario ya que estamos reduciendo la cantidad de llamadas a funciones que se encarguen de la interpolación.
+
+
+Otra función a la que se le dedica un tiempo de computo significante es $
+initDepthBuffer$ esta función es relativamente sencilla ya que es la encargada de resetear los valores del $DepthBuffer$ lo cual originalmente se realiza iterando las $ANCHO*ALTO$ posiciones. La versión de asm ($
+initDepthBuffer$) también constará de un ciclo pero dado que podemos cargar cuatro valores por iteración entonces ahora la cantidad de iteraciones totales sera de $\frac{ANCHO*ALTO}{4}$.
+
+
+
+Si bien la función $Vec4Mat4Product$ no se encuentra entre las que demandan un gran tiempo aun así realizamos una versión en ASM para ver si podíamos mejorar el tiempo de computo. Esta función realiza el producto entre un vector de floats de tamaño 4 y una matriz de 4x4 también de floats. 
+\begin{verbatim}
+En un registros xmm podemos almacenar los valores del vector y en otros cuatros a cada una de las 
+filas. Si en rdi tenemos el puntero al float que representa el vector v y en esi a la matriz m:
+
+    movdqu xmm0, [rdi] ; v_1 | v_2 | v_3 | v_4
+    movdqu xmm1, [rsi] ; m_11 | m_12 | m_13 | m_14
+    mulps xmm1, xmm0 ; m_11*v1 | m_12*v2 | m_13*v3 | m_14*v4
+    haddps xmm1, xmm1 
+    haddps xmm1, xmm1; m_11*v1 + m_12*v2 + m_13*v3 + m_14*v4 cada 4 bytes 
+        
+repitiendo estas ultimas tres instrucciones pero para xmm2, xmmm3 y xmmm4
+y sumando a rsi 16 por cada registro (lo cual representa avanzar una fila completa) tendremos en 
+4 registros los valores que conforman el vector resultado solo queda dejarlo en un solo registro 
+obteniendo el producto que se requería.
+\end{verbatim}
+
 
 En cuanto a las otras funciones, Map y getpixel están muy relacionadas con SDL ya que Map lo que hace es simplemente realizar un cálculo con el ancho y el alto de una textura y ciertas coordenadas para obtener otras coordenadas (en píxeles), llamar a getpixel y devolver el valor del píxel precisado. En principio es dificil pensar una manera de optimizar esto porque además Map es llamada una sola vez (en ProcessScanLine_m2) y getpixel también (en Map). Finalmente Uint32ToVec4 hace algo bastante simple que es convertir un color en formato uint32 (con el que trabaja SDL) a vector de float que es el tipo de dato que utilizamos nosotros en nuestras funciones. Lo hace mediante ANDs, shifteos y divisiones con lo cual también se trata de una función bastante minimal en cuanto a operaciones que realiza.
 
-Para tratar de mejorar Interpolate2 lo que vamos a hacer es que no llame a Clamp. Es decir, la función Clamp también tiene un consumo considerable y el hecho de que Interpolate2 se llama tantas veces y ésta a su vez llama a Clamp puede evitarse haciendo Clamp dentro de interpolate. Para esto, vamos a definir entonces Interpolate1 y veamos que resultados nos arroja gprof ahora:
+Tambien buscaremos mejorar Interpolate2 pero manteniendonos en el lenguaje C, lo que vamos a hacer es que no llame a Clamp. Es decir, la función Clamp también tiene un consumo considerable y el hecho de que Interpolate2 se llama tantas veces y ésta a su vez llama a Clamp puede evitarse haciendo Clamp dentro de interpolate. Para esto, vamos a definir entonces Interpolate1 y veamos que resultados nos arroja gprof ahora:
 
 \begin{figure}[h]
     \centering
