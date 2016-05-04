@@ -174,7 +174,7 @@ Dado que este proyecto está realizado en C y algunas partes específicas en Ass
 \par Existen varias implementaciones de estas estructuras y todas son similares, lo que cambia son las dimensiones de los puntos que almacena y el tipo de dato utilizado. Esto se debe a que a la hora de cargar un modelo 3D se necesitan cargar muchos datos de distinta naturaleza como por ejemplo los vértices del mismo (tres coordenadas de tipo float), las coordenadas de la textura en el caso de que use alguna (dos coordenadas de tipo float), los índices de los vértices (enteros) y las caras de los triángulos (tres coordenadas enteras).
 \par Si observamos el código en structHelper.h, vemos que cada estructura posee una declaración similar y existen exactamente tres funciones para su manejo: la inicialización, la inserción y la liberación de memoria. Estas tres funciones nos dan el suporte suficiente para la carga de datos.
  
-\section{Conceptos matemáticos}
+\section{Conceptos matemáticos} \label{conceptos}
 
 En esta sección vamos a exponer un poco los conceptos matemáticos subyacentes de la aplicación. Las librerías gráficas que brindan soporte 3D de alto nivel como también las de bajo nivel como Direct3D y OpenGL, tratan de abstraer un poco al programador de estos conceptos. Esto significa que muchas veces el programador no necesita saber que formato tiene una matriz específica si no que simplemente llama a la función encargada de construir dicha matriz que la librería provee y listo. En este trabajo, dado que no hacemos uso de ninguna librería que brinde el soporte matemático para el manejo 3D, tuvimos que ponernos un poco más en contacto con varios de los conceptos básicos necesarios para tratar con modelos 3D y vamos a introducirlos un poco en esta sección.
 
@@ -345,7 +345,7 @@ x'.z & y'.z & z'.z & 0 \\
 \]
 Donde dot es la función que calcula el producto escalar. Este método es mas optimizado ya que no requiere realizar un producto matricial.
 
-\subsection{Matriz de proyección (Projection Matrix)}
+\subsection{Matriz de proyección (Projection Matrix)} \label{projection}
 Todos los vértices transformados dentro del $View \ Space$ siguen teniendo tres dimensiones cuando en realidad para poder dibujarlos en pantalla se necesitan exactamente dos dimensiones. Además, aún no tenemos perspectiva, es decir, que tan lejos o cerca estamos del objeto. Dado que adoptamos la idea de posicionar la cámara sobre el eje -z, esto determinará la cercanía o lejanía con el modelo, modificando así el tamaño del mismo. La matriz de proyección será la encarga de solucionar estas cuestiones.
 \par Existen distintos tipos de proyecciones, por ejemplo en una proyección en perspectiva los objetos que están más lejos de la cámara se hacen más pequeños, mientras que en una proyección ortográfica la distancia a la cámara no tiene un efecto alguno sobre el tamaño del objeto. En nuestro caso utilizaremos proyección en perspectiva.
 \par La proyección en perspectiva se basa en la idea que la parte visible se encuentra dentro de una determinada figura (llamada $View \ Frustum$). El volumen de esta figura está definido por seis planos: un plano cerca de la cámara ($near \ plane$), un plano más lejos ($far \ plane$) y cuatro planos laterales que definen los bordes. El $near \ plane$  define a partir de donde se puede visualizar y el $far \ plane$ define hasta que punto podemos ver. De este modo, solo los objetos que se encuentren entre estos planos serán representados en pantalla. 
@@ -484,7 +484,7 @@ Este método sera el mas básico, se encargara de dibujar cada uno de los trián
 \subsubsection{Modo 2:}  
 En el segundo modo procederemos a rellenar los triángulos. Esto es posible ya sea tomando píxeles de una imagen de forma tal que el modelo final obtenga la textura de la imagen o bien definiendo un conjunto de pixels con el mismo color para todos. Para el primer caso Blender nos permite asignarles texturas a los distintos modelos, una de las formas es tomando como input una imagen y utilizando el Mapeo UV ($UV$ $mapping$). Esta técnica permite asignar una textura en 2D a una superficie 3D. 
 \par A cada vértice ,de los polígonos que componen el modelo, le sera asignado un par de coordenadas 2D llamas UV. Este nuevo par de coordenadas definen que área de la imagen es mapeada a cada triangulo es decir, permitirá pintar cada triangulo con el color de una imagen. 
-\par Por lo que modificaremos la función $RenderFilledModel_m1$ a $RenderFilledModel_m2$ y $DrawTriangle\_m1$ a $DrawTriangle\_m2$ de manera de no solo exportar los vértices sino que también las coordenadas UV de cada uno.
+\par Por lo que modificaremos la función $RenderFilledModel\_m1$ a $RenderFilledModel\_m2$ y $DrawTriangle\_m1$ a $DrawTriangle\_m2$ de manera de no solo exportar los vértices sino que también las coordenadas UV de cada uno.
 \par Como requeriremos acceder a cada píxel de la imagen usaremos la función $SDL\_LoadBMP$ ( provista por SDL) la cual permite cargar una superficie desde un archivo del tipo .BMP y nos devuelve un puntero a la misma, al cual llamaremos $tex$.
 
 
@@ -498,7 +498,9 @@ Redefiniremos $RenderFilledModel\_m2$, agregandole nuevas funcionalidades, a $Re
 \subsubsection{Modo 1:} \label{sdlmodo1}
 
 
-Para continuar con la renderización de nuestros modelos construiremos una nueva función llamada $DrawTriangle\_m1$ 
+Para continuar con la renderización de nuestros modelos construiremos una nueva función llamada $DrawTriangle\_m1$ \\
+
+
 \textbf{DrawTriangle\_m1 y ProcessScanLine\_m1:}
 \par Sean  P1, P2, P3 tres vértices de un triangulo ubicado en un valor menor del eje y respecto del siguiente vértice, definiremos P1.y como el valor en la coordenada y de P1, P1.x como el valor en el eje x, de manera análoga para P2, P3 y posteriormente para SX y EX. 
 \par La idea para crear las aristas es definir para cada valor Y entre P1.y y P3.y dos puntos SX y EX como se observa en la figura 5 de esta manera la sucesión de puntos creara la idea de aristas.
@@ -509,8 +511,8 @@ Para continuar con la renderización de nuestros modelos construiremos una nueva
     \label{fig:mesh1}
 \end{figure}
 \par La principal incógnita que se nos plantea es encontrar el valor SX.x y EX.x (ya que SX.y y EX.y es igual al valor Y de la iteración) de manera que se ubique dentro de la recta que los uniría. Para esto utilizaremos la formula de interpolación a partir de conocer el valor del eje y; mientras que los puntos que requiere la función serán los que conformen la recta sobre la cual se encuentren SX y EX.
-\par La función encargada de usar la interpolación de los puntos y proceder con la creación de las lineas la denominaremos $ProcessScanLine\_m1$ quien sera llamada por $DrawTriangle\_m1$ en los diferentes escenarios que se nos planteen.
-Sea pa, pb los puntos que me permiten interpolar SX y pc y pd los que interpolan a EX podemos definir: 
+\par La función encargada de usar la interpolación de los puntos y proceder con la creación de las lineas la denominaremos $ProcessScanLine\_m1$ quien sera llamada por $DrawTriangle\_m1$ en los diferentes escenarios que se nos planteen. 
+\par Sean pa, pb los puntos que me permiten interpolar SX y pc y pd los que interpolan a EX podemos definir: 
 \begin{verbatim}
 ProcessScanLine_m1(pa, pb, pc, pd, Y):
     gradient1 = if (pa.y != pb.y) 
@@ -526,7 +528,11 @@ ProcessScanLine_m1(pa, pb, pc, pd, Y):
     putpixel(SX.x, Y);
     putpixel(EX.x, Y);
 \end{verbatim}
-Como mencionamos $DrawTriangle\_m1$ hará uso de esta función en los distintos casos que se nos presenten, ya que si observamos la figura 5 vemos que no siempre SX o EX se encuentran sobre la misma arista, en un caso SX esta en la arista correspondiente a P1 y P3 mientras que en el otro triangulo esta sobre la conformada por P2 y P1 esto nos lleva a plantearnos y analizar todos los casos antes de comenzar el proceso de crear las lineas.
+
+$Interpolate$ se basa en el principio de interpolación mencionado en la sección \ref{conceptos}, en el mismo definimos el concepto de $gradient$ en este caso es necesario definir dos $gradient1$ y $gradient2$. pa, pb, pc y pd serán distintos vértices según sea la forma del triangulo (lo que se analizara a continuación) pero, siempre se debería cumplir que pa.y $\leq$ Y, pc.y $\leq$ Y, pa.y $\leq$ pb.y y pc.y $\leq$ pd.y. De esta forma cada uno de los gradientes debería ser positivo aun mas, el denominador siempre debería ser mayor que el numerador por lo que se debería cumplir que 0 $\leq$ $gradient1$ $\leq$ 1 y 0 $\leq$ $gradient2$ $\leq$ 1.  Dado que estamos trabajando con aritmética finita podría haber errores de redondeo tal que no se cumplan estas desigualdades. Para evitar continuar propagando errores y obtener un punto muy distorsionado del que se debería $Interpolate$ hará uso de otra función llamada $Clamp$ la cual retornara el valor $gradient$ final a utilizar es decir, si el pasado por parámetro a $Interpolate$ si es que esta entre cero o uno y sino por default el valor 1.
+
+
+Como mencionamos $DrawTriangle\_m1$ hará uso de $ProcessScanLine\_m1$ variando los pa, pb, pc y pd en los distintos casos que se nos presenten, ya que si observamos la figura 5 vemos que no siempre SX o EX se encuentran sobre la misma arista, en un caso SX esta en la arista correspondiente a P1 y P3 mientras que en el otro triangulo esta sobre la conformada por P2 y P1 esto nos lleva a plantearnos y analizar todos los casos antes de comenzar el proceso de crear las lineas.
 Primero estableceremos una manera de distinguir cuando P1 se encuentra a la derecha de P2 o viceversa: 
 dP1P2 = (P2.x - P1.x) / (P2.y - P1.y) 
 dP1P3 = (P3.x - P1.x) / (P3.y - P1.y)
@@ -571,8 +577,9 @@ O ESTE PSEUDOCÓDIGO SOLAMENTE NO SE.....)
                                         
 \end{verbatim}
 
+ 
 
-\subsection{Modo Textura:} 
+\subsection{Modo 2:} 
 
 
 \par En el segundo modo procederemos a rellenar los triángulos adoptando la idea del algoritmo Scan Line. El mismo se basa en rellenar cada triangulo de izquierda a derecha por medio de un conjunto de pixels (que representaría la linea azul en la figura 5) y, continuando con la notación del modo anterior, descendiendo desde P1.y hasta P3.y.  
@@ -620,7 +627,7 @@ ProcessScanLine_m2(pa, pb, pc, pd, Y, tex):
     
         putpixel(x, Y, z, textureColor)
 \end{verbatim}
-\subsection{Modo Textura + Sombra:} 
+\subsection{Modo 3:} 
 
 
 \textbf{DrawTriangle\_m3:} 
