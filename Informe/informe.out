@@ -8,17 +8,26 @@
 \BOOKMARK [2][-]{subsection.2.3}{Ciclo principal y detecci\363n de eventos}{section.2}% 8
 \BOOKMARK [2][-]{subsection.2.4}{Renderizado de texto \(HAY QUE LLAMAR A TTF\137QUIT\)}{section.2}% 9
 \BOOKMARK [2][-]{subsection.2.5}{Timers}{section.2}% 10
-\BOOKMARK [2][-]{subsection.2.6}{Funci\363n putpixel}{section.2}% 11
+\BOOKMARK [2][-]{subsection.2.6}{Funciones putpixel y getpixel}{section.2}% 11
 \BOOKMARK [1][-]{section.3}{Implementaci\363n de estructuras}{}% 12
-\BOOKMARK [1][-]{section.4}{Conceptos matem\341ticos}{}% 13
-\BOOKMARK [2][-]{subsection.4.1}{Matriz del mundo \(World Matrix\)}{section.4}% 14
-\BOOKMARK [2][-]{subsection.4.2}{Matriz de vista \(View Matrix\)}{section.4}% 15
-\BOOKMARK [2][-]{subsection.4.3}{Matriz de proyecci\363n \(Projection Matrix\)}{section.4}% 16
-\BOOKMARK [2][-]{subsection.4.4}{mathHelper}{section.4}% 17
-\BOOKMARK [2][-]{subsection.4.5}{sdlHelper: }{section.4}% 18
-\BOOKMARK [2][-]{subsection.4.6}{Modo 1:}{section.4}% 19
-\BOOKMARK [2][-]{subsection.4.7}{Modo Textura:}{section.4}% 20
-\BOOKMARK [2][-]{subsection.4.8}{Modo Textura + Sombra:}{section.4}% 21
-\BOOKMARK [1][-]{section.5}{An\341lisis de performance y experimentaci\363n}{}% 22
-\BOOKMARK [2][-]{subsection.5.1}{Optimizaci\363n del c\363digo encargado de la interpolaci\363n}{section.5}% 23
-\BOOKMARK [2][-]{subsection.5.2}{Optimizaciones en Assembler}{section.5}% 24
+\BOOKMARK [2][-]{subsection.3.1}{Manejo de memoria}{section.3}% 13
+\BOOKMARK [2][-]{subsection.3.2}{Otras estructuras}{section.3}% 14
+\BOOKMARK [1][-]{section.4}{Conceptos matem\341ticos}{}% 15
+\BOOKMARK [2][-]{subsection.4.1}{Matriz del mundo \(World Matrix\)}{section.4}% 16
+\BOOKMARK [2][-]{subsection.4.2}{Matriz de vista \(View Matrix\)}{section.4}% 17
+\BOOKMARK [2][-]{subsection.4.3}{Matriz de proyecci\363n \(Projection Matrix\)}{section.4}% 18
+\BOOKMARK [2][-]{subsection.4.4}{mathHelper}{section.4}% 19
+\BOOKMARK [2][-]{subsection.4.5}{Model Loader:}{section.4}% 20
+\BOOKMARK [3][-]{subsubsection.4.5.1}{Modo 1:}{subsection.4.5}% 21
+\BOOKMARK [3][-]{subsubsection.4.5.2}{Modo 2:}{subsection.4.5}% 22
+\BOOKMARK [3][-]{subsubsection.4.5.3}{Modo 3:}{subsection.4.5}% 23
+\BOOKMARK [2][-]{subsection.4.6}{sdlHelper: }{section.4}% 24
+\BOOKMARK [3][-]{subsubsection.4.6.1}{Modo 1:}{subsection.4.6}% 25
+\BOOKMARK [2][-]{subsection.4.7}{Modo 2:}{section.4}% 26
+\BOOKMARK [2][-]{subsection.4.8}{Modo 3:}{section.4}% 27
+\BOOKMARK [1][-]{section.5}{An\341lisis de performance y experimentaci\363n}{}% 28
+\BOOKMARK [2][-]{subsection.5.1}{Optimizaci\363n del c\363digo encargado de la interpolaci\363n}{section.5}% 29
+\BOOKMARK [2][-]{subsection.5.2}{Optimizaciones en Assembler}{section.5}% 30
+\BOOKMARK [3][-]{subsubsection.5.2.1}{InterpolateASM}{subsection.5.2}% 31
+\BOOKMARK [3][-]{subsubsection.5.2.2}{Vec4Mat4ProductASM}{subsection.5.2}% 32
+\BOOKMARK [3][-]{subsubsection.5.2.3}{initDepthBufferASM}{subsection.5.2}% 33

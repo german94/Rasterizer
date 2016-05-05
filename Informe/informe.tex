@@ -162,17 +162,37 @@ Tanto para mostrar los FPS como las indicaciones de uso, nuestro programa muestr
 \subsection{Timers}
 Para medir la performance de la aplicación una de las técnicas que usamos fue el uso de timers. Si bien SDL provee soporte para esto, decidimos utilizar los clásicos Clocks de C pero hicimos uso de la función $SDL\_GetTicks$ que nos devuelve la cantidad de milisegundos que pasaron desde que se inicializó la librería.
 
-\subsection{Función $putpixel$} \label{putpixel}
+\subsection{Funciones $putpixel$ y $getpixel$} \label{putpixel}
 Si bien esta función no se encuentra dentro de la SDL, tiene una relación muy cercana a la misma ya que trabaja a un nivel bastante bajo con sus estructuras y formatos (efectuando operaciones como shifteos y and's) y es por eso que se encuentra en sdlHelper.c.
 Toma como parámetros la superficie ($SDL\_Surface*$) de la ventana, coordenadas enteras x, y, z, un píxel en formato entero de 32 bits, tamaños enteros ancho y alto de la ventana y un puntero al depthBuffer ($float*$). Lo que hace es manipular la superficie de la ventana de manera tal de modificar el píxel que se encuentra en la posición $(x, y)$ para que ahora tenga el valor del píxel que toma como parámetro. 
 \par Sin embargo, vemos que también hay otros parámetros como una coordenada z y un depthBuffer. Esto es porque, debido a que estamos renderizando en una ventana 2D que representa a un mundo 3D, cada píxel tiene una ``profundidad'' (que guardamos en el depthBuffer) y que utilizamos para testear si el píxel original que se encuentra en dichas coordenadas está delante o detras (en términos de la coordenada z) del que toma esta función por parámetro.
 En el caso de que el nuevo píxel esté delante del viejo, entonces efectivamente lo modificamos, caso contrario dejamos
  todo como está.
  
+ 
+La función $getpixel$ en cambio, solo toma tres parámetros (la superficie, coordenada x y coordenada y) ya que no se va a efectuar ningún cambio sobre la superficie en sí, si no que la idea es obtener el valor de un píxel específico. El tipo de dato que devuelve es un entero de 32 bits sin signo que es el tipo que usa SDL para los píxeles. Esta función es llamada únicamente por la función $Map$, que se encarga de extraer la información necesaria del archivo de textura para poder pintar los triángulos (es decir solo se usa en los modos 2 y 3).
+ 
 \section{Implementación de estructuras}
-Dado que este proyecto está realizado en C y algunas partes específicas en Assembler, no contamos con estructuras dinámicas implementadas que podamos usar de manera práctica. Estas estructuras en nuestro caso son arreglos dinámicos, las definimos nosotros en structHelper.h y sus implementaciones están en structHelper.c. Fueron construidas para el almacenamiento dinámico de coordenadas 1D, 2D, 3D y 4D a la hora de cargar un modelo 3D desde un archivo.
-\par Existen varias implementaciones de estas estructuras y todas son similares, lo que cambia son las dimensiones de los puntos que almacena y el tipo de dato utilizado. Esto se debe a que a la hora de cargar un modelo 3D se necesitan cargar muchos datos de distinta naturaleza como por ejemplo los vértices del mismo (tres coordenadas de tipo float), las coordenadas de la textura en el caso de que use alguna (dos coordenadas de tipo float), los índices de los vértices (enteros) y las caras de los triángulos (tres coordenadas enteras).
+\subsection{Manejo de memoria}
+Dado que este proyecto está realizado en C y algunas partes específicas en Assembler, no contamos con estructuras dinámicas con un manejo eficiente de la memoria que podamos usar. Dichas estructuras, en nuestro caso arreglos dinámicos, las definimos nosotros en structHelper.h y sus implementaciones están en structHelper.c. Fueron construidas para el almacenamiento dinámico de coordenadas de hasta 4 dimensiones a la hora de cargar un modelo 3D desde un archivo.
+\par Existen varias implementaciones de estas estructuras y todas son muy similares, lo que cambia son las dimensiones de los puntos que almacena y el tipo de dato utilizado. Esto se debe a que a la hora de cargar un modelo 3D se necesitan cargar muchos datos de distinta naturaleza como por ejemplo los vértices del mismo (tres coordenadas de tipo float), las coordenadas de la textura en el caso de que use alguna (dos coordenadas de tipo float), los índices de los vértices (enteros) y las caras de los triángulos (tres coordenadas enteras).
 \par Si observamos el código en structHelper.h, vemos que cada estructura posee una declaración similar y existen exactamente tres funciones para su manejo: la inicialización, la inserción y la liberación de memoria. Estas tres funciones nos dan el suporte suficiente para la carga de datos.
+
+Las estructuras que usamos entonces son:
+\begin{itemize}
+\item \textbf{UInt3DynamicArray: } almacena las caras de los triángulos, compuestas por tres índices
+\item \textbf{Vec2DynamicArray: } almacena las coordenadas de las texturas (modos 2 y 3)
+\item \textbf{Vec4DynamicArray: } almacena las coordenadas de los vértices (cada componente es un float)
+\end{itemize}
+
+\subsection{Otras estructuras}
+Además de las estructuras para los arreglos dinámicos que mencionamos en la sección anterior, existen otras estructuras que definimos por una cuestión de organización de los datos. Es decir, sin tener estas estructuras la cantidad de parámetros de las funciones en modelLoader y las funciones encargadas de la rasterización aumentarían al doble o más. A continuación listamos los nombres de dichas estructuras y una breve descripción de su uso:
+
+\begin{itemize}
+\item \textbf{Vertex: } almacena toda la información de un vértice. Esto es: sus coordenadas en los distintos espacios, su normal y las coordenadas de la textura que le corresponden.
+\item \textbf{ScanLineData:} agrupa los datos necesarios para que ProcessScanLine realice la interpolación
+\item \textbf{Model:} se utiliza a la hora de cargar el modelo y luego pasarselo a los posibles modos de renderizado. Agrupa toda la información necesaria, desde lo que se carga del archivo hasta las matrices que lo transforman, distancias máximas para reescalado y color.
+\end{itemize}
  
 \section{Conceptos matemáticos} \label{conceptos}
 
@@ -676,12 +696,71 @@ Comencemos haciendo una corrida de gprof a nuestra aplicación con el código he
 \end{figure}
 
 
-Podemos ver que la función $Interpolate2$ es la que más consumo de tiempo realiza y le siguen $ProcessScanLine\_m2$ y $Clamp$. Recordemos que tanto $Interpolate2$ como $Clamp$, son funciones matemáticas que son llamadas durante el proceso de rasterización. Más aún, $Interpolate2$ realiza una llamada a $Clamp$ en su definición y a su vez $ProcessScanLine\_m2$ llama sucesivas veces (11 para ser exactos) a Interpolate2. Claramente estas tres funciones están muy vinculadas entre sí y debido a las numerosas llamadas a $Interpolate2$, la idea va ser optimizar ésta función.
-\par Dado que $interpolate2$ nos da como resultado un float (4 bytes) y la idea de utilizar ASM es para emplear las instrucciones SIMD, que nos permiten cargar en un registro 16 bytes, aprovecharemos la cantidad de veces que se utiliza esta función dentro de $ProcessScanLine\_2$. 
-\par  $InterpolateASM$ sera la versión en ASM de la función, por cada llamada a esta función calcularemos, cuando  sea posible, cuatros valores de los que se deben interpolar. Entonces la función recibira los valores necesarios para interpolar dentro de distintos vectores, donde cada posición representa los valores necesarios para calcular los distintos puntos a interpolar. 
-\par Básicamente podemos representar esta función con el siguiente pseudocódigo:
+Podemos ver que la función $Interpolate2$ es la que más consumo de tiempo realiza y le siguen $ProcessScanLine\_m2$ y $Clamp$. Recordemos que tanto $Interpolate2$ como $Clamp$, son funciones matemáticas que son llamadas durante el proceso de rasterización. Más aún, $Interpolate2$ realiza una llamada a $Clamp$ en su definición y a su vez $ProcessScanLine\_m2$ llama sucesivas veces (11 para ser exactos) a $Interpolate2$. Claramente estas tres funciones están muy vinculadas entre sí y debido a las numerosas llamadas a $Interpolate2$, la idea va ser optimizar ésta función.
+\par Dado que $Interpolate2$ nos da como resultado un float (4 bytes) y la idea de utilizar Assembler es para emplear las instrucciones SIMD que nos permitan cargar en un registro 16 bytes, aprovecharemos la cantidad de veces que se utiliza esta función dentro de $ProcessScanLine\_2$.
 
-Si en xmm0 tenemos cargado los distintos $gradient$, en xmm1 cada 4 bytes se encuentra uno de los puntos que necesario para la interpolación (a los que llamaremos min ) , en xmm2 el segundo valor que se necesita (llamados max) y en xmm3 cuatros valores 1 representado cada uno con 4 bytes luego:   
+En cuanto a las otras funciones, Map y getpixel están muy relacionadas con SDL ya que Map lo que hace es simplemente realizar un cálculo con el ancho y el alto de una textura y ciertas coordenadas para obtener otras coordenadas (en píxeles), llamar a getpixel y devolver el valor del píxel precisado. En principio es dificil pensar una manera de optimizar esto porque además Map es llamada una sola vez (en ProcessScanLine_m2) y getpixel también (en Map). Finalmente Uint32ToVec4 hace algo bastante simple que es convertir un color en formato uint32 (con el que trabaja SDL) a vector de float que es el tipo de dato que utilizamos nosotros en nuestras funciones. Lo hace mediante ANDs, shifteos y divisiones con lo cual también se trata de una función bastante minimal en cuanto a operaciones que realiza.
+
+Tambien buscaremos mejorar $Interpolate2$ pero manteniendonos en el lenguaje C, lo que vamos a hacer es que no llame a Clamp. Es decir, la función Clamp también tiene un consumo considerable y el hecho de que $Interpolate2$ se llama tantas veces y ésta a su vez llama a Clamp puede evitarse haciendo Clamp dentro de interpolate. Para esto, vamos a definir entonces $Interpolate1$ y veamos que resultados nos arroja gprof ahora:
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Imagenes/gprof2.png}
+    \caption{Misma configuración de parámetros iniciales, ahora Clamp está dentro de $Interpolate1$.}
+    \label{fig:mesh1}
+\end{figure}
+
+Se puede ver que el porcentaje de tiempo consumido es un poco mayor en $Interpolate1$ que antes en $Interpolate2$ y lo mismo sucede con ProcessScanLine_m2. En principio, pareciera que lo que hicimos empeoró las cosas, sin embargo sucedió todo lo contrario. El porcentaje de aumento que se registró en estas funciones se debe a que gracias a que ahora no existe Clamp, el tiempo total que tarda el programa en realizar las 1000 iteraciones es menor. Dado que la cota de iteraciones no cambió, la cantidad de veces que se ejecuta cada función sigue siendo la misma y en consecuencia el porcentaje del tiempo de consumo de las funciones que quedaron aumentó.
+
+Para corroborar este hecho observamos además que los FPS aumentaron aproximadamente el doble con $Interpolate1$ y el tiempo que tardó la aplicación en llegar a las 1000 iteraciones fue considerablemente menor también.
+
+Ahora veamos que datos obtenemos renderizando en modo 3 con la misma configuración de parámetros y hagamos la comparación entre estas dos versiones de Interpolate.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Imagenes/gprof3.png}
+    \caption{Misma configuración de parámetros iniciales salvo que ahora renderizamos en modo 3.}
+    \label{fig:mesh1}
+\end{figure}
+
+Vemos que la comparación en este modo es muy similar a la del modo anterior. En cuanto a tiempos y FPS pasa algo similar (el tiempo disminuye y los FPS aumentan considerablemente al utilizar $Interpolate1$) solo que en este caso los tiempos son un poco mayores debido a que es el modo más costoso por los cálculos con las normales.
+
+\subsection{Optimizaciones en Assembler}
+Como explicamos en la sección anterior, las mediciones realizadas hasta ahora fueron hechas sobre el código en C. Decidimos implementar varias funciones en Assembler, sobre todo las que hacen procesamiento matricial pero también otras como la encargada de la interpolación y la de limpiar el depth buffer y ver si esto efectivamente representa una mejora en la performance. A continuación mostramos los resultados que arroja gprof con las funciones que venimos analizando hasta ahora.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Imagenes/gprof4.png}
+    \caption{Misma configuración de parámetros iniciales, modo 2.}
+    \label{fig:mesh1}
+\end{figure}
+
+El consumo que realiza $InterpolateASM$ ahora es significativamente menor comparado con el que realizaba $Interpolate1$ e $Interpolate2$. Esta nueva implementación en Assembler efectivamente reduce los recursos que necesita esta función para ejecutarse.
+
+Como dijimos antes existen otras funciones que decidimos implementar en Assembler, no podemos mostrar sus porcentajes de consumo aca porque el gprof no arroja esos resultados. Esto puede ser porque son muy pequeños (ya eran relativamente pequeños en sus versiones de C) y no los tiene en cuenta. Sin embargo, el tiempo total que tarda en ejecutar las 1000 iteraciones esta versión en Assembler es considerablemente menor, sobre todo cuando estamos en modo 3. El siguiente gráfico muestra los tiempos en segundos de cada una de las versiones con los distintos modos:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Imagenes/tiemposTotales.png}
+    \caption{Tiempos totales en finalizar las 1000 iteraciones con las distintas versiones. Fueron medidos en un procesador i5 con 8gb de RAM.}
+    \label{fig:mesh1}
+\end{figure}
+
+Finalmente, presentamos un último gráfico con los FPS promedio de cada versión:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Imagenes/fps.png}
+    \caption{FPS promedio medidos en un procesador i5 con 8gb de RAM.}
+    \label{fig:mesh1}
+\end{figure}
+
+
+Se puede ver como en ambos gráficos quedan en evidencia las mejoras presentadas por las versiones en Assembler, tanto en el modo 2 como en el modo 3. Se ve reflejado que el hecho de usar Interpolate1 mejora un poco las cosas, pero no alcanza a la performance de las versiones en Assembler, lo cual significa que haber optimizado con SIMD la interpolación, los cálculos matriciales y la inicialización del depth buffer efectivamente valió la pena.
+
+\subsubsection{InterpolateASM}
+Explicaremos un poco esta versión de interpolación hecha en Assembler debido a su importancia en la rasterización. Por cada llamada a esta función calcularemos, cuando sea posible, cuatro valores de los que se deben interpolar. Entonces la función recibirá los valores necesarios para interpolar dentro de distintos vectores, donde cada posición representa los valores necesarios para calcular los distintos puntos a interpolar. Básicamente podemos representar esta función con el siguiente pseudocódigo:
+
+Si en xmm0 tenemos cargado los distintos $gradient$, en xmm1 cada 4 bytes se encuentra uno de los puntos que necesario para la interpolación (a los que llamaremos min), en xmm2 el segundo valor que se necesita (llamados max) y en xmm3 cuatros valores 1 representado cada uno con 4 bytes luego:   
 \begin{verbatim}
         
         xorps xmm4, xmm4; 0 |0 |0 |0
@@ -704,14 +783,8 @@ Si en xmm0 tenemos cargado los distintos $gradient$, en xmm1 cada 4 bytes se enc
  
 En este caso r8 contiene la dirección inicial de un vector que usaremos para almacenar los distintos puntos interpolados por lo que luego de llamar a $interpolateASM$ habremos calculados 4 puntos. Si bien para esta versión son necesarios vectores adicionales, creemos que aun así obtendríamos una mejor perfomance respecto al tiempo necesario ya que estamos reduciendo la cantidad de llamadas a funciones que se encarguen de la interpolación.
 
-
-Otra función a la que se le dedica un tiempo de computo significante es $
-initDepthBuffer$ esta función es relativamente sencilla ya que es la encargada de resetear los valores del $DepthBuffer$ lo cual originalmente se realiza iterando las $ANCHO*ALTO$ posiciones. La versión de asm ($
-initDepthBuffer$) también constará de un ciclo pero dado que podemos cargar cuatro valores por iteración entonces ahora la cantidad de iteraciones totales sera de $\frac{ANCHO*ALTO}{4}$.
-
-
-
-Si bien la función $Vec4Mat4Product$ no se encuentra entre las que demandan un gran tiempo aun así realizamos una versión en ASM para ver si podíamos mejorar el tiempo de computo. Esta función realiza el producto entre un vector de floats de tamaño 4 y una matriz de 4x4 también de floats. 
+\subsubsection{Vec4Mat4ProductASM}
+Si bien la función $Vec4Mat4Product$ no se encuentra entre las que demandan un gran tiempo, decidimos realizar una versión en Assembler para aprovechar el procesamiento vectorial de SIMD. En esta sección explicamos un poco cómo está hecha esta versión de la función. Esta función realiza el producto entre un vector de floats de tamaño 4 y una matriz de 4x4 también de floats. 
 \begin{verbatim}
 En un registros xmm podemos almacenar los valores del vector y en otros cuatros a cada una de las 
 filas. Si en rdi tenemos el puntero al float que representa el vector v y en esi a la matriz m:
@@ -728,53 +801,9 @@ y sumando a rsi 16 por cada registro (lo cual representa avanzar una fila comple
 obteniendo el producto que se requería.
 \end{verbatim}
 
-
-En cuanto a las otras funciones, Map y getpixel están muy relacionadas con SDL ya que Map lo que hace es simplemente realizar un cálculo con el ancho y el alto de una textura y ciertas coordenadas para obtener otras coordenadas (en píxeles), llamar a getpixel y devolver el valor del píxel precisado. En principio es dificil pensar una manera de optimizar esto porque además Map es llamada una sola vez (en ProcessScanLine_m2) y getpixel también (en Map). Finalmente Uint32ToVec4 hace algo bastante simple que es convertir un color en formato uint32 (con el que trabaja SDL) a vector de float que es el tipo de dato que utilizamos nosotros en nuestras funciones. Lo hace mediante ANDs, shifteos y divisiones con lo cual también se trata de una función bastante minimal en cuanto a operaciones que realiza.
-
-Tambien buscaremos mejorar Interpolate2 pero manteniendonos en el lenguaje C, lo que vamos a hacer es que no llame a Clamp. Es decir, la función Clamp también tiene un consumo considerable y el hecho de que Interpolate2 se llama tantas veces y ésta a su vez llama a Clamp puede evitarse haciendo Clamp dentro de interpolate. Para esto, vamos a definir entonces Interpolate1 y veamos que resultados nos arroja gprof ahora:
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.8\textwidth]{Imagenes/gprof2.png}
-    \caption{Misma configuración de parámetros iniciales, ahora Clamp está dentro de Interpolate1.}
-    \label{fig:mesh1}
-\end{figure}
-
-Se puede ver que el porcentaje de tiempo consumido es un poco mayor en Interpolate1 que antes en Interpolate2 y lo mismo sucede con ProcessScanLine_m2. En principio, pareciera que lo que hicimos empeoró las cosas, sin embargo sucedió todo lo contrario. El porcentaje de aumento que se registró en estas funciones se debe a que gracias a que ahora no existe Clamp, el tiempo total que tarda el programa en realizar las 1000 iteraciones es menor. Dado que la cota de iteraciones no cambió, la cantidad de veces que se ejecuta cada función sigue siendo la misma y en consecuencia el porcentaje del tiempo de consumo de las funciones que quedaron aumentó.
-
-Para corroborar este hecho observamos además que los FPS aumentaron aproximadamente el doble con Interpolate1 y el tiempo que tardó la aplicación en llegar a las 1000 iteraciones fue considerablemente menor también.
-
-Ahora veamos que datos obtenemos renderizando en modo 3 con la misma configuración de parámetros y hagamos la comparación entre estas dos versiones de Interpolate.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\textwidth]{Imagenes/gprof3.png}
-    \caption{Misma configuración de parámetros iniciales salvo que ahora renderizamos en modo 3.}
-    \label{fig:mesh1}
-\end{figure}
-
-Vemos que la comparación en este modo es muy similar a la del modo anterior. En cuanto a tiempos y FPS pasa algo similar (el tiempo disminuye y los FPS aumentan considerablemente al utilizar Interpolate1) solo que en este caso los tiempos son un poco mayores debido a que es el modo más costoso por los cálculos con las normales.
-
-\subsection{Optimizaciones en Assembler}
-Como explicamos en la sección anterior, las mediciones realizadas hasta ahora fueron hechas sobre el código en C. Decidimos implementar varias funciones en Assembler, sobre todo las que hacen procesamiento matricial pero también otras como la encargada de la interpolación y la de limpiar el depth buffer y ver si esto efectivamente representa una mejora en la performance. A continuación mostramos los resultados que arroja gprof con las funciones que venimos analizando hasta ahora.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\textwidth]{Imagenes/gprof4.png}
-    \caption{Misma configuración de parámetros iniciales, modo 2.}
-    \label{fig:mesh1}
-\end{figure}
-
-El consumo que realiza InterpolateASM ahora es significativamente menor comparado con el que realizaba Interpolate1 e Interpolate2. Esta nueva implementación en Assembler efectivamente reduce los recursos que necesita esta función para ejecutarse.
-
-Como dijimos antes existen otras funciones que decidimos implementar en Assembler, no podemos mostrar sus porcentajes de consumo aca porque el gprof no arroja esos resultados. Esto puede ser porque son muy pequeños (ya eran relativamente pequeños en sus versiones de C) y no los tiene en cuenta. Sin embargo, el tiempo total que tarda en ejecutar las 1000 iteraciones esta versión en Assembler es considerablemente menor, sobre todo cuando estamos en modo 3. El siguiente gráfico muestra los tiempos en segundos de cada una de las versiones con los distintos modos:
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\textwidth]{Imagenes/tiemposTotales.png}
-    \caption{Tiempos totales en finalizar las 1000 iteraciones con las distintas versiones. Fueron medidos en un procesador i5 con 8gb de RAM.}
-    \label{fig:mesh1}
-\end{figure}
-
+\subsubsection{initDepthBufferASM}
+Una función que no aparece en los gráficos (porque tiene un consumo de tiempo del 4\% aproximadamente) pero es bastante importante ya que nos permite realizar el Depth Test y así decidir cuando pintar un píxel y cuando no, es $
+initDepthBuffer$. Se trata de una función relativamente sencilla ya que es la encargada de resetear los valores del $DepthBuffer$ lo cual originalmente se realiza iterando las $ANCHO*ALTO$ posiciones. Decidimos hacer una versión en asm ($
+initDepthBufferASM$) que también constará de un ciclo con la diferencia que ahora podemos cargar cuatro valores por iteración y entonces ahora la cantidad de iteraciones totales sera de $\frac{ANCHO*ALTO}{4}$. Esta versión reduce el consumo a menos de un 1\%.
 
 \end{document}
