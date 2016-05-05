@@ -56,17 +56,17 @@ int main(int argc, char *argv[])
     Uint32 deltaclock = 0;
     Uint32 currentFPS = 0;
 
+    Vec4DynamicArray Vertices;
+    Vec2DynamicArray Uvs;
+    Vec4DynamicArray Normals;
+    UInt3DynamicArray Faces;
+
     if(init())
     {
         CreateScaleMatrix(scale, sx, sy, sz);
         Traspose(scale);
 
     	screenSurface = SDL_GetWindowSurface( window );
-
-        Vec4DynamicArray Vertices;
-        Vec2DynamicArray Uvs;
-        Vec4DynamicArray Normals;
-        UInt3DynamicArray Faces;
 
         Vec2_int max_distancias; //{indice x_max, indice y_max}
 
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
         data.max_dis = max_distancias;  
 
 
-        LoadModel("model.obj", &data);
+        LoadModel("../alfred.obj", &data);
           
         SDL_Surface* tex;
         if(Uvs.size != 0)
@@ -100,14 +100,15 @@ int main(int argc, char *argv[])
         
         Mat4 worldt;
 
-        int contador = 0;
+        //Uint32 startApp = SDL_GetTicks();
 		while(!quit)
 		{
             startclock = SDL_GetTicks();
 
 			EventDetection();
 						 			 
-            initDepthBufferASM(depthBuffer, vec_max, SCREEN_WIDTH*SCREEN_HEIGHT);
+            //initDepthBufferASM(depthBuffer, vec_max, SCREEN_WIDTH*SCREEN_HEIGHT);
+            initDepthBuffer();
 
             SDL_FillRect( screenSurface, NULL, SDL_MapRGB( screenSurface->format, 0x00, 0x00, 0x00 ) );
 
@@ -202,6 +203,8 @@ int main(int argc, char *argv[])
             strcpy(buf, "FPS: ");
             snprintf(&buf[5], 4, "%d", currentFPS);
 
+            //prom += currentFPS;
+
             SDL_Color clrFg = {255,0,0,0};
             if(showFPS)
                 RenderText(clrFg, font, buf, screenSurface);
@@ -210,10 +213,22 @@ int main(int argc, char *argv[])
                 ShowInfo(screenSurface);
             
         	SDL_UpdateWindowSurface( window );
+
+            //iteraciones++;
     	}
+
+        //float fpsPROM = prom / 1000;
+        //printf("Tiempo transcurrido: %d, FPS Promedio: %f\n", SDL_GetTicks() - startApp, fpsPROM);
   	}
 
+    freeVec4DynamicArray(&Vertices);
+    freeVec2DynamicArray(&Uvs);
+    freeVec4DynamicArray(&Normals);
+    freeUint3DynamicArray(&Faces);
+
+
     TTF_CloseFont(font);
+    TTF_Quit();
     SDL_DestroyWindow( window );
 
     SDL_Quit();

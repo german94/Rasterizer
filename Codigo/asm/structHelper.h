@@ -24,13 +24,6 @@ typedef struct
 	float ndotld; 
 } ScanLineData;
 
-typedef struct
-{
-  unsigned int *image;
-  int w;
-  int h
-} Texture;
-
 void CopyVec(float*, float*, int);
 
 /////////////////////////////////////////////////////////////////
@@ -75,7 +68,7 @@ typedef struct {
  void insertVec4DynamicArray(Vec4DynamicArray*, Vec4);
  void freeVec4DynamicArray(Vec4DynamicArray*);
 
- typedef struct
+typedef struct
 {
     Vec4DynamicArray* vertices;
     Vec2DynamicArray* uvs;

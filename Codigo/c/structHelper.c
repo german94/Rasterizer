@@ -89,7 +89,6 @@ void insertVec2DynamicArray(Vec2DynamicArray *a, Vec2 element)
   }
   a->array[a->used][0] = element[0];
   a->array[a->used][1] = element[1];
-  a->array[a->used][2] = element[2];
 
   a->used++;
 }
