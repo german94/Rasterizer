@@ -202,3 +202,25 @@ void Mat4ProductTras(Mat4 m1, Mat4 m2, Mat4 res)
 			res[j][i] = ScalarProd(&m1[i], &m2[j]);
 	}
 }
+
+float Interpolate1(float min, float max, float gradient)
+{ 
+    float mini = (gradient < 1) ? gradient : 1;
+    float maxi = (0 > mini) ? 0 : mini;
+    return min + (max - min) *maxi;
+}
+
+float ComputeNDotL(Vec4 centerPoint, Vec4 vnFace, Vec3 lightPos) 
+{
+	Vec3 lightDirection;
+
+	Sub3(lightPos, centerPoint, lightDirection);
+
+	Normalize3(vnFace);
+  
+	Normalize3(lightDirection);
+
+	float prod = Dot3Prod(vnFace, lightDirection);
+
+	return (0 > prod) ? 0 : prod;
+}

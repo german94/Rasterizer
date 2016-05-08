@@ -29,6 +29,8 @@ Vec3 lightPos;
 Vec3 color = {1.0, 1.0, 1.0};
 Mat4 t;
 
+extern bool interpolate1ON;
+
 int main(int argc, char *argv[])
 {
 

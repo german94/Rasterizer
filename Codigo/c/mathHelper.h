@@ -1,6 +1,9 @@
 #ifndef DEF_MATHH_H
 #define DEF_MATHH_H
 
+#define true 1
+#define false 0
+
 #include <stdio.h>
 #include <math.h>
 
@@ -12,6 +15,7 @@ typedef int Vec2_int[2];
 typedef unsigned int uint3[3];
 typedef float Mat4[4][4];
 typedef float Mat3[3][3];
+typedef int bool;
 
 void VecByScalar(float* in, float scalar, float* out, int d);
 void VecByVec(float* in1, float* in2, float* out, int d);
@@ -34,5 +38,12 @@ void Traspose(Mat4 m1);
 void Traspose2(Mat4 m1, Mat4 res);
 float ScalarProd(float *v1, float *v2);
 void Mat4ProductTras(Mat4 m1, Mat4 m2, Mat4 res);
+float Max(float a, float b);
+float Min(float a, float b);
+float Clamp(float value);
+float Interpolate(float min, float max, float gradient, bool i1ON);
+//float Interpolate2(float min, float max, float gradient);
+//float Interpolate1(float min, float max, float gradient);
+float ComputeNDotL(Vec4 centerPoint, Vec4 vnFace, Vec3 lightPos); 
 
 #endif

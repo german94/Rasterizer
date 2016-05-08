@@ -57,17 +57,17 @@ bool init()
     font = TTF_OpenFont("DroidSans.ttf", 12);
 
     quit = false;
-    rotX = false;
+    rotX = true;
     rotY = true;
-    rotZ = false;
+    rotZ = true;
     sx = 1.0f;
     sy = 1.0f;
     sz = 1.0f;
     rotSpeed = 0.01f;
-    showFPS = true;
-    showInfo = true;
-    m_esq = true;
-	m_tex = false;
+    showFPS = false;
+    showInfo = false;
+    m_esq = false;
+	m_tex = true;
 	m_tex_norm = false;
 
     return true;
@@ -387,6 +387,8 @@ void ShowInfo(SDL_Surface* screen)
     RenderTextR(c, font, "5: mostrar modo texturas", screenSurface, &r11);
     SDL_Rect r12 = {0, 185, 0, 0};
     RenderTextR(c, font, "6: mostrar modo texturas y normales", screenSurface, &r12);
+    SDL_Rect r13 = {0, 200, 0, 0};
+    RenderTextR(c, font, "2, 4, 6, 7, 8, 9 (teclado numerico): mover el modelo en el espacio", screenSurface, &r13);
 }
 
 #endif

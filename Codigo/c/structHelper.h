@@ -1,11 +1,7 @@
 #ifndef DEF_STRUCTH_H_
 #define DEF_STRUCTH_H_
 
-#define true 1
-#define false 0
 #include "mathHelper.h"
-
-typedef int bool;
 
 typedef struct
 {

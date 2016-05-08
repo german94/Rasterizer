@@ -1,7 +1,6 @@
 #ifndef DEF_AUXILIARES_H_
 #define DEF_AUXILIARES_H_
 
-#include "sdlHelper.h"
 #include "mathHelper.h"
 #include "modelLoader.h"
 #include "structHelper.h"
@@ -10,6 +9,7 @@ extern bool quit;
 extern bool rotX;
 extern bool rotY;
 extern bool rotZ;
+extern bool interpolate1ON;
 extern float sx;
 extern float sy;
 extern float sz;
@@ -57,17 +57,17 @@ bool init()
     font = TTF_OpenFont("DroidSans.ttf", 12);
 
     quit = false;
-    rotX = false;
+    rotX = true;
     rotY = true;
-    rotZ = false;
+    rotZ = true;
     sx = 1.0f;
     sy = 1.0f;
     sz = 1.0f;
     rotSpeed = 0.01f;
     showFPS = true;
     showInfo = true;
-    m_esq = true;
-	m_tex = false;
+    m_esq = false;
+	m_tex = true;
 	m_tex_norm = false;
 
     return true;
@@ -135,6 +135,12 @@ void EventDetection()
                         m_tex_norm = !m_tex_norm;
                         m_esq = false;
                         m_tex = false;
+                        break;
+                    }
+
+                    case SDLK_7:
+                    {
+                        interpolate1ON = !interpolate1ON;
                         break;
                     }
 
@@ -387,6 +393,13 @@ void ShowInfo(SDL_Surface* screen)
     RenderTextR(c, font, "5: mostrar modo texturas", screenSurface, &r11);
     SDL_Rect r12 = {0, 185, 0, 0};
     RenderTextR(c, font, "6: mostrar modo texturas y normales", screenSurface, &r12);
+    SDL_Rect r13 = {0, 200, 0, 0};
+    RenderTextR(c, font, "2, 4, 6, 7, 8, 9 (teclado numerico): mover el modelo en el espacio", screenSurface, &r13);
+    SDL_Rect r14 = {0, 215, 0, 0};
+    if(interpolate1ON)
+        RenderTextR(c, font, "7: Interpolacion modo 1 activado", screenSurface, &r14);
+    else
+        RenderTextR(c, font, "7: Interpolacion modo 2 activado", screenSurface, &r14);
 }
 
 #endif

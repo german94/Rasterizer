@@ -1,8 +1,7 @@
 #ifndef DEF_MODELLOADER_H_
 #define DEF_MODELLOADER_H_
 
-#include "structHelper.h"
-#include "sdlHelper.h"
+#include "rasterHelper.h"
 
 bool LoadModel(char* path, Model* data);
 void RenderFilledModel_m3(Model* data, SDL_Surface* sf, float* depthBuffer, SDL_Surface* tex,  Vec3 lightPos);

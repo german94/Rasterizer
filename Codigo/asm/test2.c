@@ -63,6 +63,8 @@ int main(int argc, char *argv[])
     Vec4DynamicArray Normals;
     UInt3DynamicArray Faces;
 
+    SDL_Surface* tex = NULL;
+
     if(init())
     {
         CreateScaleMatrix(scale, sx, sy, sz);
@@ -83,7 +85,6 @@ int main(int argc, char *argv[])
 
         LoadModel("../alfred.obj", &data);          
 
-        SDL_Surface* tex;
         if(Uvs.size != 0)
         {
         	if(argc == 2)
@@ -227,6 +228,9 @@ int main(int argc, char *argv[])
     freeVec2DynamicArray(&Uvs);
     freeVec4DynamicArray(&Normals);
     freeUint3DynamicArray(&Faces);
+
+    if(tex != NULL)
+        SDL_FreeSurface(tex);
 
     TTF_CloseFont(font);
     TTF_Quit();
