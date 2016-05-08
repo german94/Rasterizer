@@ -57,17 +57,17 @@ bool init()
     font = TTF_OpenFont("DroidSans.ttf", 12);
 
     quit = false;
-    rotX = true;
-    rotY = true;
-    rotZ = true;
+    rotX = false;
+    rotY = false;
+    rotZ = false;
     sx = 1.0f;
     sy = 1.0f;
     sz = 1.0f;
     rotSpeed = 0.01f;
     showFPS = true;
     showInfo = true;
-    m_esq = false;
-	m_tex = true;
+    m_esq = true;
+	m_tex = false;
 	m_tex_norm = false;
 
     return true;
@@ -302,7 +302,7 @@ void EventDetection()
                         break;
                     }
 
-                    case SDLK_UP:
+                    case SDLK_DOWN:
                     {
                         if (lightPos[1] > -SCREEN_HEIGHT/2)
                             lightPos[1]-=0.05;
@@ -316,7 +316,7 @@ void EventDetection()
                         break;
                     }
 
-                    case SDLK_DOWN:
+                    case SDLK_UP:
                     {
                         if (lightPos[1] < SCREEN_HEIGHT)
                             lightPos[1]+=0.05;
@@ -400,6 +400,13 @@ void ShowInfo(SDL_Surface* screen)
         RenderTextR(c, font, "7: Interpolacion modo 1 activado", screenSurface, &r14);
     else
         RenderTextR(c, font, "7: Interpolacion modo 2 activado", screenSurface, &r14);
+
+    SDL_Rect r15 = {0, 230, 0, 0};
+    RenderTextR(c, font, "z / x: aumentar o disminuir la intensidad de la luz", screenSurface, &r15);
+    SDL_Rect r16 = {0, 245, 0, 0};
+    RenderTextR(c, font, "flechas: mover direccion de la luz", screenSurface, &r16);
+    SDL_Rect r17 = {0, 260, 0, 0};
+    RenderTextR(c, font, "+ / - : cambiar de color ", screenSurface, &r17);
 }
 
 #endif

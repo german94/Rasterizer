@@ -1,7 +1,6 @@
 #ifndef DEF_AUXILIARES_H_
 #define DEF_AUXILIARES_H_
 
-#include "sdlHelper.h"
 #include "mathHelper.h"
 #include "modelLoader.h"
 #include "structHelper.h"
@@ -10,6 +9,7 @@ extern bool quit;
 extern bool rotX;
 extern bool rotY;
 extern bool rotZ;
+extern bool interpolate1ON;
 extern float sx;
 extern float sy;
 extern float sz;
@@ -57,17 +57,17 @@ bool init()
     font = TTF_OpenFont("DroidSans.ttf", 12);
 
     quit = false;
-    rotX = true;
-    rotY = true;
-    rotZ = true;
+    rotX = false;
+    rotY = false;
+    rotZ = false;
     sx = 1.0f;
     sy = 1.0f;
     sz = 1.0f;
     rotSpeed = 0.01f;
-    showFPS = false;
-    showInfo = false;
-    m_esq = false;
-	m_tex = true;
+    showFPS = true;
+    showInfo = true;
+    m_esq = true;
+	m_tex = false;
 	m_tex_norm = false;
 
     return true;
@@ -135,6 +135,12 @@ void EventDetection()
                         m_tex_norm = !m_tex_norm;
                         m_esq = false;
                         m_tex = false;
+                        break;
+                    }
+
+                    case SDLK_7:
+                    {
+                        interpolate1ON = !interpolate1ON;
                         break;
                     }
 
@@ -296,7 +302,7 @@ void EventDetection()
                         break;
                     }
 
-                    case SDLK_UP:
+                    case SDLK_DOWN:
                     {
                         if (lightPos[1] > -SCREEN_HEIGHT/2)
                             lightPos[1]-=0.05;
@@ -310,7 +316,7 @@ void EventDetection()
                         break;
                     }
 
-                    case SDLK_DOWN:
+                    case SDLK_UP:
                     {
                         if (lightPos[1] < SCREEN_HEIGHT)
                             lightPos[1]+=0.05;
@@ -389,6 +395,18 @@ void ShowInfo(SDL_Surface* screen)
     RenderTextR(c, font, "6: mostrar modo texturas y normales", screenSurface, &r12);
     SDL_Rect r13 = {0, 200, 0, 0};
     RenderTextR(c, font, "2, 4, 6, 7, 8, 9 (teclado numerico): mover el modelo en el espacio", screenSurface, &r13);
+    SDL_Rect r14 = {0, 215, 0, 0};
+    if(interpolate1ON)
+        RenderTextR(c, font, "7: Interpolacion modo 1 activado", screenSurface, &r14);
+    else
+        RenderTextR(c, font, "7: Interpolacion modo 2 activado", screenSurface, &r14);
+
+    SDL_Rect r15 = {0, 230, 0, 0};
+    RenderTextR(c, font, "z / x: aumentar o disminuir la intensidad de la luz", screenSurface, &r15);
+    SDL_Rect r16 = {0, 245, 0, 0};
+    RenderTextR(c, font, "flechas: mover direccion de la luz", screenSurface, &r16);
+    SDL_Rect r17 = {0, 260, 0, 0};
+    RenderTextR(c, font, "+ / - : cambiar de color ", screenSurface, &r17);
 }
 
 #endif
