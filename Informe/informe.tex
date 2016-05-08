@@ -141,6 +141,54 @@ SDL es una librería gráfica open source de bajo nivel, multiplataforma, que tr
 \subsection{Otras features}
 Si bien nuestro principal objetivo es el de realizar los cálculos algebraicos necesarios para convertir los vértices de un modelo 3D en píxeles y así poder dibujarlos en la pantalla, existen otras cosas como por ejemplo computar transformaciones básicas sobre el objeto como rotarlo y estirarlo en distintas direcciones, aplicarle texturas y también un tipo específico de iluminación. Además, dado que en general los modelos 3D son generados por programas de diseño como 3D Studio Max o Blender y existen numerosos formatos de archivos de modelos 3D, resulta conveniente elegir uno e implementar un lector para poder cargar la información fácilmente. Nosotros elegimos el formato *.obj e implementamos dicho lector.
 
+Los datos serán importados desde el tipo de archivo .obj exportado por Blender. Estos archivos cuentan generalmente con el siguiente formato:  
+
+\begin{verbatim}
+# Blender v2.76 (sub 0) OBJ File: ''
+# www.blender.org
+o Cube
+v -1.000000 -1.000000 1.000000
+v -1.000000 -1.000000 -1.000000
+v 1.000000 -1.000000 -1.000000
+v 1.000000 -1.000000 1.000000
+v -1.000000 1.000000 0.999999
+v -0.999999 1.000000 -1.000001
+v 1.000000 1.000000 -1.000000
+v 1.000000 1.000000 1.000000
+vt 0.000100 0.999900
+vt 0.000100 0.000100
+vt 0.999900 0.000100
+vt 1.000000 0.000000
+vt 1.000000 1.000000
+vt 0.000000 1.000000
+vt 0.999900 0.999900
+vt 0.000000 0.000000
+vn 0.000000 -1.000000 -0.000000
+vn 0.000000 1.000000 0.000000
+vn -1.000000 0.000000 -0.000000
+vn 0.000000 0.000000 -1.000000
+vn 1.000000 -0.000000 0.000000
+vn -0.000000 0.000000 1.000000
+s off
+f 2/1/1 3/2/1 4/3/1
+f 8/1/2 7/2/2 6/3/2
+f 5/4/3 6/5/3 2/6/3
+f 6/7/4 7/1/4 3/2/4
+f 3/1/5 7/2/5 8/3/5
+f 1/4/6 4/5/6 8/6/6
+f 1/7/1 2/1/1 4/3/1
+f 5/7/2 8/1/2 6/3/2
+f 1/8/3 5/4/3 2/6/3
+f 2/3/4 6/7/4 3/2/4
+f 4/7/5 3/1/5 8/3/5
+f 5/8/6 1/4/6 8/6/6
+\end{verbatim} 
+
+En las primeras lineas se identifica el programa y la versión, la pagina oficial y luego el nombre del modelo (en este caso usaremos un cubo); Las lineas que comienzan con v identifican la ubicación de un vértice dentro del $Model$ $Space$; Las que comienzan con vt identifican las coordenadas UV; Con vn se identifican las coordenadas normales a los vértices; Y aquellas lineas que comienzan con f representa a los vértices que conforman un triangulo, así también como la textura correspondiente y el vector normal a estos.
+\par Por ejemplo en la linea f 2/1/1 3/2/1 4/3/1 los valores que aparecen antes de la primer barra significan que ese triangulo esta compuesto por los vértices 2, 3 y 4 (la numeración es de arriba a abajo según aparecen en el archivo), es decir a -1.000000 -1.000000 -1.000000, 1.000000 -1.000000 -1.000000 y 1.000000 -1.000000 1.000000; Los valores que aparecen entre las barras son los índices de la textura que asociado a cada vértice en este caso 1, 2 y 3 corresponde a 0.000100 0.999900; 0.000100 0.000100 y 0.999900 0.000100. Finalmente el ultimo valor identifica los índices de las coordenadas normales.
+\par En algunos casos es posible que el archivo no cuente con las coordenadas UV por lo que el modelo sera pintado de un mismo color, o que no presente las coordenadas normales por lo que el modo 3 no estará disponible. Además es posible que la lineas que comienzan con f tengan mas de tres conjuntos de valores, por lo que en estos casos el modelo no estará representado por un conjunto de triángulos sino de rombos (o en algunos casos combinaciones de ambos) por lo que los rombos serán divididos en dos triángulos soportando este tipo. 
+
+
 \section{Código SDL}
 Como dijimos anteriormente, para realizar este proyecto nos apoyamos en la librería SDL y por lo tanto una parte importante del código hace uso de la misma. En esta sección vamos a detallar y explicar cuándo y para qué llamamos a la SDL.
 \subsection{Inicialización, terminación y manejo de errores}
@@ -153,7 +201,7 @@ La función SDL_CreateWindow nos permite crear la ventana donde se van a dibujar
 Dado que esta es una aplicación interactiva, en el sentido de que no se trata de un software al cual ejecutamos, devuelve una entrada y termina, es necesario que todo el tiempo se esté ejecutando cierto código y ciertas llamadas a funciones. Para esto definimos un ciclo principal que termine únicamente cuando el usuario cierra la ventana. \par El ciclo principal es básicamente el nucleo de la aplicación y su condición de corte es que el usuario quiera cerrar la ventana (más adelante veremos como detectar esto). Ahí es donde se ejecuta desde la detección de eventos hasta las llamadas a las funciones encargadas de renderizar los modelos 3D, el cálculo de los FPS y otras cosas más. Cuando dibujamos un modelo 3D y decidimos rotarlo, estirarlo o cambiar el modo del renderizado debemos volver a dibujarlo todo desde cero. Para lograr esto sin que se pise con el dibujo que estaba antes lo que hay que hacer es limpiar la ventana, es decir borrar todo lo que habíamos hecho antes. De esto se encarga la función $SDL\_FillRect$, a la cuál le pasamos como parámetros el puntero a la superficie asociada a la ventana y el color que queremos que tengan todos los píxeles (para esto usamos $SDL\_MapRGB$). Luego de dibujar sobre la superficie asociada a la ventana debemos actualizarla, esto lo hacemos con SDL_UpdateWindowSurface pasándole como parámetro dicha superficie (el puntero).
 \par Para el manejo de eventos primero necesitamos crear una instancia $e$ de tipo $SDL\_Event$. Luego, para detectar eventos del usuario con SDL hay que definir un subciclo del ciclo principal, cuya condición de corte es $SDL\_PollEvent(\&e) == NULL$. Si entramos al ciclo significa que detectamos un evento, para identificar que tipo de evento es usamos el campo $type$ de $SDL\_Event$ (el valor puede ser $SDL\_QUIT$ si el usuario quiere cerrar la ventana, $SDL\_KEYUP$ si el usuario soltó una tecla, $SDL\_KEYDOWN$ si el usuario está apretando una tecla, entre otros). Es cuestión de anidar distintos switches para poder identificar los eventos que nos importan y actuar en consecuencia. Dado que la detección de eventos es una parte importante del código, está toda dentro de la función $EventDetection$, la cual se ejecuta una vez por cada iteración del ciclo principal.
 
-\subsection{Renderizado de texto (HAY QUE LLAMAR A TTF_QUIT)}
+\subsection{Renderizado de texto:}
 Tanto para mostrar los FPS como las indicaciones de uso, nuestro programa muestra un texto a la izquierda. Para hacer esto utilizamos una librería llamada $SDL\_TTF$ ya que SDL no brinda soporte de manera directa para renderizado de texto.
 \par Esta librería es muy simple de usar y si bien es externa a SDL, está hecha para interactuar con ésta última. De manera similar a SDL, para utilizarla debemos inicializarla llamando a la función $TTF\_Init$ y antes de terminar el programa hay que hacer una llamada a $TTF\_Quit$.
 \par Para empezar a hacer uso de la librería y dibujar texto en la ventana primero hay que cargar una fuente, esto lo hacemos utilizando la función $TTF\_OpenFont$ a la cual le pasamos como parámetros la ruta de la fuente que queremos utilizar y el tamaño de letra y nos devuelve un puntero a una instancia de tipo $TTF\_Font$. Una vez hecho esto ya estamos en condición de dibujar texto en la ventana, para lo cual hacemos uso de las funciones $TTF\_RenderText\_Solid$, $SDL\_BlitSurface$ y $SDL\_FreeSurface$. La primera de las tres es la que nos devuelve la superficie asociada al texto que queremos dibujar, toma la fuente que cargamos anteriormente, la cadena de caracteres correspondiente al texto y el color. La segunda función es la que efectivamente, haciendo uso de los conceptos de superficies de SDL, dibuja el texto que se encuentra en la superficie que obtuvimos con la función anterior dentro de la superficie correspondiente a la ventana. Con lo cual sus parámetros son la superficie del texto, la de la ventana y la posición (con el formato de la estructura $SDL\_Rect$). Finalmente debemos llamar a $SDL\_FreeSurface$ pasándole como parámetro la superficie asociada al texto para liberar la misma, ya que no la vamos a necesitar.
