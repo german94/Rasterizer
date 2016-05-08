@@ -83,20 +83,21 @@ int main(int argc, char *argv[])
 
         data.max_dis = max_distancias;  
 
-        LoadModel("../alfred.obj", &data);          
-
+        LoadModel(argv[1], &data);
+          
+        SDL_Surface* tex;
         if(Uvs.size != 0)
         {
-        	if(argc == 2)
-        		tex = SDL_LoadBMP(argv[1]);
-        	else
-        	{
-        		printf("Falta textura.\n");
-        		quit = true;
-        	}
+            if(argc == 3)
+                tex = SDL_LoadBMP(argv[2]);
+            else
+            {
+                printf("Falta textura.\n");
+                quit = true;
+            }
         }
         else
-        	tex = NULL;
+            tex = NULL;
 
         CreateTranslationMatrix(t, 0.0f, 0.0f, 20.0f);
         
