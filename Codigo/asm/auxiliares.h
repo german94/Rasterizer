@@ -9,7 +9,7 @@ extern bool quit;
 extern bool rotX;
 extern bool rotY;
 extern bool rotZ;
-extern bool interpolate1ON;
+bool interpolate1ON;
 extern float sx;
 extern float sy;
 extern float sz;
