@@ -129,14 +129,44 @@ El propósito de este trabajo es desarrollar un renderizador 3D sin la ayuda de 
 
 \newpage
 \section{Introducción}
-\subsection{¿Qué es un renderizador 3D?}
+
+
 Para dibujar los gráficos 3D que vemos en muchos de los juegos o software de simulación que podemos encontrar hoy en día, se hacen uso de librerías que facilitan este trabajo. En general siempre existe una abstracción de alto nivel que nos permite dibujar en pantalla un modelo o primitiva 3D de manera directa, indicando su posición en el espacio, rotación o demás características. Sin embargo, si empezamos a bajar el nivel de abstracción, siempre vamos a converger en el uso de dos librerías de bajo nivel: Direct3D y OpenGL.
 \par Direct3D y OpenGL son librerías gráficas que trabajan con la placa de video independientemente del fabricante, permitiendo de esta manera que el desarrollador pueda concentrarse en el código de más alto nivel y no tenga que preocuparse por los detalles de hardware. Además, brindan el soporte matemático necesario para que el programador no tenga que realizar ciertos cálculos o construir matrices desde 0, si no que con algunos datos (por ejemplo para construir una matriz de rotación basta con pasarle el ángulo de rotación) ya se encarga de realizar la tarea por completo. De esta manera, si se desea dibujar una primitiva 3D, basta con pasar sus vértices a alguna función específica que provean estas librerías.
 \par Podemos pensar entonces a un renderizador 3D como un software que se encarga de hacer ésto último, es decir, tomar la información necesaria sobre un modelo 3D (en un formato tridimensional) y convertirla a píxeles para posteriormente dibujarlos en la pantalla. Cuando decimos ``información necesaria'' estamos resumiendo muchísimas cosas ya que para dibujar un modelo 3D necesitamos bastantes más datos que solo sus vértices. El objetivo de este trabajo va a ser programar una suerte de DirectX u OpenGL propio pero que interaccione solamente con el CPU.
 
+\newpage
+
+
+\section{Desarrollo:}
+
 \subsection{Librería SDL}
 SDL es una librería gráfica open source de bajo nivel, multiplataforma, que trabaja con C y que brinda soporte para el desarrollo de aplicaciones gráficas 2D (aunque puede ser usada también con OpenGL). Esta librería nos permite realizar tareas como crear la ventana, imprimir texto en pantalla, detectar eventos de mouse y teclado y pintar píxeles en la ventana de manera sencilla.
 \par Elegimos SDL básicamente por dos motivos, el primero porque es una librería ``madura'' en el sentido de que lleva varios años en desarrollo y tiene una comunidad importante detras. El segundo motivo fue que también nos permite trabajar con la CPU en el sentido de que podemos evitar la aceleración por hardware de la placa de video, pudiendo de esta manera medir de manera más exacta la performance a la hora de realizar experimentos y poder sacar conclusiones más objetivamente. 
+
+
+\subsection{Conceptos matemáticos} \label{conceptos}
+
+En esta sección vamos a exponer un poco los conceptos matemáticos subyacentes de la aplicación. Las librerías gráficas que brindan soporte 3D de alto nivel como también las de bajo nivel como Direct3D y OpenGL, tratan de abstraer un poco al programador de estos conceptos. Esto significa que muchas veces el programador no necesita saber que formato tiene una matriz específica si no que simplemente llama a la función encargada de construir dicha matriz que la librería provee y listo. En este trabajo, dado que no hacemos uso de ninguna librería que brinde el soporte matemático para el manejo 3D, tuvimos que ponernos un poco más en contacto con varios de los conceptos básicos necesarios para tratar con modelos 3D y vamos a introducirlos un poco en esta sección.
+
+\par Cuando un modelo 3D es creado, éste vive en un espacio de coordenadas por defecto (proporcionado generalmente por el programa que se utilizó para diseñarlo), conocido como espacio del modelo o $Model Space$. Luego, para poder ser renderizado pasa por múltiples transformaciones que lo llevan a otros espacios de coordenadas hasta que finalmente es visible en la pantalla. 
+\par La idea se basa en utilizar tres matrices fundamentales conocidas como World, View y Projection y combinarlas utilizando el producto de matrices en una sola: 
+PVW = Projection*View*World
+De esta manera  multiplicando cada coordenada del objeto (en $Model Space$) por la PVW, el objeto se mueve a través de varios espacios para finalmente proyectarse en pantalla.
+
+\textbf{Interpolación:}
+
+
+Un concepto que usaremos sera el principio de interpolación lineal,  el cual nos permite obtener un tercer punto interpolado ($x_c$, $y_c$),  ajustándose a los valores de otros dos ($x_a, y_a$) y ($x_b, y_b$). Básicamente consiste en trazar una recta que pasa por ($x_a,y_a$) y ($x_b,y_b$), y calcular los valores intermedios sobre esta recta. La formula para obtenerlos es la siguiente:
+
+$y_c$ = $y_a$ + $(x_c - x_a)*\frac{y_b - y_a}{x_b - x_c}$  (1)
+
+Observemos que en la formula (1) $\frac{y_b - y_a}{x_b - x_c}$ es el valor de la  pendiente entre estos dos puntos es decir, la recta sobre la cual se ubicara el punto a interpolar. 
+\par Dado que la formula (1) nos permite obtener el valor y del punto a polarizar a partir del x, en caso de ser conocido el valor y, y desconocido el de x si despejamos de (1) obtenemos la siguiente formula :
+
+$x_c$ = $x_a$ + $(x_b - x_a)*gradient$ 
+
+con $gradient$  = $\frac{y_c - y_a}{y_b - y_a}$
 
 \subsection{Otras features}
 
@@ -190,38 +220,6 @@ En las primeras lineas se identifica el programa y la versión, la pagina oficia
 \par Por ejemplo en la linea f 2/1/1 3/2/1 4/3/1 los valores que aparecen antes de la primer barra significan que ese triangulo esta compuesto por los vértices 2, 3 y 4 (la numeración es de arriba a abajo según aparecen en el archivo), es decir a -1.000000 -1.000000 -1.000000, 1.000000 -1.000000 -1.000000 y 1.000000 -1.000000 1.000000; Los valores que aparecen entre las barras son los índices de la textura que asociado a cada vértice en este caso 1, 2 y 3 corresponde a 0.000100 0.999900; 0.000100 0.000100 y 0.999900 0.000100. Finalmente el ultimo valor identifica los índices de las coordenadas normales.
 \par En algunos casos es posible que el archivo no cuente con las coordenadas UV por lo que el modelo sera pintado de un mismo color, o que no presente las coordenadas normales por lo que el modo 3 no estará disponible. Además es posible que la lineas que comienzan con f tengan mas de tres conjuntos de valores, por lo que en estos casos el modelo no estará representado por un conjunto de triángulos sino de rombos (o en algunos casos combinaciones de ambos) por lo que los rombos serán divididos en dos triángulos soportando este tipo. 
 
-
-\section{Código SDL}
-Como dijimos anteriormente, para realizar este proyecto nos apoyamos en la librería SDL y por lo tanto una parte importante del código hace uso de la misma. En esta sección vamos a detallar y explicar cuándo y para qué llamamos a la SDL.
-\subsection{Inicialización, terminación y manejo de errores}
-Antes de empezar a utilizar SDL hay que hacer una llamada a $SDL\_Init$ y pasarle como parámetro $SDL\_INIT\_VIDEO$ para indicarle que queremos hacer uso del subsistema de video. Esto se debe a que existen otros subsistemas de SDL como por ejemplo el que brinda soporte para el sonido. Así como debemos inicializar la librería, también debemos llamar a $SDL\_Quit$ una vez que terminamos de hacer uso de la misma (en nuestro caso antes de que el programa termine).
-\par Existen numerosas funciones de SDL, algunas devuelven punteros a instancias de estructuras propias de la librería (como veremos en las siguientes secciones) y otras simplemente algún número. Es importante saber que estas funciones pueden fallar, en general las que devuelven un número, si este número es negativo significa que falló. En los casos que devuelven un puntero, fallan cuando el puntero es nulo. Para poder detectar correctamente e informar cuando una de estas funciones falla, tenemos la función $SDL\_GetError$ que nos devuelve un mensaje informándonos sobre la falla.
-\subsection{Manejo de ventana}
-La función SDL_CreateWindow nos permite crear la ventana donde se van a dibujar las primitivas. Dicha función devuelve un puntero a la estructura $SDL\_Window$ y nos permite definir las dimensiones y el título que queramos. Antes de terminar, el programa debe llamar a $SDL\_DestroyWindow$ y pasarle como parámetro el puntero obtenido por $SDL\_CreateWindow$.
-\par En SDL para poder dibujar sobre la ventana, es necesario trabajar sobre superficies, definidas con la estructura $SDL\_Surface$. Así como cuando uno carga una imagen trabaja con la superficie asociada a la imagen, cuando queremos dibujar sobre la ventana debemos obtener la superficie asociada a la ventana utilizando la función $SDL\_GetWindowSurface$. Esta función toma como parámetro un puntero a una instancia de $SDL\_Window$ (el que obtenemos al crear la ventana) y nos devuelve el puntero a la instancia de $SDL\_Surface$ que necesitamos.
-\subsection{Ciclo principal y detección de eventos}
-Dado que esta es una aplicación interactiva, en el sentido de que no se trata de un software al cual ejecutamos, devuelve una entrada y termina, es necesario que todo el tiempo se esté ejecutando cierto código y ciertas llamadas a funciones. Para esto definimos un ciclo principal que termine únicamente cuando el usuario cierra la ventana. \par El ciclo principal es básicamente el nucleo de la aplicación y su condición de corte es que el usuario quiera cerrar la ventana (más adelante veremos como detectar esto). Ahí es donde se ejecuta desde la detección de eventos hasta las llamadas a las funciones encargadas de renderizar los modelos 3D, el cálculo de los FPS y otras cosas más. Cuando dibujamos un modelo 3D y decidimos rotarlo, estirarlo o cambiar el modo del renderizado debemos volver a dibujarlo todo desde cero. Para lograr esto sin que se pise con el dibujo que estaba antes lo que hay que hacer es limpiar la ventana, es decir borrar todo lo que habíamos hecho antes. De esto se encarga la función $SDL\_FillRect$, a la cuál le pasamos como parámetros el puntero a la superficie asociada a la ventana y el color que queremos que tengan todos los píxeles (para esto usamos $SDL\_MapRGB$). Luego de dibujar sobre la superficie asociada a la ventana debemos actualizarla, esto lo hacemos con SDL_UpdateWindowSurface pasándole como parámetro dicha superficie (el puntero).
-\par Para el manejo de eventos primero necesitamos crear una instancia $e$ de tipo $SDL\_Event$. Luego, para detectar eventos del usuario con SDL hay que definir un subciclo del ciclo principal, cuya condición de corte es $SDL\_PollEvent(\&e) == NULL$. Si entramos al ciclo significa que detectamos un evento, para identificar que tipo de evento es usamos el campo $type$ de $SDL\_Event$ (el valor puede ser $SDL\_QUIT$ si el usuario quiere cerrar la ventana, $SDL\_KEYUP$ si el usuario soltó una tecla, $SDL\_KEYDOWN$ si el usuario está apretando una tecla, entre otros). Es cuestión de anidar distintos switches para poder identificar los eventos que nos importan y actuar en consecuencia. Dado que la detección de eventos es una parte importante del código, está toda dentro de la función $EventDetection$, la cual se ejecuta una vez por cada iteración del ciclo principal.
-
-\subsection{Renderizado de texto:}
-Tanto para mostrar los FPS como las indicaciones de uso, nuestro programa muestra un texto a la izquierda. Para hacer esto utilizamos una librería llamada $SDL\_TTF$ ya que SDL no brinda soporte de manera directa para renderizado de texto.
-\par Esta librería es muy simple de usar y si bien es externa a SDL, está hecha para interactuar con ésta última. De manera similar a SDL, para utilizarla debemos inicializarla llamando a la función $TTF\_Init$ y antes de terminar el programa hay que hacer una llamada a $TTF\_Quit$.
-\par Para empezar a hacer uso de la librería y dibujar texto en la ventana primero hay que cargar una fuente, esto lo hacemos utilizando la función $TTF\_OpenFont$ a la cual le pasamos como parámetros la ruta de la fuente que queremos utilizar y el tamaño de letra y nos devuelve un puntero a una instancia de tipo $TTF\_Font$. Una vez hecho esto ya estamos en condición de dibujar texto en la ventana, para lo cual hacemos uso de las funciones $TTF\_RenderText\_Solid$, $SDL\_BlitSurface$ y $SDL\_FreeSurface$. La primera de las tres es la que nos devuelve la superficie asociada al texto que queremos dibujar, toma la fuente que cargamos anteriormente, la cadena de caracteres correspondiente al texto y el color. La segunda función es la que efectivamente, haciendo uso de los conceptos de superficies de SDL, dibuja el texto que se encuentra en la superficie que obtuvimos con la función anterior dentro de la superficie correspondiente a la ventana. Con lo cual sus parámetros son la superficie del texto, la de la ventana y la posición (con el formato de la estructura $SDL\_Rect$). Finalmente debemos llamar a $SDL\_FreeSurface$ pasándole como parámetro la superficie asociada al texto para liberar la misma, ya que no la vamos a necesitar.
-\par Como todo el proceso descripto en el párrafo anterior sobre como se dibuja texto con estas librerías puede ser un poco tedioso si lo que queremos hacer es escribir varias lineas, lo que decidimos hacer fue definir dos funciones que nos abstraigan de todos estos detalles. Estas funciones se llaman $RenderText$ y $RenderTextR$ y se encuentran definidas en sdlHelper.c. La diferencia entre ambas es que la primera no pide la posición del texto a renderizar (siempre lo dibuja arriba a la izquierda, es útil cuando solo se quiere renderizar pocos datos como por ejemplo los FPS) y la segunda sí. Ambas piden el color, la superficie asociada a la ventana, el texto y la fuente a utilizar.
-
-\subsection{Timers}
-Para medir la performance de la aplicación una de las técnicas que usamos fue el uso de timers. Si bien SDL provee soporte para esto, decidimos utilizar los clásicos Clocks de C pero hicimos uso de la función $SDL\_GetTicks$ que nos devuelve la cantidad de milisegundos que pasaron desde que se inicializó la librería.
-
-\subsection{Funciones $putpixel$ y $getpixel$} \label{putpixel}
-Si bien esta función no se encuentra dentro de la SDL, tiene una relación muy cercana a la misma ya que trabaja a un nivel bastante bajo con sus estructuras y formatos (efectuando operaciones como shifteos y and's) y es por eso que se encuentra en sdlHelper.c.
-Toma como parámetros la superficie ($SDL\_Surface*$) de la ventana, coordenadas enteras x, y, z, un píxel en formato entero de 32 bits, tamaños enteros ancho y alto de la ventana y un puntero al depthBuffer ($float*$). Lo que hace es manipular la superficie de la ventana de manera tal de modificar el píxel que se encuentra en la posición $(x, y)$ para que ahora tenga el valor del píxel que toma como parámetro. 
-\par Sin embargo, vemos que también hay otros parámetros como una coordenada z y un depthBuffer. Esto es porque, debido a que estamos renderizando en una ventana 2D que representa a un mundo 3D, cada píxel tiene una ``profundidad'' (que guardamos en el depthBuffer) y que utilizamos para testear si el píxel original que se encuentra en dichas coordenadas está delante o detras (en términos de la coordenada z) del que toma esta función por parámetro.
-En el caso de que el nuevo píxel esté delante del viejo, entonces efectivamente lo modificamos, caso contrario dejamos
- todo como está.
- 
- 
-La función $getpixel$ en cambio, solo toma tres parámetros (la superficie, coordenada x y coordenada y) ya que no se va a efectuar ningún cambio sobre la superficie en sí, si no que la idea es obtener el valor de un píxel específico. El tipo de dato que devuelve es un entero de 32 bits sin signo que es el tipo que usa SDL para los píxeles. Esta función es llamada únicamente por la función $Map$, que se encarga de extraer la información necesaria del archivo de textura para poder pintar los triángulos (es decir solo se usa en los modos 2 y 3).
- 
 \section{Implementación de estructuras}
 \subsection{Manejo de memoria}
 Dado que este proyecto está realizado en C y algunas partes específicas en Assembler, no contamos con estructuras dinámicas con un manejo eficiente de la memoria que podamos usar. Dichas estructuras, en nuestro caso arreglos dinámicos, las definimos nosotros en structHelper.h y sus implementaciones están en structHelper.c. Fueron construidas para el almacenamiento dinámico de coordenadas de hasta 4 dimensiones a la hora de cargar un modelo 3D desde un archivo.
@@ -243,30 +241,50 @@ Además de las estructuras para los arreglos dinámicos que mencionamos en la se
 \item \textbf{ScanLineData:} agrupa los datos necesarios para que ProcessScanLine realice la interpolación
 \item \textbf{Model:} se utiliza a la hora de cargar el modelo y luego pasarselo a los posibles modos de renderizado. Agrupa toda la información necesaria, desde lo que se carga del archivo hasta las matrices que lo transforman, distancias máximas para reescalado y color.
 \end{itemize}
+
+\newpage
+
+\section{Código SDL}
+Como dijimos anteriormente, para realizar este proyecto nos apoyamos en la librería SDL y por lo tanto una parte importante del código hace uso de la misma. En esta sección vamos a detallar y explicar cuándo y para qué llamamos a la SDL.
+
+
+\subsection{Inicialización, terminación y manejo de errores}
+Antes de empezar a utilizar SDL hay que hacer una llamada a $SDL\_Init$ y pasarle como parámetro $SDL\_INIT\_VIDEO$ para indicarle que queremos hacer uso del subsistema de video. Esto se debe a que existen otros subsistemas de SDL como por ejemplo el que brinda soporte para el sonido. Así como debemos inicializar la librería, también debemos llamar a $SDL\_Quit$ una vez que terminamos de hacer uso de la misma (en nuestro caso antes de que el programa termine).
+\par Existen numerosas funciones de SDL, algunas devuelven punteros a instancias de estructuras propias de la librería (como veremos en las siguientes secciones) y otras simplemente algún número. Es importante saber que estas funciones pueden fallar, en general las que devuelven un número, si este número es negativo significa que falló. En los casos que devuelven un puntero, fallan cuando el puntero es nulo. Para poder detectar correctamente e informar cuando una de estas funciones falla, tenemos la función $SDL\_GetError$ que nos devuelve un mensaje informándonos sobre la falla.
+
+
+\subsection{Manejo de ventana}
+La función SDL_CreateWindow nos permite crear la ventana donde se van a dibujar las primitivas. Dicha función devuelve un puntero a la estructura $SDL\_Window$ y nos permite definir las dimensiones y el título que queramos. Antes de terminar, el programa debe llamar a $SDL\_DestroyWindow$ y pasarle como parámetro el puntero obtenido por $SDL\_CreateWindow$.
+\par En SDL para poder dibujar sobre la ventana, es necesario trabajar sobre superficies, definidas con la estructura $SDL\_Surface$. Así como cuando uno carga una imagen trabaja con la superficie asociada a la imagen, cuando queremos dibujar sobre la ventana debemos obtener la superficie asociada a la ventana utilizando la función $SDL\_GetWindowSurface$. Esta función toma como parámetro un puntero a una instancia de $SDL\_Window$ (el que obtenemos al crear la ventana) y nos devuelve el puntero a la instancia de $SDL\_Surface$ que necesitamos.
+
+
+\subsection{Ciclo principal y detección de eventos}
+Dado que esta es una aplicación interactiva, en el sentido de que no se trata de un software al cual ejecutamos, devuelve una entrada y termina, es necesario que todo el tiempo se esté ejecutando cierto código y ciertas llamadas a funciones. Para esto definimos un ciclo principal que termine únicamente cuando el usuario cierra la ventana. \par El ciclo principal es básicamente el nucleo de la aplicación y su condición de corte es que el usuario quiera cerrar la ventana (más adelante veremos como detectar esto). Ahí es donde se ejecuta desde la detección de eventos hasta las llamadas a las funciones encargadas de renderizar los modelos 3D, el cálculo de los FPS y otras cosas más. Cuando dibujamos un modelo 3D y decidimos rotarlo, estirarlo o cambiar el modo del renderizado debemos volver a dibujarlo todo desde cero. Para lograr esto sin que se pise con el dibujo que estaba antes lo que hay que hacer es limpiar la ventana, es decir borrar todo lo que habíamos hecho antes. De esto se encarga la función $SDL\_FillRect$, a la cuál le pasamos como parámetros el puntero a la superficie asociada a la ventana y el color que queremos que tengan todos los píxeles (para esto usamos $SDL\_MapRGB$). Luego de dibujar sobre la superficie asociada a la ventana debemos actualizarla, esto lo hacemos con SDL_UpdateWindowSurface pasándole como parámetro dicha superficie (el puntero).
+\par Para el manejo de eventos primero necesitamos crear una instancia $e$ de tipo $SDL\_Event$. Luego, para detectar eventos del usuario con SDL hay que definir un subciclo del ciclo principal, cuya condición de corte es $SDL\_PollEvent(\&e) == NULL$. Si entramos al ciclo significa que detectamos un evento, para identificar que tipo de evento es usamos el campo $type$ de $SDL\_Event$ (el valor puede ser $SDL\_QUIT$ si el usuario quiere cerrar la ventana, $SDL\_KEYUP$ si el usuario soltó una tecla, $SDL\_KEYDOWN$ si el usuario está apretando una tecla, entre otros). Es cuestión de anidar distintos switches para poder identificar los eventos que nos importan y actuar en consecuencia. Dado que la detección de eventos es una parte importante del código, está toda dentro de la función $EventDetection$, la cual se ejecuta una vez por cada iteración del ciclo principal.
+
+
+\subsection{Renderizado de texto:}
+Tanto para mostrar los FPS como las indicaciones de uso, nuestro programa muestra un texto a la izquierda. Para hacer esto utilizamos una librería llamada $SDL\_TTF$ ya que SDL no brinda soporte de manera directa para renderizado de texto.
+\par Esta librería es muy simple de usar y si bien es externa a SDL, está hecha para interactuar con ésta última. De manera similar a SDL, para utilizarla debemos inicializarla llamando a la función $TTF\_Init$ y antes de terminar el programa hay que hacer una llamada a $TTF\_Quit$.
+\par Para empezar a hacer uso de la librería y dibujar texto en la ventana primero hay que cargar una fuente, esto lo hacemos utilizando la función $TTF\_OpenFont$ a la cual le pasamos como parámetros la ruta de la fuente que queremos utilizar y el tamaño de letra y nos devuelve un puntero a una instancia de tipo $TTF\_Font$. Una vez hecho esto ya estamos en condición de dibujar texto en la ventana, para lo cual hacemos uso de las funciones $TTF\_RenderText\_Solid$, $SDL\_BlitSurface$ y $SDL\_FreeSurface$. La primera de las tres es la que nos devuelve la superficie asociada al texto que queremos dibujar, toma la fuente que cargamos anteriormente, la cadena de caracteres correspondiente al texto y el color. La segunda función es la que efectivamente, haciendo uso de los conceptos de superficies de SDL, dibuja el texto que se encuentra en la superficie que obtuvimos con la función anterior dentro de la superficie correspondiente a la ventana. Con lo cual sus parámetros son la superficie del texto, la de la ventana y la posición (con el formato de la estructura $SDL\_Rect$). Finalmente debemos llamar a $SDL\_FreeSurface$ pasándole como parámetro la superficie asociada al texto para liberar la misma, ya que no la vamos a necesitar.
+\par Como todo el proceso descripto en el párrafo anterior sobre como se dibuja texto con estas librerías puede ser un poco tedioso si lo que queremos hacer es escribir varias lineas, lo que decidimos hacer fue definir dos funciones que nos abstraigan de todos estos detalles. Estas funciones se llaman $RenderText$ y $RenderTextR$ y se encuentran definidas en sdlHelper.c. La diferencia entre ambas es que la primera no pide la posición del texto a renderizar (siempre lo dibuja arriba a la izquierda, es útil cuando solo se quiere renderizar pocos datos como por ejemplo los FPS) y la segunda sí. Ambas piden el color, la superficie asociada a la ventana, el texto y la fuente a utilizar.
+
+\subsection{Timers}
+Para medir la performance de la aplicación una de las técnicas que usamos fue el uso de timers. Si bien SDL provee soporte para esto, decidimos utilizar los clásicos Clocks de C pero hicimos uso de la función $SDL\_GetTicks$ que nos devuelve la cantidad de milisegundos que pasaron desde que se inicializó la librería.
+
+\subsection{Funciones $putpixel$ y $getpixel$} \label{putpixel}
+Si bien esta función no se encuentra dentro de la SDL, tiene una relación muy cercana a la misma ya que trabaja a un nivel bastante bajo con sus estructuras y formatos (efectuando operaciones como shifteos y and's) y es por eso que se encuentra en sdlHelper.c.
+Toma como parámetros la superficie ($SDL\_Surface*$) de la ventana, coordenadas enteras x, y, z, un píxel en formato entero de 32 bits, tamaños enteros ancho y alto de la ventana y un puntero al depthBuffer ($float*$). Lo que hace es manipular la superficie de la ventana de manera tal de modificar el píxel que se encuentra en la posición $(x, y)$ para que ahora tenga el valor del píxel que toma como parámetro. 
+\par Sin embargo, vemos que también hay otros parámetros como una coordenada z y un depthBuffer. Esto es porque, debido a que estamos renderizando en una ventana 2D que representa a un mundo 3D, cada píxel tiene una ``profundidad'' (que guardamos en el depthBuffer) y que utilizamos para testear si el píxel original que se encuentra en dichas coordenadas está delante o detras (en términos de la coordenada z) del que toma esta función por parámetro.
+En el caso de que el nuevo píxel esté delante del viejo, entonces efectivamente lo modificamos, caso contrario dejamos
+ todo como está.
  
-\section{Conceptos matemáticos} \label{conceptos}
+ 
+La función $getpixel$ en cambio, solo toma tres parámetros (la superficie, coordenada x y coordenada y) ya que no se va a efectuar ningún cambio sobre la superficie en sí, si no que la idea es obtener el valor de un píxel específico. El tipo de dato que devuelve es un entero de 32 bits sin signo que es el tipo que usa SDL para los píxeles. Esta función es llamada únicamente por la función $Map$, que se encarga de extraer la información necesaria del archivo de textura para poder pintar los triángulos (es decir solo se usa en los modos 2 y 3).
 
-En esta sección vamos a exponer un poco los conceptos matemáticos subyacentes de la aplicación. Las librerías gráficas que brindan soporte 3D de alto nivel como también las de bajo nivel como Direct3D y OpenGL, tratan de abstraer un poco al programador de estos conceptos. Esto significa que muchas veces el programador no necesita saber que formato tiene una matriz específica si no que simplemente llama a la función encargada de construir dicha matriz que la librería provee y listo. En este trabajo, dado que no hacemos uso de ninguna librería que brinde el soporte matemático para el manejo 3D, tuvimos que ponernos un poco más en contacto con varios de los conceptos básicos necesarios para tratar con modelos 3D y vamos a introducirlos un poco en esta sección.
+\newpage
 
-\par Cuando un modelo 3D es creado, éste vive en un espacio de coordenadas por defecto (proporcionado generalmente por el programa que se utilizó para diseñarlo), conocido como espacio del modelo o $Model Space$. Luego, para poder ser renderizado pasa por múltiples transformaciones que lo llevan a otros espacios de coordenadas hasta que finalmente es visible en la pantalla. 
-\par La idea se basa en utilizar tres matrices fundamentales conocidas como World, View y Projection y combinarlas utilizando el producto de matrices en una sola: 
-PVW = Projection*View*World
-De esta manera  multiplicando cada coordenada del objeto (en $Model Space$) por la PVW, el objeto se mueve a través de varios espacios para finalmente proyectarse en pantalla.
-
-\textbf{Interpolación:}
-
-
-Un concepto que usaremos sera el principio de interpolación lineal,  el cual nos permite obtener un tercer punto interpolado ($x_c$, $y_c$),  ajustándose a los valores de otros dos ($x_a, y_a$) y ($x_b, y_b$). Básicamente consiste en trazar una recta que pasa por ($x_a,y_a$) y ($x_b,y_b$), y calcular los valores intermedios sobre esta recta. La formula para obtenerlos es la siguiente:
-
-$y_c$ = $y_a$ + $(x_c - x_a)*\frac{y_b - y_a}{x_b - x_c}$  (1)
-
-Observemos que en la formula (1) $\frac{y_b - y_a}{x_b - x_c}$ es el valor de la  pendiente entre estos dos puntos es decir, la recta sobre la cual se ubicara el punto a interpolar. 
-\par Dado que la formula (1) nos permite obtener el valor y del punto a polarizar a partir del x, en caso de ser conocido el valor y, y desconocido el de x si despejamos de (1) obtenemos la siguiente formula :
-
-$x_c$ = $x_a$ + $(x_b - x_a)*gradient$ 
-
-con $gradient$  = $\frac{y_c - y_a}{y_b - y_a}$
-
+\section{Matriz WVP:}
  
 \subsection{Matriz del mundo (World Matrix)}
 La primera matriz que describiremos sera la  World Matrix o Matriz del mundo.
@@ -275,7 +293,9 @@ Como mencionamos anteriormente, cada modelo vive inicialmente en un espacio loca
 \par La $World Matrix$ se compone a su vez por distintos tipos de matrices combinadas, expresando esta combinación como el producto de estas matrices al igual que hicimos con la matriz PVW. A continuación vemos los distintos tipos de matrices que pueden utilizarse para conformar la $World Matrix$.
 
 
-\textbf{Matriz de traslación (Translation Matrix)}: nos permite trasladar las coordenadas del modelo en el espacio   
+\subsubsection{de traslación (Translation Matrix):} 
+
+Nos permite trasladar las coordenadas del modelo en el espacio   
  \[
 \begin{bmatrix}
 1 & 0 & 0 & 0 \\
@@ -303,14 +323,11 @@ sx, sy y sz representan el tamaño a escalar en la dirección correspondiente a 
 
 
 
-\textbf{Matriz de rotación (Rotation Matrix )}:
+\subsubsection{Matriz de rotación (Rotation Matrix ):}
 
-
- Aquí nos encontramos con distintas variantes 
+Aquí nos encontramos con distintas variantes 
  
- 
- 
-Matriz de rotación alrededor del eje x: nos permite rotar en cierto ángulo al modelo en una dirección particular
+Matriz de rotación alrededor del eje x:
 \[
 \begin{bmatrix}
 1 & 0 & 0 & 0 \\
@@ -537,6 +554,10 @@ $y''$ = $\frac{y'}{w'}*height +  height*0.5$ \newline
 
 Donde $width$ y $height$ representa el ancho y alto de nuestra pantall. Notar que luego sumamos $width*0.5$ a $x''$ y $height*0.5$ a $y''$ para tener las coordenadas finales centradas en la pantalla.
 
+\newpage
+
+\section{????}
+
 \subsection{mathHelper}
 En el archivo mathHelper.h declaramos numerosas funciones matemáticas que luego definimos en mathHelper.c. Estas funciones van desde cálculos básicos como el producto cruzado, el producto escalar, normalizaciones y productos de matrices hasta la construcción de matrices específicas como de rotación, escala, vista y proyección.
 \par Existen cálculos que se repiten mucho a lo largo del código y que, en algunos casos, es necesario realizarlos por cada ejecución del ciclo principal por ejemplo. En estos casos decidimos implementar también una versión de los mismos en Assembler con el objetivo de optimizar la performance y poder realizar mediciones y comparaciones con las versiones de estas funciones en C. Las funciones matemáticas que decidimos implementar en Assembler son las siguientes: producto escalar (ScalarProdASM), interpolación (InterpolateASM, hablaremos del uso de esta función más adelante) y producto de vector por matriz (Vec4Mat4ProductASM). También existen otras funciones que decidimos implementar en Assembler, que no realizan cálculos matemáticos pero que se ve reflejado en la experimentación que haberlas programado en Assembler mejoró notablemente la performance, hablaremos de ellas más adelante.
@@ -726,6 +747,8 @@ Calcularemos $lightDirection$ junto con el coseno del ángulo asociado en una fu
 \textbf{ ProcessScanLine\_m3:}
 Tenemos el porcentaje de luz para las coordenadas que representan a los vértices, solo nos falta para el resto de las que componen cada triangulo,  por lo que cada vez que interpolemos las coordenadas para rellenar el triangulo, también interpolaremos la luz que recibiría  basándonos en la que tienen los vértices. Por ultimo solo debemos multiplicar este valor por el color del punto interpolado.  
 
+\newpage
+
 \section{Análisis de performance y experimentación}
 En esta sección vamos a presentar varios resultados de distintos tipos de mediciones que realizamos. Observando estos datos vamos a poder explicar el porqué de la definición de algunas funciones en Assembler y otras en C que sustituyen a otras funciones originales de la aplicación que realizan un mayor consumo de cómputo.
 
@@ -855,5 +878,36 @@ obteniendo el producto que se requería.
 Una función que no aparece en los gráficos (porque tiene un consumo de tiempo del 4\% aproximadamente) pero es bastante importante ya que nos permite realizar el Depth Test y así decidir cuando pintar un píxel y cuando no, es $
 initDepthBuffer$. Se trata de una función relativamente sencilla ya que es la encargada de resetear los valores del $DepthBuffer$ lo cual originalmente se realiza iterando las $ANCHO*ALTO$ posiciones. Decidimos hacer una versión en asm ($
 initDepthBufferASM$) que también constará de un ciclo con la diferencia que ahora podemos cargar cuatro valores por iteración y entonces ahora la cantidad de iteraciones totales sera de $\frac{ANCHO*ALTO}{4}$. Esta versión reduce el consumo a menos de un 1\%.
+
+\newpage
+
+\section{Compilación y librerias adicionales:}
+
+Para poder trabajar con las distintas funciones provistas por la librería SDL fue necesario la instalación de los siguientes paquetes: \\
+
+\textbf{ build-essential xorg-dev libudev-dev libgl1-mesa-dev libglu1-mesa-dev libasound2-dev libpulse-dev libopenal-dev libogg-dev libvorbis-dev libaudiofile-dev libpng12-dev libfreetype6-dev libusb-dev libdbus-1-dev zlib1g-dev libdirectfb-dev libsdl2-ttf-dev } \\ 
+
+Una vez instaladas las anteriores dependencias, es posible la compilación exitosa de los distintos archivos y por ende la creación del ejecutable que va a representar a nuestro renderizador.
+\par Dado que existen dos versiones de código, uno realizado puramente en C y el otro optimizado con funciones en ASM, cada uno poseerá su correspondiente Make File de esta forma ejecutando la instrucción make por consola se obtendrá el ejecutable $renderizar$.
+\par Finalmente para poder hacer uso de nuestro programa solo es necesario pasar por parámetro a $renderizar$ el nombre del archivo *.obj y el nombre de la imagen en formato *.bmp es decir:
+
+
+\begin{verbatim}
+.\renderizar archivo.obj imagen.bmp
+\end{verbatim}
+
+
+
+En caso de que el archivo no cuente con las coordenadas UV solo se pasara el nombre del archivo como parámetro.
+
+ 
+\newpage
+
+\section{Conclusión:}
+
+\newpage
+
+\section{Bibliografia:}
+
 
 \end{document}
