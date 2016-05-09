@@ -6,8 +6,6 @@
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 800;
 
-extern void initDepthBufferASM(float *buffer, float *maxs, int tam);
-
 SDL_Window* window;
 SDL_Surface* screenSurface;
 TTF_Font *font;
@@ -110,7 +108,6 @@ int main(int argc, char *argv[])
 
 			EventDetection();
 						 			 
-            //initDepthBufferASM(depthBuffer, vec_max, SCREEN_WIDTH*SCREEN_HEIGHT);
             initDepthBuffer();
 
             SDL_FillRect( screenSurface, NULL, SDL_MapRGB( screenSurface->format, 0x00, 0x00, 0x00 ) );
