@@ -876,9 +876,18 @@ initDepthBufferASM$) que también constará de un ciclo con la diferencia que ah
 
 \section{Compilación y librerias adicionales}
 
-Para poder trabajar con las distintas funciones provistas por la librería SDL fue necesario la instalación de los siguientes paquetes: \\
+Para poder trabajar con las distintas funciones de SDL fue necesario la instalación de esta librería, accediendo a la siguiente pagina:  
 
-\textbf{ build-essential xorg-dev libudev-dev libgl1-mesa-dev libglu1-mesa-dev libasound2-dev libpulse-dev libopenal-dev libogg-dev libvorbis-dev libaudiofile-dev libpng12-dev libfreetype6-dev libusb-dev libdbus-1-dev zlib1g-dev libdirectfb-dev libsdl2-ttf-dev } \\ 
+\textbf{www.libsdl.org/download-2.0.php}
+
+luego de descargar y descomprimir el código fuente se deben ejecutar los archivos configure, make y make install (este ultimo como root)
+
+
+Para escribir texto en la pantalla el tipo de formato de letra tiene que ser compatible con las fuentes true type (ttf) por lo que es necsario contar con esta libreria para esto se debe correr: 
+
+
+\textbf{sudo apt-get install libsdl2-ttf-dev}
+
 
 Una vez instaladas las anteriores dependencias, es posible la compilación exitosa de los distintos archivos y por ende la creación del ejecutable que va a representar a nuestro renderizador.
 \par Dado que existen dos versiones de código, uno realizado puramente en C y el otro optimizado con funciones en ASM, cada uno poseerá su correspondiente Make File de esta forma ejecutando la instrucción make por consola se obtendrá el ejecutable $renderizar$.
