@@ -100,7 +100,7 @@ Uint32 Map(SDL_Surface* tex, float tu, float tv)
     return getpixel(tex, u, v);
 }
 
-void Uint32ToVec4(Uint32 inColor, Vec3 outColor) //recibo (abgr)//REVISAR ORDEN CON LA ORIGINAL
+void Uint32ToVec4(Uint32 inColor, Vec3 outColor) //recibo (bgr)
 {
     outColor[0] = ((inColor >> 16) & 255) / 255.0f;// b
     outColor[1] = ((inColor >> 8) & 255) / 255.0f;// g

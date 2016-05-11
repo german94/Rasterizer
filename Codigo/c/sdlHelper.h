@@ -2,7 +2,7 @@
 #define _DEF_SDLH_H_
 
 #include <SDL.h>
-#include <SDL2/SDL_ttf.h>        //sudo apt-get install libsdl2-ttf-dev, linkear con -lSDL2_ttf
+#include <SDL2/SDL_ttf.h>       
 #include "structHelper.h"
 #include "mathHelper.h"
 

@@ -3,8 +3,8 @@
 #include <time.h>  
 #include "auxiliares.h"
  
-const int SCREEN_WIDTH = 800;
-const int SCREEN_HEIGHT = 800;
+const int SCREEN_WIDTH = 800;//ANCHO DE LA PANTALLA	
+const int SCREEN_HEIGHT = 800;//ALTO DE LA PANTALLA
 
 SDL_Window* window;
 SDL_Surface* screenSurface;
@@ -18,7 +18,7 @@ bool m_esq;
 bool m_tex;
 bool m_tex_norm;
 float sx, sy, sz;
-float depthBuffer[800 * 800];       //no deja usar las consts por declararlo globalmente
+float depthBuffer[800 * 800];       //DEBE AJUSTARSE A SCREEN_WIDTH*SCREEN_HEIGHT
 Mat4 scale;
 float rotSpeed;
 bool showFPS;
@@ -100,8 +100,6 @@ int main(int argc, char *argv[])
         CreateTranslationMatrix(t, 0.0f, 0.0f, 20.0f);
         
         Mat4 worldt;
-
-        //Uint32 startApp = SDL_GetTicks();
 		while(!quit)
 		{
             startclock = SDL_GetTicks();
@@ -203,8 +201,6 @@ int main(int argc, char *argv[])
             strcpy(buf, "FPS: ");
             snprintf(&buf[5], 4, "%d", currentFPS);
 
-            //prom += currentFPS;
-
             SDL_Color clrFg = {255,0,0,0};
             if(showFPS)
                 RenderText(clrFg, font, buf, screenSurface);
@@ -213,12 +209,7 @@ int main(int argc, char *argv[])
                 ShowInfo(screenSurface);
             
         	SDL_UpdateWindowSurface( window );
-
-            //iteraciones++;
     	}
-
-        //float fpsPROM = prom / 1000;
-        //printf("Tiempo transcurrido: %d, FPS Promedio: %f\n", SDL_GetTicks() - startApp, fpsPROM);
   	}
 
     freeVec4DynamicArray(&Vertices);

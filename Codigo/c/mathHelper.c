@@ -1,7 +1,5 @@
 #include "mathHelper.h"
 
-extern float ScalarProdASM(float *v1, float *v2);
-
 void VecByScalar(float* in, float scalar, float* out, int d)
 {
 	int i;
@@ -227,18 +225,6 @@ float Interpolate(float min, float max, float gradient, bool i1ON)
     float maxi = (0 > mini) ? 0 : mini;
     return min + (max - min) *maxi;
 }
-
-// float Interpolate2(float min, float max, float gradient)
-// { 
-// 	return min + (max - min) * Clamp(gradient);
-// }
-
-// float Interpolate1(float min, float max, float gradient)
-// { 
-//     float mini = (gradient < 1) ? gradient : 1;
-//     float maxi = (0 > mini) ? 0 : mini;
-//     return min + (max - min) *maxi;
-// }
 
 float ComputeNDotL(Vec4 centerPoint, Vec4 vnFace, Vec3 lightPos) 
 {

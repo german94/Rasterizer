@@ -42,8 +42,6 @@ float Max(float a, float b);
 float Min(float a, float b);
 float Clamp(float value);
 float Interpolate(float min, float max, float gradient, bool i1ON);
-//float Interpolate2(float min, float max, float gradient);
-//float Interpolate1(float min, float max, float gradient);
 float ComputeNDotL(Vec4 centerPoint, Vec4 vnFace, Vec3 lightPos); 
 
 #endif
