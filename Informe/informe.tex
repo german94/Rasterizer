@@ -962,11 +962,13 @@ También fue necesario interiorizarse en un formato específico de archivos que 
 
 El hecho de programar todo en C y Assembler hizo que tengamos que ocuparnos de construir estructuras dinámicas para la carga de los modelos, lo cual si bien no fue dificil porque se trata de estructuras bastante básicas, adhiere cierta complejidad al código. Sin embargo, un software de este tipo en un lenguaje de alto nivel con manejo de memoria automático significaría probablemente una pérdida de performance bastante alta.
 
+Con respecto al impacto de las funciones en lenguaje ASM pudimos discriminar que funciones eran convenientes usar a través de las experimentaciones realizadas y del uso de Gprof. Si bien algunas funciones como $ScalarProdASM$ o copiar un vector de 4 floats parece lo mas obvio y óptimo para realizar en SIMD vimos que el tiempo de computo de estas funciones aumento respecto de sus versiones en C. Esto se podía deber tanto a que no se realizaban tantas veces como para obtener una cierta ventaja o bien eran tan simples que el ser llamadas desde ASM agregaba un tiempo extra. Mientras que para otras funciones resulto ser óptimas sus versiones en ASM, generalmente las que requerían de un ciclo con un gran numero de iteraciones o aquellas que se utilizaban muchas veces en una misma función y era posible acomodarlas para poder hacer uso de las Instrucciones SIMD. 
+\par De esta forma concluimos que si bien en un principio habíamos creído que tener la mayor cantidad de funciones en ASM mejoraría la perfomance de nuestro renderizador la mejor opción fue encontrar un equilibrio entre estas y las de C.
 
-\section{Bibliografia}
+\section{Bibliografía}
 
 
-\textbf{Algebral Lineal y Conceptos de programación gráfica::}
+\textbf{Álgebra Lineal y Conceptos de programación gráfica:}
 
 Fletcher Dunn and Ian Parberry. 2002. 3D Math Primer for Graphics and Game Development. ed. Wordware Publishing, Inc.
 
@@ -996,7 +998,11 @@ James M. Van Verth and Lars M. Bishop. 2008. Essential Mathematics for Games and
 
 \textbf{Blender tutoriales:}
 
-\href{https://www.blender.org/support/tutorials/}{\textcolor{blue}{https://www.blender.org/support/tutorials/}}
+\href{https://www.blender.org/support/tutorials/}{\textcolor{blue}{https://www.blender.org/support/tutorials/}}\\
+
+\textbf{Acerca de Gprof:}
+
+\href{https://sourceware.org/binutils/docs/gprof/}{\textcolor{blue}{https://sourceware.org/binutils/docs/gprof/}}
 
 
 \end{document}
