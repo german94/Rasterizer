@@ -244,7 +244,7 @@ void ProcessScanLine_m2(Vec3 color, Vertex* va, Vertex* vb, Vertex* vc, Vertex* 
         }
         else
         {    
-            texColor[0] = color[0]; texColor[1] = color[1]; texColor[2] = color[2];     //si no hay textura entonces pongo  color blanco 
+            texColor[0] = color[0]; texColor[1] = color[1]; texColor[2] = color[2];   
         }
 
         textureColor = Vec4ToUint32P(texColor[2], texColor[1], texColor[0]);

@@ -44,7 +44,6 @@ void putpixel(int x, int y, float z, float* depthBuffer, SDL_Surface* surface, U
 Uint32 getpixel(SDL_Surface *surface, int x, int y)
 {
     int bpp = surface->format->BytesPerPixel;
-    /* Here p is the address to the pixel we want to retrieve */
     Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
 
     switch(bpp) {
@@ -68,7 +67,7 @@ Uint32 getpixel(SDL_Surface *surface, int x, int y)
         break;
 
     default:
-        return 0;       /* shouldn't happen, but avoids warnings */
+        return 0;     
     }
 }
 
@@ -105,7 +104,7 @@ Uint32 Map(SDL_Surface* tex, float tu, float tv)
     return getpixel(tex, u, v);
 }
 
-void Uint32ToVec4(Uint32 inColor, Vec3 outColor) //recibo (abgr)//REVISAR ORDEN CON LA ORIGINAL
+void Uint32ToVec4(Uint32 inColor, Vec3 outColor) //recibo (bgr)
 {
     outColor[0] = ((inColor >> 16) & 255) / 255.0f;// b
     outColor[1] = ((inColor >> 8) & 255) / 255.0f;// g

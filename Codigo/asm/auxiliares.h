@@ -9,7 +9,6 @@ extern bool quit;
 extern bool rotX;
 extern bool rotY;
 extern bool rotZ;
-bool interpolate1ON;
 extern float sx;
 extern float sy;
 extern float sz;
@@ -30,13 +29,6 @@ extern float depthBuffer[800 * 800];
 extern TTF_Font *font;
 extern SDL_Window* window;
 extern SDL_Surface* screenSurface;
-
-void initDepthBuffer()
-{
-    int i;
-    for (i = 0; i < SCREEN_WIDTH*SCREEN_HEIGHT; ++i)
-        depthBuffer[i] = FLT_MAX;
-}   
 
 bool init()
 {
@@ -135,12 +127,6 @@ void EventDetection()
                         m_tex_norm = !m_tex_norm;
                         m_esq = false;
                         m_tex = false;
-                        break;
-                    }
-
-                    case SDLK_7:
-                    {
-                        interpolate1ON = !interpolate1ON;
                         break;
                     }
 
@@ -396,17 +382,11 @@ void ShowInfo(SDL_Surface* screen)
     SDL_Rect r13 = {0, 200, 0, 0};
     RenderTextR(c, font, "2, 4, 6, 7, 8, 9 (teclado numerico): mover el modelo en el espacio", screenSurface, &r13);
     SDL_Rect r14 = {0, 215, 0, 0};
-    if(interpolate1ON)
-        RenderTextR(c, font, "7: Interpolacion modo 1 activado", screenSurface, &r14);
-    else
-        RenderTextR(c, font, "7: Interpolacion modo 2 activado", screenSurface, &r14);
-
+    RenderTextR(c, font, "z / x: aumentar o disminuir la intensidad de la luz", screenSurface, &r14);
     SDL_Rect r15 = {0, 230, 0, 0};
-    RenderTextR(c, font, "z / x: aumentar o disminuir la intensidad de la luz", screenSurface, &r15);
+    RenderTextR(c, font, "flechas: mover direccion de la luz", screenSurface, &r15);
     SDL_Rect r16 = {0, 245, 0, 0};
-    RenderTextR(c, font, "flechas: mover direccion de la luz", screenSurface, &r16);
-    SDL_Rect r17 = {0, 260, 0, 0};
-    RenderTextR(c, font, "+ / - : cambiar de color ", screenSurface, &r17);
+    RenderTextR(c, font, "+ / - : cambiar de color ", screenSurface, &r16);
 }
 
 #endif
