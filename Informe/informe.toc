@@ -1,34 +1,42 @@
 \select@language {spanish}
-\contentsline {section}{\numberline {1}Introducci\IeC {\'o}n}{3}{section.1}
-\contentsline {subsection}{\numberline {1.1}\IeC {\textquestiondown }Qu\IeC {\'e} es un renderizador 3D?}{3}{subsection.1.1}
-\contentsline {subsection}{\numberline {1.2}Librer\IeC {\'\i }a SDL}{3}{subsection.1.2}
-\contentsline {subsection}{\numberline {1.3}Otras features}{3}{subsection.1.3}
-\contentsline {section}{\numberline {2}C\IeC {\'o}digo SDL}{3}{section.2}
-\contentsline {subsection}{\numberline {2.1}Inicializaci\IeC {\'o}n, terminaci\IeC {\'o}n y manejo de errores}{4}{subsection.2.1}
-\contentsline {subsection}{\numberline {2.2}Manejo de ventana}{4}{subsection.2.2}
-\contentsline {subsection}{\numberline {2.3}Ciclo principal y detecci\IeC {\'o}n de eventos}{4}{subsection.2.3}
-\contentsline {subsection}{\numberline {2.4}Renderizado de texto (HAY QUE LLAMAR A TTF_QUIT)}{5}{subsection.2.4}
-\contentsline {subsection}{\numberline {2.5}Timers}{5}{subsection.2.5}
-\contentsline {subsection}{\numberline {2.6}Funciones $putpixel$ y $getpixel$}{5}{subsection.2.6}
+\contentsline {section}{\numberline {1}Introducci\IeC {\'o}n}{4}{section.1}
+\contentsline {section}{\numberline {2}Desarrollo}{4}{section.2}
+\contentsline {subsection}{\numberline {2.1}Librer\IeC {\'\i }a SDL}{4}{subsection.2.1}
+\contentsline {subsection}{\numberline {2.2}Features}{4}{subsection.2.2}
 \contentsline {section}{\numberline {3}Implementaci\IeC {\'o}n de estructuras}{6}{section.3}
 \contentsline {subsection}{\numberline {3.1}Manejo de memoria}{6}{subsection.3.1}
-\contentsline {subsection}{\numberline {3.2}Otras estructuras}{6}{subsection.3.2}
-\contentsline {section}{\numberline {4}Conceptos matem\IeC {\'a}ticos}{7}{section.4}
-\contentsline {subsection}{\numberline {4.1}Matriz del mundo (World Matrix)}{7}{subsection.4.1}
-\contentsline {subsection}{\numberline {4.2}Matriz de vista (View Matrix)}{9}{subsection.4.2}
-\contentsline {subsection}{\numberline {4.3}Matriz de proyecci\IeC {\'o}n (Projection Matrix)}{10}{subsection.4.3}
-\contentsline {subsection}{\numberline {4.4}mathHelper}{13}{subsection.4.4}
-\contentsline {subsection}{\numberline {4.5}Model Loader:}{13}{subsection.4.5}
-\contentsline {subsubsection}{\numberline {4.5.1}Modo 1:}{14}{subsubsection.4.5.1}
-\contentsline {subsubsection}{\numberline {4.5.2}Modo 2:}{14}{subsubsection.4.5.2}
-\contentsline {subsubsection}{\numberline {4.5.3}Modo 3:}{14}{subsubsection.4.5.3}
-\contentsline {subsection}{\numberline {4.6}sdlHelper: }{15}{subsection.4.6}
-\contentsline {subsubsection}{\numberline {4.6.1}Modo 1:}{15}{subsubsection.4.6.1}
-\contentsline {subsection}{\numberline {4.7}Modo 2:}{17}{subsection.4.7}
-\contentsline {subsection}{\numberline {4.8}Modo 3:}{18}{subsection.4.8}
-\contentsline {section}{\numberline {5}An\IeC {\'a}lisis de performance y experimentaci\IeC {\'o}n}{19}{section.5}
-\contentsline {subsection}{\numberline {5.1}Optimizaci\IeC {\'o}n del c\IeC {\'o}digo encargado de la interpolaci\IeC {\'o}n}{19}{subsection.5.1}
-\contentsline {subsection}{\numberline {5.2}Optimizaciones en Assembler}{21}{subsection.5.2}
-\contentsline {subsubsection}{\numberline {5.2.1}InterpolateASM}{23}{subsubsection.5.2.1}
-\contentsline {subsubsection}{\numberline {5.2.2}Vec4Mat4ProductASM}{24}{subsubsection.5.2.2}
-\contentsline {subsubsection}{\numberline {5.2.3}initDepthBufferASM}{24}{subsubsection.5.2.3}
+\contentsline {subsection}{\numberline {3.2}Otras estructuras}{7}{subsection.3.2}
+\contentsline {section}{\numberline {4}C\IeC {\'o}digo SDL}{7}{section.4}
+\contentsline {subsection}{\numberline {4.1}Inicializaci\IeC {\'o}n, terminaci\IeC {\'o}n y manejo de errores}{7}{subsection.4.1}
+\contentsline {subsection}{\numberline {4.2}Manejo de ventana}{7}{subsection.4.2}
+\contentsline {subsection}{\numberline {4.3}Ciclo principal y detecci\IeC {\'o}n de eventos}{8}{subsection.4.3}
+\contentsline {subsection}{\numberline {4.4}Renderizado de texto}{8}{subsection.4.4}
+\contentsline {subsection}{\numberline {4.5}Timers}{9}{subsection.4.5}
+\contentsline {subsection}{\numberline {4.6}Funciones $putpixel$ y $getpixel$}{9}{subsection.4.6}
+\contentsline {section}{\numberline {5}Conceptos matem\IeC {\'a}ticos}{9}{section.5}
+\contentsline {subsection}{\numberline {5.1}Matriz del mundo (World Matrix)}{10}{subsection.5.1}
+\contentsline {subsubsection}{\numberline {5.1.1}Matriz de traslaci\IeC {\'o}n (Translation Matrix)}{10}{subsubsection.5.1.1}
+\contentsline {subsubsection}{\numberline {5.1.2}Matriz de escala (Scale Matrix)}{10}{subsubsection.5.1.2}
+\contentsline {subsubsection}{\numberline {5.1.3}Matriz de rotaci\IeC {\'o}n (Rotation Matrix)}{11}{subsubsection.5.1.3}
+\contentsline {subsection}{\numberline {5.2}Matriz de vista (View Matrix)}{11}{subsection.5.2}
+\contentsline {subsection}{\numberline {5.3}Matriz de proyecci\IeC {\'o}n (Projection Matrix)}{13}{subsection.5.3}
+\contentsline {subsection}{\numberline {5.4}Interpolaci\IeC {\'o}n}{15}{subsection.5.4}
+\contentsline {subsection}{\numberline {5.5}mathHelper}{16}{subsection.5.5}
+\contentsline {section}{\numberline {6}Carga y renderizado del modelo}{16}{section.6}
+\contentsline {subsection}{\numberline {6.1}Model Loader}{16}{subsection.6.1}
+\contentsline {subsubsection}{\numberline {6.1.1}Modo 1}{16}{subsubsection.6.1.1}
+\contentsline {subsubsection}{\numberline {6.1.2}Modo 2}{16}{subsubsection.6.1.2}
+\contentsline {subsubsection}{\numberline {6.1.3}Modo 3}{17}{subsubsection.6.1.3}
+\contentsline {subsection}{\numberline {6.2}Renderizado}{17}{subsection.6.2}
+\contentsline {subsubsection}{\numberline {6.2.1}Modo 1}{17}{subsubsection.6.2.1}
+\contentsline {subsubsection}{\numberline {6.2.2}Modo 2}{20}{subsubsection.6.2.2}
+\contentsline {subsubsection}{\numberline {6.2.3}Modo 3}{22}{subsubsection.6.2.3}
+\contentsline {section}{\numberline {7}An\IeC {\'a}lisis de performance y experimentaci\IeC {\'o}n}{23}{section.7}
+\contentsline {subsection}{\numberline {7.1}Optimizaci\IeC {\'o}n del c\IeC {\'o}digo encargado de la interpolaci\IeC {\'o}n}{24}{subsection.7.1}
+\contentsline {subsection}{\numberline {7.2}Optimizaciones en Assembler}{26}{subsection.7.2}
+\contentsline {subsubsection}{\numberline {7.2.1}InterpolateASM}{28}{subsubsection.7.2.1}
+\contentsline {subsubsection}{\numberline {7.2.2}Vec4Mat4ProductASM}{28}{subsubsection.7.2.2}
+\contentsline {subsubsection}{\numberline {7.2.3}initDepthBufferASM}{29}{subsubsection.7.2.3}
+\contentsline {section}{\numberline {8}Compilaci\IeC {\'o}n y librerias adicionales}{29}{section.8}
+\contentsline {section}{\numberline {9}Conclusi\IeC {\'o}n}{29}{section.9}
+\contentsline {section}{\numberline {10}Bibliografia}{30}{section.10}

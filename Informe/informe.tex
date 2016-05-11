@@ -133,7 +133,7 @@ El propósito de este trabajo es desarrollar un renderizador 3D sin la ayuda de 
 
 
 Para dibujar los gráficos 3D que vemos en muchos de los juegos o software de simulación que podemos encontrar hoy en día, se hacen uso de librerías que facilitan este trabajo. En general siempre existe una abstracción de alto nivel que nos permite dibujar en pantalla un modelo o primitiva 3D de manera directa, indicando su posición en el espacio, rotación o demás características. Sin embargo, si empezamos a bajar el nivel de abstracción, siempre vamos a converger en el uso de dos librerías de bajo nivel: Direct3D y OpenGL.
-\par Direct3D y OpenGL son librerías gráficas que trabajan con la placa de video independientemente del fabricante, permitiendo de esta manera que el desarrollador pueda concentrarse en el código de más alto nivel y no tenga que preocuparse por los detalles de hardware. Además, brindan el soporte matemático necesario para que el programador no tenga que realizar ciertos cálculos o construir matrices desde 0, si no que con algunos datos (por ejemplo para construir una matriz de rotación basta con pasarle el ángulo de rotación) ya se encarga de realizar la tarea por completo. De esta manera, si se desea dibujar una primitiva 3D, basta con pasar sus vértices a alguna función específica que provean estas librerías.
+\par Direct3D y OpenGL son librerías gráficas que trabajan con la placa de video independientemente del fabricante, permitiendo de esta manera que el desarrollador pueda concentrarse en el código de más alto nivel y no tenga que preocuparse por los detalles de hardware. Además, brindan el soporte matemático necesario para que el programador no tenga que realizar ciertos cálculos o construir matrices desde cero, si no que con algunos datos (por ejemplo para construir una matriz de rotación basta con pasarle el ángulo de rotación) ya se encarga de realizar la tarea por completo. De esta manera, si se desea dibujar una primitiva 3D, basta con pasar sus vértices a alguna función específica que provean estas librerías.
 \par Podemos pensar entonces a un renderizador 3D como un software que se encarga de hacer ésto último, es decir, tomar la información necesaria sobre un modelo 3D (en un formato tridimensional) y convertirla a píxeles para posteriormente dibujarlos en la pantalla. Cuando decimos ``información necesaria'' estamos resumiendo muchísimas cosas ya que para dibujar un modelo 3D necesitamos bastantes más datos que solo sus vértices. El objetivo de este trabajo va a ser programar una suerte de DirectX u OpenGL propio pero que interaccione solamente con el CPU.
 
 
@@ -147,11 +147,11 @@ SDL (Simple DirectMedia Layer) es una librería gráfica open source de bajo niv
 La aplicación que desarrollamos permite básicamente renderizar modelos 3D con formato .obj  (toma dos parámetros: el primero es el modelo y el segundo la textura) e implementa las siguientes funcionalidades: 
 
 \begin{itemize}
-\item La renderización puede ser realizada en tres modos distintos (esqueleto, texturizado y con sombras). El modo esqueleto solo renderiza los triángulos que forman el modelo sin rellenarlos, el texturizado rellena dichos triángulos con la información que provee la textura y el de sombras utiliza una luz que lo oscurece o ilumina dependiendo de la posición en la que se encuentra el modelo. 
+\item La renderización puede ser realizada en tres modos distintos: esqueleto (modo 1), texturizado (modo 2) y texturizado con sombras (modo 3). El modo esqueleto solo renderiza los triángulos que forman el modelo sin rellenarlos, el texturizado rellena dichos triángulos con la información que provee la textura y el de sombras utiliza una luz que lo oscurece o ilumina dependiendo de la posición en la que se encuentra el modelo. 
 \item El modelo puede ser deformado en tiempo real de distintas maneras. Los tipos de deformaciones son básicamente tres: rotaciones (sobre cualquiera de los tres ejes y combinándolos), escalado (al igual que la rotación, sobre cualquier eje y varios al mismo tiempo) y traslación. 
 \item La velocidad de rotación puede ser modificada.
 \item En el modo de renderizado con sombras se puede cambiar tanto la dirección como la intensidad de la luz.
-\item Se puede colorear de cierta manera el modelo, modificando ligeramente el color que provee la textura a cada vértice
+\item Se puede colorear de cierta manera el modelo, modificando ligeramente el color que provee la textura a cada vértice.
 \item La versión C de la aplicación permite cambiar en tiempo real el tipo de interpolación que se utiliza. Existen dos funciones que implementan interpolación en C y poder alternar entre ambas nos deja observar la bajada o subida de FPS y analizar la performance.
 \item Muestra FPS e instrucciones por pantalla, pueden sacarse si así se quiere.
 \end{itemize} 
@@ -201,8 +201,8 @@ f 4/7/5 3/1/5 8/3/5
 f 5/8/6 1/4/6 8/6/6
 \end{verbatim} 
 
-En las primeras lineas se identifica el programa y la versión, la pagina oficial y luego el nombre del modelo (en este caso usaremos un cubo); Las lineas que comienzan con v identifican la ubicación de un vértice dentro del $Model$ $Space$; Las que comienzan con vt identifican las coordenadas UV; Con vn se identifican las coordenadas normales a los vértices; Y aquellas lineas que comienzan con f representa a los vértices que conforman un triangulo, así también como la textura correspondiente y el vector normal a estos.
-\par Por ejemplo en la linea f 2/1/1 3/2/1 4/3/1 los valores que aparecen antes de la primer barra significan que ese triangulo esta compuesto por los vértices 2, 3 y 4 (la numeración es de arriba a abajo según aparecen en el archivo), es decir a -1.000000 -1.000000 -1.000000, 1.000000 -1.000000 -1.000000 y 1.000000 -1.000000 1.000000; Los valores que aparecen entre las barras son los índices de la textura que asociado a cada vértice en este caso 1, 2 y 3 corresponde a 0.000100 0.999900; 0.000100 0.000100 y 0.999900 0.000100. Finalmente el ultimo valor identifica los índices de las coordenadas normales.
+En las primeras lineas se identifica el programa y la versión, la pagina oficial y luego el nombre del modelo (en este caso usaremos un cubo); Las lineas que comienzan con v identifican la ubicación de un vértice dentro del Model Space; Las que comienzan con vt identifican las coordenadas UV; Con vn se identifican las coordenadas normales a los vértices; Y aquellas lineas que comienzan con f representa a los vértices que conforman un triangulo, así también como la textura correspondiente y el vector normal a estos (tanto el concepto de Model Space como coordenadas UV y normales sera desarrollado a lo largo de las siguientes secciones).
+\par Por ejemplo en la linea f 2/1/1 3/2/1 4/3/1 los valores que aparecen antes de la primer barra significan que ese triangulo esta compuesto por los vértices 2, 3 y 4 (la numeración es de arriba a abajo según aparecen en el archivo), es decir por -1.000000 -1.000000 -1.000000, 1.000000 -1.000000 -1.000000 y 1.000000 -1.000000 1.000000; Los valores que aparecen entre las barras son los índices de la textura asociado a cada vértice en este caso 1, 2 y 3 corresponde a 0.000100 0.999900; 0.000100 0.000100 y 0.999900 0.000100. Finalmente el ultimo valor identifica los índices de las coordenadas normales.
 \par En algunos casos es posible que el archivo no cuente con las coordenadas UV por lo que el modelo sera pintado de un mismo color, o que no presente las coordenadas normales por lo que el modo 3 no estará disponible. Además es posible que la lineas que comienzan con f tengan mas de tres conjuntos de valores, por lo que en estos casos el modelo no estará representado por un conjunto de triángulos sino de rombos (o en algunos casos combinaciones de ambos) por lo que los rombos serán divididos en dos triángulos soportando este tipo. 
 
 \section{Implementación de estructuras}
@@ -219,11 +219,11 @@ Las estructuras que usamos entonces son:
 \end{itemize}
 
 \subsection{Otras estructuras}
-Además de las estructuras para los arreglos dinámicos que mencionamos en la sección anterior, existen otras estructuras que definimos por una cuestión de organización de los datos. Es decir, sin tener estas estructuras la cantidad de parámetros de las funciones en modelLoader y las funciones encargadas de la rasterización aumentarían al doble o más. A continuación listamos los nombres de dichas estructuras y una breve descripción de su uso:
+Además de las estructuras para los arreglos dinámicos que mencionamos en la sección anterior, existen otras estructuras que definimos por una cuestión de organización de los datos. Es decir, sin tener estas estructuras la cantidad de parámetros de las funciones en $modelLoader$ y las funciones encargadas de la rasterización aumentarían al doble o más. A continuación listamos los nombres de dichas estructuras y una breve descripción de su uso:
 
 \begin{itemize}
 \item \textbf{Vertex: } almacena toda la información de un vértice. Esto es: sus coordenadas en los distintos espacios, su normal y las coordenadas de la textura que le corresponden.
-\item \textbf{ScanLineData:} agrupa los datos necesarios para que ProcessScanLine realice la interpolación
+\item \textbf{ScanLineData:} agrupa los datos necesarios para que $ProcessScanLine$ realice la interpolación
 \item \textbf{Model:} se utiliza a la hora de cargar el modelo y luego pasarselo a los posibles modos de renderizado. Agrupa toda la información necesaria, desde lo que se carga del archivo hasta las matrices que lo transforman, distancias máximas para reescalado y color.
 \end{itemize}
 
@@ -237,12 +237,12 @@ Antes de empezar a utilizar SDL hay que hacer una llamada a $SDL\_Init$ y pasarl
 
 
 \subsection{Manejo de ventana}
-La función SDL_CreateWindow nos permite crear la ventana donde se van a dibujar las primitivas. Dicha función devuelve un puntero a la estructura $SDL\_Window$ y nos permite definir las dimensiones y el título que queramos. Antes de terminar, el programa debe llamar a $SDL\_DestroyWindow$ y pasarle como parámetro el puntero obtenido por $SDL\_CreateWindow$.
+La función $SDL\_CreateWindow$ nos permite crear la ventana donde se van a dibujar las primitivas. Dicha función devuelve un puntero a la estructura $SDL\_Window$ y nos permite definir las dimensiones y el título que queramos. Antes de terminar, el programa debe llamar a $SDL\_DestroyWindow$ y pasarle como parámetro el puntero obtenido por $SDL\_CreateWindow$.
 \par En SDL para poder dibujar sobre la ventana, es necesario trabajar sobre superficies, definidas con la estructura $SDL\_Surface$. Así como cuando uno carga una imagen trabaja con la superficie asociada a la imagen, cuando queremos dibujar sobre la ventana debemos obtener la superficie asociada a la ventana utilizando la función $SDL\_GetWindowSurface$. Esta función toma como parámetro un puntero a una instancia de $SDL\_Window$ (el que obtenemos al crear la ventana) y nos devuelve el puntero a la instancia de $SDL\_Surface$ que necesitamos.
 
 
-\subsection{Ciclo principal y detección de eventos}
-Dado que esta es una aplicación interactiva, en el sentido de que no se trata de un software al cual ejecutamos, devuelve una entrada y termina, es necesario que todo el tiempo se esté ejecutando cierto código y ciertas llamadas a funciones. Para esto definimos un ciclo principal que termine únicamente cuando el usuario cierra la ventana. \par El ciclo principal es básicamente el nucleo de la aplicación y su condición de corte es que el usuario quiera cerrar la ventana (más adelante veremos como detectar esto). Ahí es donde se ejecuta desde la detección de eventos hasta las llamadas a las funciones encargadas de renderizar los modelos 3D, el cálculo de los FPS y otras cosas más. Cuando dibujamos un modelo 3D y decidimos rotarlo, estirarlo o cambiar el modo del renderizado debemos volver a dibujarlo todo desde cero. Para lograr esto sin que se pise con el dibujo que estaba antes lo que hay que hacer es limpiar la ventana, es decir borrar todo lo que habíamos hecho antes. De esto se encarga la función $SDL\_FillRect$, a la cuál le pasamos como parámetros el puntero a la superficie asociada a la ventana y el color que queremos que tengan todos los píxeles (para esto usamos $SDL\_MapRGB$). Luego de dibujar sobre la superficie asociada a la ventana debemos actualizarla, esto lo hacemos con SDL_UpdateWindowSurface pasándole como parámetro dicha superficie (el puntero).
+\subsection{Ciclo principal y detección de eventos}¸\label{ciclop}
+Dado que esta es una aplicación interactiva, en el sentido de que no se trata de un software al cual ejecutamos, devuelve una entrada y termina, es necesario que todo el tiempo se esté ejecutando cierto código y ciertas llamadas a funciones. Para esto definimos un ciclo principal que termine únicamente cuando el usuario cierra la ventana. \par El ciclo principal es básicamente el nucleo de la aplicación y su condición de corte es que el usuario quiera cerrar la ventana (más adelante veremos como detectar esto). Ahí es donde se ejecuta desde la detección de eventos hasta las llamadas a las funciones encargadas de renderizar los modelos 3D, el cálculo de los FPS y otras cosas más. Cuando dibujamos un modelo 3D y decidimos rotarlo, estirarlo o cambiar el modo del renderizado debemos volver a dibujarlo todo desde cero. Para lograr esto sin que se pise con el dibujo que estaba antes lo que hay que hacer es limpiar la ventana, es decir borrar todo lo que habíamos hecho antes. De esto se encarga la función $SDL\_FillRect$, a la cuál le pasamos como parámetros el puntero a la superficie asociada a la ventana y el color que queremos que tengan todos los píxeles (para esto usamos $SDL\_MapRGB$). Luego de dibujar sobre la superficie asociada a la ventana debemos actualizarla, esto lo hacemos con $SDL\_UpdateWindowSurface$ pasándole como parámetro dicha superficie (el puntero).
 \par Para el manejo de eventos primero necesitamos crear una instancia $e$ de tipo $SDL\_Event$. Luego, para detectar eventos del usuario con SDL hay que definir un subciclo del ciclo principal, cuya condición de corte es $SDL\_PollEvent(\&e) == NULL$. Si entramos al ciclo significa que detectamos un evento, para identificar que tipo de evento es usamos el campo $type$ de $SDL\_Event$ (el valor puede ser $SDL\_QUIT$ si el usuario quiere cerrar la ventana, $SDL\_KEYUP$ si el usuario soltó una tecla, $SDL\_KEYDOWN$ si el usuario está apretando una tecla, entre otros). Es cuestión de anidar distintos switches para poder identificar los eventos que nos importan y actuar en consecuencia. Dado que la detección de eventos es una parte importante del código, está toda dentro de la función $EventDetection$, la cual se ejecuta una vez por cada iteración del ciclo principal.
 
 
@@ -257,8 +257,8 @@ Para medir la performance de la aplicación una de las técnicas que usamos fue 
 
 \subsection{Funciones $putpixel$ y $getpixel$} \label{putpixel}
 Si bien esta función no se encuentra dentro de la SDL, tiene una relación muy cercana a la misma ya que trabaja a un nivel bastante bajo con sus estructuras y formatos (efectuando operaciones como shifteos y and's) y es por eso que se encuentra en sdlHelper.c.
-Toma como parámetros la superficie ($SDL\_Surface*$) de la ventana, coordenadas enteras x, y, z, un píxel en formato entero de 32 bits, tamaños enteros ancho y alto de la ventana y un puntero al depthBuffer ($float*$). Lo que hace es manipular la superficie de la ventana de manera tal de modificar el píxel que se encuentra en la posición $(x, y)$ para que ahora tenga el valor del píxel que toma como parámetro. 
-\par Sin embargo, vemos que también hay otros parámetros como una coordenada z y un depthBuffer. Esto es porque, debido a que estamos renderizando en una ventana 2D que representa a un mundo 3D, cada píxel tiene una ``profundidad'' (que guardamos en el depthBuffer) y que utilizamos para testear si el píxel original que se encuentra en dichas coordenadas está delante o detras (en términos de la coordenada z) del que toma esta función por parámetro.
+Toma como parámetros la superficie ($SDL\_Surface*$) de la ventana, coordenadas enteras x, y, z, un píxel en formato entero de 32 bits, tamaños enteros ancho y alto de la ventana y un puntero a un buffer (depthBuffer). Lo que hace es manipular la superficie de la ventana de manera tal de modificar el píxel que se encuentra en la posición $(x, y)$ para que ahora tenga el valor del píxel que toma como parámetro. 
+\par Sin embargo, vemos que también hay otros parámetros como una coordenada z y un depthBuffer. Esto es porque, debido a que estamos renderizando en una ventana 2D que representa a un mundo 3D, cada píxel tiene una "profundidad" (que guardamos en el depthBuffer) y que utilizamos para testear si el píxel original que se encuentra en dichas coordenadas está delante o detras (en términos de la coordenada z) del que toma esta función por parámetro.
 En el caso de que el nuevo píxel esté delante del viejo, entonces efectivamente lo modificamos, caso contrario dejamos
  todo como está.
  
@@ -268,16 +268,18 @@ La función $getpixel$ en cambio, solo toma tres parámetros (la superficie, coo
 \section{Conceptos matemáticos}
 En esta sección vamos a exponer un poco los conceptos matemáticos subyacentes de la aplicación. Las librerías gráficas que brindan soporte 3D de alto nivel como también las de bajo nivel como Direct3D y OpenGL, tratan de abstraer un poco al programador de estos conceptos. Esto significa que muchas veces el programador no necesita saber que formato tiene una matriz específica si no que simplemente llama a la función encargada de construir dicha matriz que la librería provee y listo. En este trabajo, dado que no hacemos uso de ninguna librería que brinde el soporte matemático para el manejo 3D, tuvimos que ponernos un poco más en contacto con varios de los conceptos básicos necesarios para tratar con modelos 3D y vamos a introducirlos un poco en esta sección.
 
-Cuando un modelo 3D es creado, éste vive en un espacio de coordenadas por defecto (proporcionado generalmente por el programa que se utilizó para diseñarlo), conocido como espacio del modelo o $Model Space$. Luego, para poder ser renderizado pasa por múltiples transformaciones que lo llevan a otros espacios de coordenadas hasta que finalmente es visible en la pantalla. 
+Cuando un modelo 3D es creado, éste vive en un espacio de coordenadas por defecto (proporcionado generalmente por el programa que se utilizó para diseñarlo), conocido como espacio del modelo o Model Space. Luego, para poder ser renderizado pasa por múltiples transformaciones que lo llevan a otros espacios de coordenadas hasta que finalmente es visible en la pantalla. 
 \par La idea se basa en utilizar tres matrices fundamentales conocidas como World, View y Projection y combinarlas utilizando el producto de matrices en una sola: 
-PVW = Projection*View*World
-De esta manera  multiplicando cada coordenada del objeto (en $Model Space$) por la PVW, el objeto se mueve a través de varios espacios para finalmente proyectarse en pantalla.
+
+WVP = World*View*Projection*
+
+De esta manera  multiplicando cada coordenada del objeto (en Model Space) por la WVP, el objeto se mueve a través de varios espacios para finalmente proyectarse en pantalla.
 
 \subsection{Matriz del mundo (World Matrix)}
 La primera matriz que describiremos sera la  World Matrix o Matriz del mundo.
 Como mencionamos anteriormente, cada modelo vive inicialmente en un espacio local,  por lo que transformaremos sus vértices a un sistema de coordenadas común conocido como espacio de mundo o World Space. Esta matriz nos va a permitir determinar una posición,  orientación e incluso escalar el modelo en el nuevo espacio 3D.
 \par La World Matrix la conseguiremos por medio del producto de otras 3 matrices, cada una de tamaño 4x4 y asumiendo una notación donde las filas representan cada uno de los ejes. Es decir la primera, segunda y tercer fila corresponden a los ejes x, y, z respectivamente y la cuarta fila se utilizará por cuestiones más matemáticas y para diferenciar entre vectores (direcciones) y puntos. Dado que adoptamos esta convención, al efectuar el producto entre un vector y una matriz, el vector deberá ubicarse a la izquierda de la matriz.
-\par La $World Matrix$ se compone a su vez por distintos tipos de matrices combinadas, expresando esta combinación como el producto de estas matrices al igual que hicimos con la matriz PVW. A continuación vemos los distintos tipos de matrices que pueden utilizarse para conformar la $World Matrix$.
+\par La World Matrix se compone a su vez como el producto de distintas matrices. A continuación vemos los distintos tipos de matrices que pueden utilizarse para conformar la $World Matrix$.
 
 
 \subsubsection{Matriz de traslación (Translation Matrix)} 
@@ -293,8 +295,8 @@ Traslacion.x & Traslacion.y & traslacion.z & 1
 \]
 
 
-Si bien para representar  coordenadas en un espacio 3D son necesarios tres valores (ubicación en el eje x, y y z) utilizaremos un cuarto, w, con valor 1, necesario para la aritmética matricial. En este caso Traslación indica en cuanto queremos mover cada una de las coordenadas. Traslacion.x indicara cuanto moveremos el valor x;  Traslacion.y el valor de la coordenada en y y finalmente Traslacion.z a z.
-\par Si quisieramos trasladar las coordenadas (5,5,5,1) 12 unidades en dirección del eje x, al multiplicar dicho vector por la matriz de traslación obtendremos como resultado (5 + 12, 5 5, 1 ) efectivamente obteniendo el resultado deseado.  
+Si bien para representar  coordenadas en un espacio 3D son necesarios tres valores (ubicación en el eje x, y y z) utilizaremos un cuarto (con valor 1), w,  necesario para la aritmética matricial. En este caso $Traslacion$ indica en cuanto queremos mover cada una de las coordenadas. $Traslacion.x$ indicara cuanto moveremos el valor x;  $Traslacion.y$ el valor de la coordenada en y y finalmente $Traslacion.z$ a z.
+\par Por ejemplo si quisieramos trasladar las coordenadas (5,5,5,1) 12 unidades en dirección del eje x, al multiplicar dicho vector por la matriz de traslación obtendremos como resultado (5 + 12, 5 5, 1 ) efectivamente obteniendo el resultado deseado.  
 
 \subsubsection{Matriz de escala (Scale Matrix)}
 
@@ -308,7 +310,7 @@ sx & 0 & 0 & 0 \\
 0 & 0 & 0 & 1  
 \end{bmatrix}
 \]
-sx, sy y sz representan el tamaño a escalar en la dirección correspondiente a la fila de la matriz. Si tomamos por ejemplo la primera fila, que representa al eje x, se puede observar que el eje conserva la dirección pero es escalado por un valor sx. 
+$sx$, $sy$ y $sz$ representan el tamaño a escalar en la dirección correspondiente a la fila de la matriz. Si tomamos por ejemplo la primera fila, que representa al eje x, se puede observar que el eje conserva la dirección pero es escalado por un valor $sx$. 
 
 \subsubsection{Matriz de rotación (Rotation Matrix)}
 
@@ -343,7 +345,7 @@ sin(ang) & cos(ang) & 0 & 0 \\
 \]
 
 
-Las  matrices representan  la rotación de ang grados del plano. Notemos el valor de la coordenada en el eje sobre el cual queremos rotar nunca cambia. Esto es lo que se espera cuando nosotros queremos rotar alrededor del eje en cuestión, ya que  la rotación es exclusivamente alrededor del eje y por lo tanto las coordenadas se mantienen constantes.
+Las  matrices representan  la rotación de $ang$ grados del plano. Notemos que el valor de la coordenada en el eje sobre el cual queremos rotar nunca cambia, esto es lo que se espera cuando nosotros queremos rotar alrededor del eje en cuestión. 
 
 \par Ya vimos como es posible trasladar, estirar y rotar el modelo y como dijimos antes, es posible combinar cada una de estas transformaciones en una sola matriz ($World Matrix$): \newline
 World Matrix = Rotation Matrix * Tanslation Matrix * Scale Matrix\newline  \newline
@@ -354,17 +356,23 @@ coordenadas\_transformadas = coordenadas\_originales * WorldMatrix
 
 
 \subsection{Matriz de vista (View Matrix)}
-Como explicamos en la sección anterior, el primer paso para  renderizar un objeto 3D  es poner a todos los modelos en el mismo espacio, $World Space$. Para continuar con la proyección en pantalla de nuestro modelo necesitamos efectuar un nuevo cambio de coordenadas hacia otro espacio llamado $View Space$.
+Como explicamos en la sección anterior, el primer paso para  renderizar un objeto 3D  es poner a todos los modelos en el mismo espacio, World Space. Para continuar con la proyección en pantalla de nuestro modelo necesitamos efectuar un nuevo cambio de coordenadas hacia otro espacio llamado View Space.
 
-\par ¿Por que es necesario un nuevo espacio? Básicamente porque podríamos estar mirándolo desde cualquier dirección. La transformación consiste en cambiar el sistema de coordenadas de toda la escena a uno nuevo que represente la cámara que está visualizando el modelo (por eso también se lo llama $Camera Space$. Así, la matriz asociada a esta transformación ($View Matrix$) definirá la posición y orientación de la cámara, modificando sus valores alteramos el centro y el plano de proyección respecto al espacio del mundo. 
+\par ¿Por que es necesario un nuevo espacio? Básicamente porque podríamos estar mirándolo desde cualquier dirección. La transformación consiste en cambiar el sistema de coordenadas de toda la escena a uno nuevo que represente la cámara que está visualizando el modelo (por eso también se lo llama Camera Space. Así, la matriz asociada a esta transformación ($View$ $Matrix$) definirá la posición y orientación de la cámara, modificando sus valores alteramos el centro y el plano de proyección respecto al espacio del mundo. 
+
+
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.50\textwidth]{Imagenes/a.png}
-    \caption{Los vectores n, u, v definen los ejes principales del nuevo sistema de referencia en el $View$ $Space$.}
+    \caption{Los vectores n, u, v definen los ejes principales del nuevo sistema de referencia en el View Space.}
     \label{fig:mesh1}
 \end{figure}
 
-Para la creación de la matriz haremos uso de tres vectores $eye$, $target$ y $up$. El vector $eye$ determina la posición de la cámara con respecto al $World Space$. $target$ determina la dirección hacia donde está enfocando la cámara. $up$ que define la dirección ``hacia arriba'' desde el punto de vista de la cámara.  Una implementación típica, la cual adoptamos, es asumir que que la cámara esta colocada sobre el eje -z (left-handed coordinate system o regla de la mano izquierda por convención).
+
+
+Para la creación de la matriz haremos uso de tres vectores $eye$, $target$ y $up$. El vector $eye$ determina la posición de la cámara con respecto al World Space; $target$ determina la dirección hacia donde está enfocando la cámara; y $up$ define la dirección "hacia arriba" desde el punto de vista de la cámara.  Una implementación típica, la cual adoptamos, es asumir que la cámara esta colocada sobre el eje -z (left-handed coordinate system o regla de la mano izquierda por convención).
+
+
 \begin{figure}[h!]
  \centering
   \subfloat[]{
@@ -375,16 +383,16 @@ Para la creación de la matriz haremos uso de tres vectores $eye$, $target$ y $u
     \includegraphics[width=0.4\textwidth]{Imagenes/c.png}}
   \caption{A la izquierda se muestra la ubicación de los ejes utilizando la regla de la mano izquierda y a la derecha como estaría posicionada nuestra cámara según dicha regla.}
  \label{f:coordenadas}
-\end{figure}
-
-
-Para construir esta matriz debemos primero calcular tres nuevos vectores: x', y' y z'. Para calcularlos vamos a empezar por z' e ir utilizando los datos que ya sabemos (como $target$, $eye$ y $up$). cross es la función que computa el producto cruzado (así aseguramos perpendicularidad) y normal la función de normalización de vectores. Así, los cálculos se efectúan de la siguiente manera: \newline \newline
+\end{figure} 
+ 
+Para construir esta matriz debemos primero calcular tres nuevos vectores: x', y' y z'. Para calcularlos vamos a empezar por z' e ir utilizando los datos que ya conocemos. Definiremos $cross$ como la función que computa el producto cruzado (así aseguramos perpendicularidad) y $normal$ a la función de normalización de vectores. Así, los cálculos se efectúan de la siguiente manera: \newline \newline
     z'  = normal(eye - target); \newline 
     x' = normal(cross(up, z' )); \newline
     y' = cross(z', x');   \newline
-    
-    
+ 
 Con estos datos podemos construir una nueva matriz que represente a estos nuevos ejes:
+
+
 \[
 orientation =
 \begin{bmatrix}
@@ -417,10 +425,10 @@ x'.z & y'.z & z'.z & 0 \\
 -dot(x', eye) & -dot(y', eye) & -dot(z', eye) & 1    
 \end{bmatrix}
 \]
-Donde dot es la función que calcula el producto escalar. Este método es mas optimizado ya que no requiere realizar un producto matricial.
+Donde $dot$ es la función que calcula el producto escalar. Este método es mas optimizado ya que no requiere realizar un producto matricial.
 
 \subsection{Matriz de proyección (Projection Matrix)} \label{projection}
-Todos los vértices transformados dentro del $View \ Space$ siguen teniendo tres dimensiones cuando en realidad para poder dibujarlos en pantalla se necesitan exactamente dos dimensiones. Además, aún no tenemos perspectiva, es decir, que tan lejos o cerca estamos del objeto. Dado que adoptamos la idea de posicionar la cámara sobre el eje -z, esto determinará la cercanía o lejanía con el modelo, modificando así el tamaño del mismo. La matriz de proyección será la encarga de solucionar estas cuestiones.
+Todos los vértices transformados dentro del View Space siguen teniendo tres dimensiones cuando en realidad para poder dibujarlos en pantalla se necesitan exactamente dos dimensiones. Además, aún no tenemos perspectiva, es decir, que tan lejos o cerca estamos del objeto. Dado que adoptamos la idea de posicionar la cámara sobre el eje -z, esto determinará la cercanía o lejanía con el modelo, modificando así el tamaño del mismo. La matriz de proyección será la encarga de solucionar estas cuestiones.
 \par Existen distintos tipos de proyecciones, por ejemplo en una proyección en perspectiva los objetos que están más lejos de la cámara se hacen más pequeños, mientras que en una proyección ortográfica la distancia a la cámara no tiene un efecto alguno sobre el tamaño del objeto. En nuestro caso utilizaremos proyección en perspectiva.
 \par La proyección en perspectiva se basa en la idea que la parte visible se encuentra dentro de una determinada figura (llamada $View \ Frustum$). El volumen de esta figura está definido por seis planos: un plano cerca de la cámara ($near \ plane$), un plano más lejos ($far \ plane$) y cuatro planos laterales que definen los bordes. El $near \ plane$  define a partir de donde se puede visualizar y el $far \ plane$ define hasta que punto podemos ver. De este modo, solo los objetos que se encuentren entre estos planos serán representados en pantalla. 
  
@@ -431,7 +439,7 @@ Todos los vértices transformados dentro del $View \ Space$ siguen teniendo tres
     \caption{Visualización basada en $View $ $Frustum$}
     \label{fig:mesh1}
 \end{figure}
-La matriz calculará las coordenadas dentro del intervalo [-1,1], de esta forma un punto no será visible sii luego de multiplicar la $projection matrix$ es menor que -1 o mayor que 1. Se adopta utilizar las coordenadas dentro de ese intervalo para que sea independiente de las dimensiones de la pantalla. Una vez que tengamos las coordenadas de la matriz solo deberemos multiplicarlas por el ancho y alto de la pantalla en la que se este trabajando para dimensionarlos.
+La matriz calculará las coordenadas dentro del intervalo [-1,1], de esta forma un punto no será visible si solo si luego de multiplicar por la $projection matrix$ es menor que -1 o mayor que 1. Se adopta utilizar las coordenadas dentro de ese intervalo para que sea independiente de las dimensiones de la pantalla. Una vez que tengamos las coordenadas de la matriz solo deberemos multiplicarlas por el ancho y alto de la pantalla en la que se este trabajando para dimensionarlos.
 \par Dado que adoptamos la ubicación de los ejes con la regla $left-handed$ estaremos posicionados sobre el eje -z. Por lo que debemos convertir cada punto de la coordenada z en -z, esto se puede lograr multiplicando las coordenadas por: 
 
 
@@ -451,7 +459,7 @@ De esta forma si tenemos el vector de coordenadas v = (x,y,z,1) quedaría como: 
 v'= (x, y, -z, 1); Luego de efectuar v*M1\newline
 
 El segundo paso requiere dividir las coordenadas x e y por -z. De esta manera cuando el objeto esté mas lejos de la cámara el valor de z sera mayor por lo que los cocientes serán más chicos (en módulo) y estaremos dándole perspectiva a nuestro objeto.
-\par Recordemos que estamos trabajando con vectores de coordenadas de 4 dimensiones (conocidas como coordenadas homogéneas) donde el ultimo valor (conocido como w) es igual a 1. Si multiplicamos cualquiera de estas coordenadas por la World y/o Translation matrix observaremos que el ultimo valor se sigue manteniendo en un 1 (que es lo que queremos). Sin embargo, no es el caso cuando multiplicamos por esta matriz. Esto significa que para volver a las coordenadas homogéneas, luego de haber multiplicado el vector de coordenadas por la matriz PVW, tendremos que dividirlo por el valor w que posea ya que de esta forma estaremos efectuando $\frac{w}{w}$ obteniendo de nuevo el valor 1. Entonces, si w fuese igual a -z, conseguiríamos lo que estamos buscando: dividir x e y por -z.\newline
+\par Recordemos que estamos trabajando con vectores de coordenadas de 4 dimensiones (conocidas como coordenadas homogéneas). Si multiplicamos cualquiera de estas coordenadas por la $World$ y/o $Translation$ $matrix$ observaremos que el ultimo valor se sigue manteniendo en 1 (que es lo que queremos). Sin embargo, no es el caso cuando multiplicamos por esta matriz. Esto significa que para volver a las coordenadas homogéneas, luego de haber multiplicado el vector de coordenadas por la matriz PVW, tendremos que dividirlo por el valor w que posea ya que de esta forma estaremos efectuando $\frac{w}{w}$ obteniendo de nuevo el valor 1. Entonces, si w fuese igual a -z, conseguiríamos lo que estamos buscando: dividir x e y por -z.\newline
 
 Consideremos cambiar la cuarta columna de la matriz M1 por el siguiente vector (0,0,-1,0) tenemos una M2 tal que:
 
@@ -502,11 +510,11 @@ Se deberían cumplir dos condiciones: cuando v este mas cerca del $near$ $plane$
  
  z'= $\frac{-f}{f-n}$*$(-n)$ + $\frac{-f*n}{f-n}$*$1$ = $\frac{f*n - f*n}{f-n}$ = $0$
  
-Recordemos que aun es necesario dividir por w' que es -z por lo que en el primer caso -z = $f$ entonces, tendríamos como resultado final 1; en el segundo caso 0. Efectivamente obtuvimos los valores deseados.
+Recordemos que aun es necesario dividir por w' (que es igual -z ). En el primer caso cuando -z = $f$ obtenemos como resultado final 1 y en el segundo caso 0, efectivamente obtuvimos los valores deseados.
 
 
-Por último, hay que tener en cuenta el ángulo de visión (AOV)  o campo de visión (FOV) de la cámara. Este parámetro controla qué parte de la escena es visible a la cámara.\newline
-Generalmente se utiliza es suponer que la ventana de proyección es un cuadrado de [-1: 1] en cada dimensión. y que la distancia entre la misma y la cámara es igual a 1. 
+Por último, hay que tener en cuenta el ángulo de visión (AOV)  o campo de visión (FOV) de la cámara. Este parámetro controla qué parte de la escena es visible.\newline
+Generalmente se utiliza suponer que la ventana de proyección es un cuadrado de [-1: 1] en cada dimensión y que la distancia entre la misma y la cámara es igual a 1. 
 
 
 \begin{figure}[h]
@@ -530,24 +538,24 @@ P & 0 & 0 & 0 \\
 \]
 
 
-Ya tenemos todas las matrices necesarias, con lo cual si multiplicamos cada coordenada dentro del $Model \ Space$ por la matriz PVW estaremos casi en condiciones de tener representado nuestro modelo en la pantalla. Lo único que falta es dividir estas coordenadas por $w'$ y mapear estos valores a las dimensiones de nuestra pantalla.\newline
+Ya tenemos todas las matrices necesarias, con lo cual si multiplicamos cada coordenada dentro del Model Space por la matriz WVP estaremos casi en condiciones de tener representado nuestro modelo en la pantalla. Lo único que falta es dividir estas coordenadas por $w'$ y mapear estos valores a las dimensiones de nuestra pantalla.\newline
 
 
-Llamemos $x''$ e $y''$ a las coordenadas finales que permitirán graficar en nuestra pantalla al modelo 3D y ($x'$, $y'$, $z'$, $w'$) al valor obtenido luego de multiplicar una coordenada por PVW tendremos que: \newline
+Llamemos $x''$ e $y''$ a las coordenadas finales que permitirán graficar en nuestra pantalla al modelo 3D y $x'$, $y'$, $z'$, $w'$ al valor obtenido luego de multiplicar una coordenada por WVP tendremos que: \newline
 
 $x''$ = $\frac{x'}{w'}*width +  width*0.5$ \newline
 
 $y''$ = $\frac{y'}{w'}*height +  height*0.5$ \newline
 
-Donde $width$ y $height$ representa el ancho y alto de nuestra pantall. Notar que luego sumamos $width*0.5$ a $x''$ y $height*0.5$ a $y''$ para tener las coordenadas finales centradas en la pantalla.
+Donde $width$ y $height$ representa el ancho y alto de nuestra pantalla. Notar que luego sumamos $width*0.5$ a $x''$ y $height*0.5$ a $y''$ esto es para tener las coordenadas finales centradas en la pantalla.
 
 \subsection{Interpolación}
 Además de las matrices, un concepto matemático que usaremos en muchas ocasiones será el principio de interpolación lineal. La interpolación nos permite obtener un tercer punto interpolado ($x_c$, $y_c$),  ajustándose a los valores de otros dos ($x_a, y_a$) y ($x_b, y_b$). Básicamente consiste en trazar una recta que pasa por ($x_a,y_a$) y ($x_b,y_b$), y calcular los valores intermedios sobre esta recta. La formula para obtenerlos es la siguiente:
 
 $y_c$ = $y_a$ + $(x_c - x_a)*\frac{y_b - y_a}{x_b - x_c}$  (1)
 
-Observemos que en la formula (1) $\frac{y_b - y_a}{x_b - x_c}$ es el valor de la  pendiente entre estos dos puntos es decir, la recta sobre la cual se ubicara el punto a interpolar. 
-\par Dado que la formula (1) nos permite obtener el valor y del punto a polarizar a partir del x, en caso de ser conocido el valor y, y desconocido el de x si despejamos de (1) obtenemos la siguiente formula:
+Observemos que en la formula (1) $\frac{y_b - y_a}{x_b - x_c}$ es el valor de la pendiente que determina la recta sobre la cual se ubican estos dos puntos y se ubicara un tercer punto interpolado. 
+\par Dado que la formula (1) nos permite obtener el valor y del punto a interpolar a partir del x, en caso de ser conocido el valor y, y desconocido el de x si despejamos de (1) obtenemos la siguiente formula:
 
 $x_c$ = $x_a$ + $(x_b - x_a)*gradient$ 
 
@@ -555,31 +563,31 @@ con $gradient$  = $\frac{y_c - y_a}{y_b - y_a}$
 
 \subsection{mathHelper}
 En el archivo mathHelper.h declaramos numerosas funciones matemáticas que luego definimos en mathHelper.c. Estas funciones van desde cálculos básicos como el producto cruzado, el producto escalar, normalizaciones y productos de matrices hasta la construcción de matrices específicas como las que fueron explicadas en esta sección.
-\par Existen cálculos que se repiten mucho a lo largo del código y que, en algunos casos, es necesario realizarlos por cada ejecución del ciclo principal por ejemplo. En estos casos decidimos implementar también una versión de los mismos en Assembler con el objetivo de optimizar la performance y poder realizar mediciones y comparaciones con las versiones de estas funciones en C. Las funciones matemáticas que decidimos implementar en Assembler son las siguientes: producto escalar (ScalarProdASM), interpolación (InterpolateASM, hablaremos del uso de esta función más adelante) y producto de vector por matriz (Vec4Mat4ProductASM). También existen otras funciones que decidimos implementar en Assembler, que no realizan cálculos matemáticos pero que se ve reflejado en la experimentación que haberlas programado en Assembler mejoró notablemente la performance, hablaremos de ellas más adelante.
+\par Existen cálculos que se repiten mucho a lo largo del código y que, en algunos casos, es necesario realizarlos por cada ejecución del ciclo principal. En estos casos decidimos implementar también una versión de los mismos en Assembler con el objetivo de optimizar la performance y poder realizar mediciones y comparaciones con las versiones de estas funciones en C. Las funciones matemáticas que decidimos implementar en Assembler son las siguientes: producto escalar (ScalarProdASM), interpolación (InterpolateASM, hablaremos del uso de esta función más adelante) y producto de vector por matriz (Vec4Mat4ProductASM). También existen otras funciones que decidimos implementar en Assembler, que no realizan cálculos matemáticos pero que se ve reflejado en la experimentación que haberlas programado en Assembler mejoró notablemente la performance, hablaremos de ellas más adelante.
 
 \section{Carga y renderizado del modelo}
 
 \subsection{Model Loader}
-Cada modelo se encuentra conformado por un conjunto de polígonos, en especial triángulos. Dado que elaboraremos tres modos, de manera de aplicar distintos efectos sobre los modelos, para poder graficar cada uno de los triángulos no solo sera necesario tener las coordenadas de sus vértices, sino que dependiendo del modo requerirán datos adicionales. 
+Cada modelo se encuentra conformado por un conjunto de polígonos, en especial triángulos. Dado que elaboraremos tres modos para poder graficar cada uno de los triángulos no solo sera necesario tener las coordenadas de sus vértices, sino que dependiendo del modo requerirán datos adicionales. 
 
 
 \subsubsection{Modo 1}  
 Este método sera el mas básico, se encargara de dibujar cada uno de los triángulos (vértices y aristas) que conforman al modelo. 
-\par Comenzaremos con una función a la que llamaremos "$RenderFilledModel\_m1$". Inicialmente se encargara de calcular ,para cada triangulo, la transformación final (descripta en la sección \ref{projection}) de las coordenadas dentro del $Model$ $Space$ a vectores bidimensionales que van a representar los píxeles en nuestra pantalla 2D.  
+\par Comenzaremos con una función a la que llamaremos "$RenderFilledModel\_m1$". Inicialmente se encargara de calcular ,para cada triangulo, la transformación final de las coordenadas dentro del Model Space a vectores bidimensionales (operaciones descriptas en la sección \ref{projection}) que van a representar los píxeles en nuestra pantalla 2D.  
 \par Sean v1,v2,v3 los tres vértices que forman un triangulo, renombraremos dichos vértices como P1, P2, P3 de manera que P1 sea el que se encuentre en una posición menor o igual que P2 respecto del eje y;  P2 a su vez sera aquel que se encuentre en una posición menor o igual que P3 respecto del mismo eje. Para calcular y graficar las aristas entre cada vértice utilizaremos la función $DrawTriangle\_m1$ descripto en la posterior sección \ref{sdlmodo1} 
 
 
 \subsubsection{Modo 2}  
-En el segundo modo procederemos a rellenar los triángulos. Esto es posible ya sea tomando píxeles de una imagen de forma tal que el modelo final obtenga la textura de la imagen o bien definiendo un conjunto de pixels con el mismo color para todos. Para el primer caso Blender nos permite asignarles texturas a los distintos modelos, una de las formas es tomando como input una imagen y utilizando el Mapeo UV ($UV$ $mapping$). Esta técnica permite asignar una textura en 2D a una superficie 3D. 
+En el segundo modo procederemos a rellenar los triángulos. Esto es posible ya sea tomando píxeles de una imagen de forma tal que el modelo final obtenga la textura de la imagen o bien definiendo un conjunto de pixels con el mismo color para todos. Para el primer caso programas como Blender nos permite asignarles texturas a los distintos modelos, una de las formas es tomando como input una imagen y utilizando el Mapeo UV ($UV$ $mapping$). Esta técnica permite asignar una textura en 2D a una superficie 3D. 
 \par A cada vértice ,de los polígonos que componen el modelo, le sera asignado un par de coordenadas 2D llamas UV. Este nuevo par de coordenadas definen que área de la imagen es mapeada a cada triangulo es decir, permitirá pintar cada triangulo con el color de una imagen. 
-\par Por lo que modificaremos la función $RenderFilledModel\_m1$ a $RenderFilledModel\_m2$ y $DrawTriangle\_m1$ a $DrawTriangle\_m2$ de manera de no solo exportar los vértices sino que también las coordenadas UV de cada uno.
-\par Como requeriremos acceder a cada píxel de la imagen usaremos la función $SDL\_LoadBMP$ ( provista por SDL) la cual permite cargar una superficie desde un archivo del tipo .BMP y nos devuelve un puntero a la misma, al cual llamaremos $tex$.
+\par Modificaremos la función $RenderFilledModel\_m1$ a $RenderFilledModel\_m2$ y $DrawTriangle\_m1$ a $DrawTriangle\_m2$ de manera de no solo exportar los vértices sino también las coordenadas UV de cada uno.
+\par Como requeriremos acceder a cada píxel de la imagen usaremos la función $SDL\_LoadBMP$ ( provista por SDL) la cual permite cargar una superficie desde un archivo del tipo .bmp y nos devuelve un puntero a la misma, al cual llamaremos $tex$.
 
 
 \subsubsection{Modo 3}  
 
-Redefiniremos $RenderFilledModel\_m2$, agregandole nuevas funcionalidades, a $RenderFilledModel\_m3$. Este nuevo modo se basa en simular efectos de luz sobre la superficie del objeto. Para esto sera necesario contar con un punto que sera desde donde iluminaremos nuestro modelo, lo llamaremos $lightPos$. Para calcular la luminosidad nos basaremos en la técnica Gouraud Shading, la misma utiliza 3 vectores normales por cada triangulo que compone a nuestro modelo. Estos vectores serán normales pero, a los vértices de cada uno. Otros métodos utilizan solo un vector normal a la superficie de los triángulos pero de esta forma toda la superficie obtiene la misma intensidad de color en cambio la técnica que emplearemos nos permite tener variaciones de intensidad sobre una misma superficie. 
-\par Como podemos iluminar a nuestro modelo desde cualquier punto del espacio donde vive nuestro modelo y no específicamente desde nuestro punto de vista, sera necesario entonces definir $lightPos$ teniendo en cuenta que se utiliza las coordenadas del World Space así también como los vectores normales (que serán exportados por Blender) y los vértices asociados. Como mencionamos, originalmente los vértices y, en este caso, las normales viven dentro del $Model$ $Space$ para convertirlas a $World$ $Space$ solo necesitaremos multiplicar por la $World$ $Matrix$.  Luego de tener las coordenadas en los respectivos espacios llamaremos a la nueva función $DrawTriangle\_m3$.
+Modifcaremos $RenderFilledModel\_m2$ a $RenderFilledModel\_m3$. Este nuevo modo se basa en simular efectos de luz sobre la superficie del objeto. Para esto sera necesario contar con un punto que sera desde donde iluminaremos nuestro modelo, lo llamaremos $lightPos$. Para calcular la luminosidad nos basaremos en la técnica Gouraud Shading, la misma utiliza 3 vectores normales por cada triangulo que compone a nuestro modelo. Estos vectores serán normales pero, a los vértices de cada uno. Otros métodos utilizan solo un vector normal a la superficie de los triángulos pero de esta forma toda la superficie obtiene la misma intensidad de color en cambio la técnica que emplearemos nos permite tener variaciones de intensidad sobre una misma superficie. 
+\par Como podemos iluminar a nuestro modelo desde cualquier punto del espacio donde vive y no específicamente desde nuestro punto de vista, sera necesario entonces definir $lightPos$ teniendo en cuenta que utilizaran las coordenadas del World Space así también como los vectores normales y los vértices asociados. Como los vértices y las normales son exportados dentro del Model Space para convertirlas a World Space solo necesitaremos multiplicarlos por la $World$ $Matrix$.  Luego de tener las coordenadas en los respectivos espacios llamaremos a la nueva función $DrawTriangle\_m3$.
 
 
 \subsection{Renderizado}
@@ -596,7 +604,7 @@ Para continuar con la renderización de nuestros modelos construiremos una nueva
     \centering
     \includegraphics[width=0.50\textwidth]{Imagenes/e.png}
     \caption{Alguno de los posibles triángulos que se pueden formar con los valores del eje y aumentando hacia abajo y los del eje x hacia la derecha.}
-    \label{fig:mesh1}
+    \label{trian}
 \end{figure}
 \par La principal incógnita que se nos plantea es encontrar el valor SX.x y EX.x (ya que SX.y y EX.y es igual al valor Y de la iteración) de manera que se ubique dentro de la recta que los uniría. Para esto utilizaremos la formula de interpolación a partir de conocer el valor del eje y; mientras que los puntos que requiere la función serán los que conformen la recta sobre la cual se encuentren SX y EX.
 \par La función encargada de usar la interpolación de los puntos y proceder con la creación de las lineas la denominaremos $ProcessScanLine\_m1$ quien sera llamada por $DrawTriangle\_m1$ en los diferentes escenarios que se nos planteen. 
@@ -617,30 +625,32 @@ ProcessScanLine_m1(pa, pb, pc, pd, Y):
     putpixel(EX.x, Y);
 \end{verbatim}
 
-$Interpolate$ se basa en el principio de interpolación mencionado en la sección \ref{conceptos}, en el mismo definimos el concepto de $gradient$ en este caso es necesario definir dos $gradient1$ y $gradient2$. pa, pb, pc y pd serán distintos vértices según sea la forma del triangulo (lo que se analizara a continuación) pero, siempre se debería cumplir que pa.y $\leq$ Y, pc.y $\leq$ Y, pa.y $\leq$ pb.y y pc.y $\leq$ pd.y. De esta forma cada uno de los gradientes debería ser positivo aun mas, el denominador siempre debería ser mayor que el numerador por lo que se debería cumplir que 0 $\leq$ $gradient1$ $\leq$ 1 y 0 $\leq$ $gradient2$ $\leq$ 1.  Dado que estamos trabajando con aritmética finita podría haber errores de redondeo tal que no se cumplan estas desigualdades. Para evitar continuar propagando errores y obtener un punto muy distorsionado del que se debería $Interpolate$ hará uso de otra función llamada $Clamp$ la cual retornara el valor $gradient$ final a utilizar es decir, si el pasado por parámetro a $Interpolate$ si es que esta entre cero o uno y sino por default el valor 1.
+$Interpolate$ se basa en el principio de interpolación mencionado en la sección \ref{conceptos}, en el mismo definimos el concepto de $gradient$ en este caso es necesario definir dos $gradient1$ y $gradient2$. pa, pb, pc y pd serán distintos vértices según sea la forma del triangulo (lo que se analizara a continuación) pero, siempre se debería cumplir que pa.y $\leq$ Y, pc.y $\leq$ Y, pa.y $\leq$ pb.y y pc.y $\leq$ pd.y. De esta forma cada uno de los gradientes debería ser positivo aun más, el denominador siempre debería ser mayor que el numerador por lo que se debería cumplir que 0 $\leq$ $gradient1$ $\leq$ 1 y 0 $\leq$ $gradient2$ $\leq$ 1.  Dado que estamos trabajando con aritmética finita podría haber errores de redondeo tal que no se cumplan estas desigualdades. Para evitar continuar propagando errores y obtener un punto muy distorsionado del que se debería $Interpolate$ hará uso de otra función llamada $Clamp$ la cual retornara el valor $gradient$ final a utilizar es decir, si el pasado por parámetro a $Interpolate$ (si es que esta entre cero y uno) y sino por default el valor 1.
 
 
-Como mencionamos $DrawTriangle\_m1$ hará uso de $ProcessScanLine\_m1$ variando los pa, pb, pc y pd en los distintos casos que se nos presenten, ya que si observamos la figura 5 vemos que no siempre SX o EX se encuentran sobre la misma arista, en un caso SX esta en la arista correspondiente a P1 y P3 mientras que en el otro triangulo esta sobre la conformada por P2 y P1 esto nos lleva a plantearnos y analizar todos los casos antes de comenzar el proceso de crear las lineas.
+Como mencionamos $DrawTriangle\_m1$ hará uso de $ProcessScanLine\_m1$ variando los pa, pb, pc y pd en los distintos casos que se nos presenten. Si observamos la figura 5 vemos que no siempre SX o EX se encuentran sobre la misma arista, en un caso SX esta en la arista correspondiente a P1 y P3 mientras que en el otro triangulo esta sobre la conformada por P2 y P1. Esto nos lleva a plantearnos y analizar todos los casos antes de comenzar el proceso de crear las lineas.
 Primero estableceremos una manera de distinguir cuando P1 se encuentra a la derecha de P2 o viceversa: 
+
 dP1P2 = (P2.x - P1.x) / (P2.y - P1.y) 
-dP1P3 = (P3.x - P1.x) / (P3.y - P1.y)
-Que representan las pendientes inversas de los puntos que se utilicen. Dado que el valor del eje y se incrementa hacia abajo dP1P2 sera positivo cuando P2 este a la derecha de P1 mientras que dP1P3 sera negativo, cumpliéndose que dP1P2 $>$ dP1P3; y para el caso de P2 a la izquierda de P1 tenemos que dP1P2 $<$ dP1P3. \par Dado que P2.y podría ser igual a P1.y o P3.y igual a P1.y entonces asignaremos el valor cero a dP1P2 y dP1P3 correspondientemente.
+
+dP1P3 = (P3.x - P1.x) / (P3.y - P1.y)\newline
+
+Que representan las pendientes inversas de los puntos que se utilicen. Dado que el valor del eje y se incrementa hacia abajo dP1P2 sera positivo cuando P2 este a la derecha de P1 mientras que dP1P3 sera negativo, cumpliéndose que dP1P2 $>$ dP1P3; y para el caso de P2 a la izquierda de P1 tenemos que dP1P2 $<$ dP1P3. 
+\par Dado que P2.y podría ser igual a P1.y o P3.y igual a P1.y entonces asignaremos el valor cero a dP1P2 y dP1P3 correspondientemente.
 Continuando con los posibles escenarios, decidimos dividir los casos que se presentan cuando P2.y es distinto de P1.y y cuando es igual.\newline
-\par Cuando P2.y es distinto a P1.y se nos presentan los primeros dos casos:
+\par Cuando P2.y es distinto a P1.y se nos presentan los casos:
  
 \begin{itemize}
 \item Primer caso: P1 se encuentra a la derecha de P2 (dP1P2 $>$ dP1P3). Se puede observar en el triangulo izquierdo de la figura 5. SX.x se obtiene a partir de los puntos P1 y P3, en cambio EX hasta el valor P2.y puede ser calculado con P1 y P2 pero luego se utilizara a P2 y P3.
 \item Segundo caso: P1 se encuentra a la izquierda de P2 (dP1P2 $<$ dP1P3). Correspondiéndose al lado derecho de la figura, vemos que EX.x se obtiene a partir de P1 y P3, mientras que SX.x con P1 y P2 hasta que se llegue al valor Y $=$ P2.y y luego con P2 y P3. 
-Cuando P2.y es igual a P1.y tenemos que evaluar lo siguiente:
+\par Cuando P2.y es igual a P1.y tenemos que evaluar lo siguiente:
 \item Tercer caso:  SX.x se obtiene por los puntos P1 y P3 , mientras que EX.x por P2 y P3 si P1.x es menor a P2.x en caso contrario SX.x es consecuencia de P2 y P3 mientras que EX.x de P1 y P3 
 \end{itemize}
 Una vez planteadas las distintas situaciones podemos proceder con la rasterización de los triángulos. 
   
 El código fuente que describe el proceso anterior es el siguiente:
 \begin{verbatim}
-DrawTriangle_m1(v1,v2, v3): (CREO QUE SE PODRÍA DEJAR LA EXPLICACIÓN DE LOS CASOS ANTERIORES 
-O ESTE PSEUDOCÓDIGO SOLAMENTE NO SE.....)
-    Designar P1, P2 y P3 
+DrawTriangle_m1(P1,P2, P3):
     
     Calcular dP1P2 y dP1P3
     
@@ -665,14 +675,24 @@ O ESTE PSEUDOCÓDIGO SOLAMENTE NO SE.....)
                                         
 \end{verbatim}
 
+Estas funciones definidas en rasterHelper.c son las principales para renderizar los modelos en el modo 1 obteniendo un resultado como se ve en la imagen \ref{modo1}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.50\textwidth]{Imagenes/modo1.png}
+    \caption{Modelo $alfred$ representado con el modo 1.}
+    \label{modo1}
+\end{figure}
  
+\pagebreak
+
 
 \subsubsection{Modo 2} 
 
 
-\par En el segundo modo procederemos a rellenar los triángulos adoptando la idea del algoritmo Scan Line. El mismo se basa en rellenar cada triangulo de izquierda a derecha por medio de un conjunto de pixels (que representaría la linea azul en la figura 5) y, continuando con la notación del modo anterior, descendiendo desde P1.y hasta P3.y.  
-\par Comenzaremos sobre el punto SX ubicado sobre las aristas del lado izquierdo de los triángulos y procederemos a crear una sucesión de puntos, incrementando el valor de SX.x, hasta llegar al extremo derecho es decir, al punto EX.x. Esta idea la aplicaremos empezando a iterar desde un valor Y igual a P1.y y cada vez que se completa una linea procederemos a aumentar el valor Y para crear una nueva, hasta que llegar a P3.y. 
-La técnica para rellenar los triángulos sera la definida anteriormente ahora tenemos que definir los valores que tendrán esos pixels es decir, su color y mas aun su textura (en el caso de tener la información necesaria).
+\par En el segundo modo procederemos a rellenar los triángulos adoptando la idea del algoritmo Scan Line. El mismo se basa en rellenar cada triangulo de izquierda a derecha por medio de un conjunto de pixels (que representaría la linea azul en la figura \ref{trian}) y, continuando con la notación del modo anterior, descendiendo desde P1.y hasta P3.y.  
+\par Comenzaremos sobre el punto SX ubicado sobre las aristas del lado izquierdo de los triángulos y procederemos a crear una sucesión de puntos, incrementando el valor de SX.x, hasta llegar al extremo derecho es decir, al punto EX.x. Esta idea la aplicaremos empezando a iterar desde un valor Y igual a P1.y y cada vez que se complete una linea procederemos a aumentar el valor Y para crear una nueva, hasta que llegar a P3.y.
+\par La técnica para rellenar los triángulos sera la definida anteriormente ahora tenemos que definir los valores que tendrán esos pixels es decir, su color y más aun su textura (en el caso de tener la información necesaria).
 \par Finalmente definiremos $ProcessScanLine\_m2$ que sera una variante de $ProcessScanLine\_m1$ a la cual se le exportaran las coordenadas UV de los vértices utilizados y el puntero a la textura.
  
 \textbf{ProcessScanLine\_m2:} 
@@ -681,8 +701,8 @@ La técnica para rellenar los triángulos sera la definida anteriormente ahora t
 Ahora esta función tendrá las coordenadas UV para cada vértice. En cada una de las lineas que vamos construyendo definimos dos puntos SX y EX y luego procedemos a calcular sus valores intermedios, ahora también sera necesario calcular las coordenadas UV asociadas a estos. La forma de calcularlos sera por medio de la interpolación. Si los puntos pa y pb nos permitían obtener SX y, pc y pd a EX de manera similar si utilizamos las coordenadas U asociadas a estos vértices podemos calcular un valor $su$ y $eu$ que indiquen el rango de valores que utilizaremos de la coordenada U; mientras que con las coordenadas del eje V podemos calcular $sv$ y $ev$ delimitando el rango de valores usados de V.
 \par Una vez calculados $su$, $eu$ podremos interpolar los valores intermedios para calcular las coordenadas U de los puntos entre SX.x y EX.x e interpolando con $sv$ y $ev$ obtendremos los valores del eje V.
 \par Dado que las coordenadas en los ejes UV están entre los valores cero y uno, una vez calculadas las coordenadas UV de cada punto sera necesario escalarlas para acceder correctamente en $tex$. Solucionaremos esto definiendo la función $map$ que realiza el producto del ancho de la imagen con el valor de la coordenada U y el producto del alto de la imagen con la coordenada V e indexara en $tex$.
-Por ultimo dibujar cada punto con el color asociado estará a cargo de $Draw\_point$. En caso de no tener una textura cargada simplemente asignaremos un numero de color arbitrario.  
-A partir de este modo implementaremos el uso del $depthBuffer$ mencionado en \ref{putpixel} por lo que sera necesario además interpolar el valor z asociado a cada punto para luego poder comparar y así dibujar o no un píxel.
+\par Por ultimo, dibujar cada punto con el color asociado estará a cargo de $Draw\_point$. En caso de no tener una textura cargada simplemente asignaremos un número de color arbitrario.  
+\par A partir de este modo implementaremos el uso del $depthBuffer$ mencionado en \ref{putpixel} por lo que sera necesario además interpolar el valor z asociado a cada punto para luego poder comparar y así dibujar o no un píxel.
  
 \par finalmente podemos expresar la función por medio de siguiente pseudocódigo: 
 \begin{verbatim}
@@ -715,41 +735,72 @@ ProcessScanLine_m2(pa, pb, pc, pd, Y, tex):
     
         putpixel(x, Y, z, textureColor)
 \end{verbatim}
+
+El efecto que conseguiremos en este modo será el de la imagen \ref{modo2}.
+
+
+\begin{figure}[h!]
+ \centering
+  \subfloat[]{
+   \label{f:c1}
+    \includegraphics[width=0.4\textwidth]{Imagenes/modo2.png}}
+  \subfloat[]{
+   \label{f:c}
+    \includegraphics[width=0.4\textwidth]{Imagenes/alfred.png}}
+  \caption{A la izquierda se muestra a $Alfred$ representado con el modo 2 y a la derecha la imagen utilizada como textura.}
+ \label{modo2}
+\end{figure} 
+
+\pagebreak
+
 \subsubsection{Modo 3} 
 
 
 \textbf{DrawTriangle\_m3:} 
 
-
-        Extenderemos la versión anterior, $Drawtriangle\_m2$, de manera que ahora calcule la luz que recibe cada vértice.
-\par La idea de los vectores normales es que cuanto menor sea el ángulo entre estos y la dirección de la luz (figura 6) entonces la luz incidirá más sobre el vértice asociado y de esta manera la intensidad del color se mantendrá, en caso contrario tendera a un color mas oscuro para simular sombras. 
+Extenderemos la versión anterior, $Drawtriangle\_m2$, de manera que ahora calcule la luz que recibe cada vértice.
+\par La idea de los vectores normales es que cuanto menor sea el ángulo entre estos y la dirección de la luz (figura \ref{normal}) entonces la luz incidirá más sobre el vértice asociado y de esta manera la intensidad del color se mantendrá, en caso contrario tendera a un color más oscuro para simular sombras. 
         
         
         \begin{figure}[h]
     \centering
     \includegraphics[width=0.50\textwidth]{Imagenes/f.png}
     \caption{}
-    \label{fig:mesh1}
+    \label{normal}
 \end{figure}
-        Dado que no tenemos el vector dirección de la luz pero si la posición y la coordenada sobre la cual incide ($centerPoint$) procederemos a calcular la dirección como:
+
+
+Dado que no tenemos el vector dirección de la luz pero si la posición y la coordenada sobre la cual incide ($centerPoint$) procederemos a calcular la dirección como:\newline
+
  $lightDirection$  = $lightPos$ – $centerPoint$
-        Una de las formas que podemos calcular la intensidad de luz que llega a cada vértice es con el coseno del ángulo formado por lightDirection y cada vector normal. Cuando el ángulo es cero entonces el coseno es igual a uno, lo de que denotara la idea de luminosidad máxima; si bien la función coseno tiene como imagen valores entre [-1; 1] fijaremos como valor mínimo cero que representara luminosidad nula. De esta forma podemos observar que si multiplicamos el color por 1, valor de luz máxima, se sigue manteniendo igual el color mientras que si el valor decrece el color sera mas oscuro hasta llegar  a 0 por lo que obtendremos el color negro. 
-\par El coseno de un ángulo $\theta$ formado por dos vectores A y B se puede calcular como:
-cos($\theta$) = $\frac{A*B}{\parallel A \parallel*\parallel B \parallel}$ 
+
+\par Una de las formas que podemos calcular la intensidad de luz que llega a cada vértice es con el coseno del ángulo formado por lightDirection y cada vector normal. Cuando el ángulo es cero entonces el coseno es igual a uno, lo de que denotara la idea de luminosidad máxima; si bien la función coseno tiene como imagen valores entre [-1; 1] fijaremos como valor mínimo cero que representara luminosidad nula. De esta forma podemos observar que si multiplicamos el color por 1, valor de luz máxima, se sigue manteniendo igual el color mientras que si el valor decrece el color sera mas oscuro hasta llegar  a 0 por lo que obtendremos el color negro. 
+\par El coseno de un ángulo $\theta$ formado por dos vectores A y B se puede calcular como:\newline
+
+cos($\theta$) = $\frac{A*B}{\parallel A \parallel*\parallel B \parallel}$ \newline
+
 con $\parallel A \parallel$ y $\parallel B \parallel$ la distancia Euclidiana de A y B respectivamente.
  
 Si normalizamos el vector A y B el denominador  sera igual a  1 y de este manera solo calculando el producto vectorial podemos obtener el coseno del ángulo. 
-Calcularemos $lightDirection$ junto con el coseno del ángulo asociado en una función auxiliar $ComputeNdotL$ que sera llamada en DrawTriangle para cada vértice, y utilizaremos estos valores para extender la función $ProcessScanLine\_m2$ en una nueva versión llamada $ProcessScanLine\_m3$.
+\par Calcularemos $lightDirection$ junto con el coseno del ángulo asociado en una función auxiliar $ComputeNdotL$ que sera llamada en $DrawTriangle\_m3$ para cada vértice, y utilizaremos estos valores para extender la función $ProcessScanLine\_m2$ en una nueva versión llamada $ProcessScanLine\_m3$.
    
 \textbf{ ProcessScanLine\_m3:}
-Tenemos el porcentaje de luz para las coordenadas que representan a los vértices, solo nos falta para el resto de las que componen cada triangulo,  por lo que cada vez que interpolemos las coordenadas para rellenar el triangulo, también interpolaremos la luz que recibiría  basándonos en la que tienen los vértices. Por ultimo solo debemos multiplicar este valor por el color del punto interpolado.  
+Tenemos el porcentaje de luz que reciben los vértices, solo nos falta para el resto de las coordenadas que componen cada triangulo,  por lo que cada vez que interpolemos las coordenadas para rellenar el triangulo, también interpolaremos la luz que recibiría  basándonos en la que tienen los vértices. Por ultimo solo debemos multiplicar este valor por el color del punto interpolado.  
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.50\textwidth]{Imagenes/modo3.png}
+    \caption{En este caso al posicionar la luz sobre la parte superior de nuestro modelo los colores en esta sección son mas claros que en el resto.}
+    \label{modo3}
+\end{figure}
+
 
 \section{Análisis de performance y experimentación}
 En esta sección vamos a presentar varios resultados de distintos tipos de mediciones que realizamos. Observando estos datos vamos a poder explicar el porqué de la definición de algunas funciones en Assembler y otras en C que sustituyen a otras funciones originales de la aplicación que realizan un mayor consumo de cómputo.
 
-Dado que se trata de una aplicación interactiva en el sentido de que no es el tipo de software que se ejecuta, devuelve un output y termina, realizar mediciones puede ser un poco más complicado. Lo que nosotros decidimos hacer fue poner una cota superior a la cantidad de iteraciones que realiza el ciclo principal de la aplicación (mencionado en la sección 2) ya que es el encargado de ejecutar toda la funcionalidad que se provee. Una vez que se alcanza esa cota, la aplicación termina.
+Dado que se trata de una aplicación interactiva en el sentido de que no es el tipo de software que se ejecuta, devuelve un output y termina, realizar mediciones puede ser un poco más complicado. Lo que nosotros decidimos hacer fue poner una cota superior a la cantidad de iteraciones que realiza el ciclo principal de la aplicación (mencionado en la sección \ref{ciclop}) ya que es el encargado de ejecutar toda la funcionalidad que se provee. Una vez que se alcanza esa cota, la aplicación termina.
 
-Además, dado que existen varios modos de renderizado y transformaciones que le podemos hacer a nuestro modelo mientras la aplicación está corriendo, es necesario elegir alguna configuración posible para poder realizar las mediciones. En nuestro caso el modo de renderizado 1 (esqueleto) no lo vamos a utilizar ya que necesita muy poco poder de cómputo para poder ejecutarse, en cambio los modos 2 (con textura) y 3 (con textura y sombra) sí los vamos a usar. Además, vamos a hacer que el modelo rote en las tres direcciones (hacemos esto para aumentar la cantidad de operaciones matriciales que realiza la aplicación), con la velocidad de rotación que viene por default. No se va a realizar escalado una vez que el modelo ya esté dibujado, es decir, el modelo va a conservar el tamaño original o el que configuremos al cargarlo si es necesario aplicar un reescalado para que entre en la pantalla. El modelo que vamos a utilizar para realizar las mediciones va a ser alfred.obj, con su correspondiente textura alfred.bmp.
+Además, dado que existen varios modos de renderizado y transformaciones que le podemos hacer a nuestro modelo mientras la aplicación está corriendo, es necesario elegir alguna configuración posible para poder realizar las mediciones. En nuestro caso el modo de renderizado 1 (esqueleto) no lo vamos a utilizar ya que necesita muy poco poder de cómputo para poder ejecutarse, en cambio los modos 2 (con textura) y 3 (con textura y sombra) sí los vamos a usar. Además, vamos a hacer que el modelo rote en las tres direcciones (hacemos esto para aumentar la cantidad de operaciones matriciales que realiza la aplicación), con la velocidad de rotación que viene por default (dada por variar el angulo de la matriz de rotacion en 0.01 entre cada iteración). No se va a realizar escalado una vez que el modelo ya esté dibujado, es decir, el modelo va a conservar el tamaño original o el que configuremos al cargarlo si es necesario aplicar un reescalado para que entre en la pantalla. El modelo que vamos a utilizar para realizar las mediciones va a ser alfred.obj, con su correspondiente textura alfred.bmp.
 
 La herramienta gprof nos provee un informe detallado del consumo de cada una de las funciones de la aplicación. De esta manera, luego de correr gprof obtenemos, entre otras cosas, una tabla con el porcenaje de tiempo consumido por cada función. Nosotros nos vamos a concentrar en las funciones que más tiempo consumieron, ignorando así otras donde el consumo es mínimo y no nos proveen información relevante.
 
@@ -769,7 +820,7 @@ Podemos ver que la función $Interpolate2$ es la que más consumo de tiempo real
 
 En cuanto a las otras funciones, Map y getpixel están muy relacionadas con SDL ya que Map lo que hace es simplemente realizar un cálculo con el ancho y el alto de una textura y ciertas coordenadas para obtener otras coordenadas (en píxeles), llamar a getpixel y devolver el valor del píxel precisado. En principio es dificil pensar una manera de optimizar esto porque además Map es llamada una sola vez (en ProcessScanLine_m2) y getpixel también (en Map). Finalmente Uint32ToVec4 hace algo bastante simple que es convertir un color en formato uint32 (con el que trabaja SDL) a vector de float que es el tipo de dato que utilizamos nosotros en nuestras funciones. Lo hace mediante ANDs, shifteos y divisiones con lo cual también se trata de una función bastante minimal en cuanto a operaciones que realiza.
 
-Tambien buscaremos mejorar $Interpolate2$ pero manteniendonos en el lenguaje C, lo que vamos a hacer es que no llame a Clamp. Es decir, la función Clamp también tiene un consumo considerable y el hecho de que $Interpolate2$ se llama tantas veces y ésta a su vez llama a Clamp puede evitarse haciendo Clamp dentro de interpolate. Para esto, vamos a definir entonces $Interpolate1$ y veamos que resultados nos arroja gprof ahora:
+Tambien buscaremos mejorar $Interpolate2$ pero manteniendonos en el lenguaje C, lo que vamos a hacer es que no llame a $Clamp$. Es decir, la función $Clamp$ también tiene un consumo considerable y el hecho de que $Interpolate2$ se llama tantas veces y ésta a su vez llama a Clamp puede evitarse haciendo $Clamp$ dentro de interpolate. Para esto, vamos a definir entonces $Interpolate1$ y veamos que resultados nos arroja gprof ahora:
 
 \begin{figure}[h]
     \centering
@@ -794,7 +845,7 @@ Ahora veamos que datos obtenemos renderizando en modo 3 con la misma configuraci
 Vemos que la comparación en este modo es muy similar a la del modo anterior. En cuanto a tiempos y FPS pasa algo similar (el tiempo disminuye y los FPS aumentan considerablemente al utilizar $Interpolate1$) solo que en este caso los tiempos son un poco mayores debido a que es el modo más costoso por los cálculos con las normales.
 
 \subsection{Optimizaciones en Assembler}
-Como explicamos en la sección anterior, las mediciones realizadas hasta ahora fueron hechas sobre el código en C. Decidimos implementar varias funciones en Assembler, sobre todo las que hacen procesamiento matricial pero también otras como la encargada de la interpolación y la de limpiar el depth buffer y ver si esto efectivamente representa una mejora en la performance. A continuación mostramos los resultados que arroja gprof con las funciones que venimos analizando hasta ahora.
+Como explicamos en la sección anterior, las mediciones realizadas hasta ahora fueron hechas sobre el código en C. Decidimos implementar varias funciones en Assembler, sobre todo las que hacen procesamiento matricial pero también otras como la encargada de la interpolación y la de limpiar el depthBuffer y ver si esto efectivamente representa una mejora en la performance. A continuación mostramos los resultados que arroja gprof con las funciones que venimos analizando hasta ahora.
 
 \begin{figure}[H]
     \centering
@@ -823,7 +874,7 @@ Finalmente, presentamos un último gráfico con los FPS promedio de cada versió
 \end{figure}
 
 
-Se puede ver como en ambos gráficos quedan en evidencia las mejoras presentadas por las versiones en Assembler, tanto en el modo 2 como en el modo 3. Se ve reflejado que el hecho de usar Interpolate1 mejora un poco las cosas, pero no alcanza a la performance de las versiones en Assembler, lo cual significa que haber optimizado con SIMD la interpolación, los cálculos matriciales y la inicialización del depth buffer efectivamente valió la pena.
+Se puede ver como en ambos gráficos quedan en evidencia las mejoras presentadas por las versiones en Assembler, tanto en el modo 2 como en el modo 3. Se ve reflejado que el hecho de usar $Interpolate1$ mejora un poco las cosas, pero no alcanza a la performance de las versiones en Assembler, lo cual significa que haber optimizado con SIMD la interpolación, los cálculos matriciales y la inicialización del depthBuffer efectivamente valió la pena.
 
 \subsubsection{InterpolateASM}
 Explicaremos un poco esta versión de interpolación hecha en Assembler debido a su importancia en la rasterización. Por cada llamada a esta función calcularemos, cuando sea posible, cuatro valores de los que se deben interpolar. Entonces la función recibirá los valores necesarios para interpolar dentro de distintos vectores, donde cada posición representa los valores necesarios para calcular los distintos puntos a interpolar. Básicamente podemos representar esta función con el siguiente pseudocódigo:
@@ -911,6 +962,7 @@ También fue necesario interiorizarse en un formato específico de archivos que 
 
 El hecho de programar todo en C y Assembler hizo que tengamos que ocuparnos de construir estructuras dinámicas para la carga de los modelos, lo cual si bien no fue dificil porque se trata de estructuras bastante básicas, adhiere cierta complejidad al código. Sin embargo, un software de este tipo en un lenguaje de alto nivel con manejo de memoria automático significaría probablemente una pérdida de performance bastante alta.
 
+
 \section{Bibliografia}
 
 
@@ -941,5 +993,10 @@ James M. Van Verth and Lars M. Bishop. 2008. Essential Mathematics for Games and
 \textbf{Modelos de ejemplos:}
 
 \href{http://www.turbosquid.com/search/3d-models/blend?keyword=&file_type=119&media_typeid=2&search_type=free}{\textcolor{blue}{http://www.turbosquid.com/}}
+
+\textbf{Blender tutoriales:}
+
+\href{https://www.blender.org/support/tutorials/}{\textcolor{blue}{https://www.blender.org/support/tutorials/}}
+
 
 \end{document}

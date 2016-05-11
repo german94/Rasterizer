@@ -1,33 +1,41 @@
 \BOOKMARK [1][-]{section.1}{Introducci\363n}{}% 1
-\BOOKMARK [2][-]{subsection.1.1}{\277Qu\351 es un renderizador 3D?}{section.1}% 2
-\BOOKMARK [2][-]{subsection.1.2}{Librer\355a SDL}{section.1}% 3
-\BOOKMARK [2][-]{subsection.1.3}{Otras features}{section.1}% 4
-\BOOKMARK [1][-]{section.2}{C\363digo SDL}{}% 5
-\BOOKMARK [2][-]{subsection.2.1}{Inicializaci\363n, terminaci\363n y manejo de errores}{section.2}% 6
-\BOOKMARK [2][-]{subsection.2.2}{Manejo de ventana}{section.2}% 7
-\BOOKMARK [2][-]{subsection.2.3}{Ciclo principal y detecci\363n de eventos}{section.2}% 8
-\BOOKMARK [2][-]{subsection.2.4}{Renderizado de texto \(HAY QUE LLAMAR A TTF\137QUIT\)}{section.2}% 9
-\BOOKMARK [2][-]{subsection.2.5}{Timers}{section.2}% 10
-\BOOKMARK [2][-]{subsection.2.6}{Funciones putpixel y getpixel}{section.2}% 11
-\BOOKMARK [1][-]{section.3}{Implementaci\363n de estructuras}{}% 12
-\BOOKMARK [2][-]{subsection.3.1}{Manejo de memoria}{section.3}% 13
-\BOOKMARK [2][-]{subsection.3.2}{Otras estructuras}{section.3}% 14
-\BOOKMARK [1][-]{section.4}{Conceptos matem\341ticos}{}% 15
-\BOOKMARK [2][-]{subsection.4.1}{Matriz del mundo \(World Matrix\)}{section.4}% 16
-\BOOKMARK [2][-]{subsection.4.2}{Matriz de vista \(View Matrix\)}{section.4}% 17
-\BOOKMARK [2][-]{subsection.4.3}{Matriz de proyecci\363n \(Projection Matrix\)}{section.4}% 18
-\BOOKMARK [2][-]{subsection.4.4}{mathHelper}{section.4}% 19
-\BOOKMARK [2][-]{subsection.4.5}{Model Loader:}{section.4}% 20
-\BOOKMARK [3][-]{subsubsection.4.5.1}{Modo 1:}{subsection.4.5}% 21
-\BOOKMARK [3][-]{subsubsection.4.5.2}{Modo 2:}{subsection.4.5}% 22
-\BOOKMARK [3][-]{subsubsection.4.5.3}{Modo 3:}{subsection.4.5}% 23
-\BOOKMARK [2][-]{subsection.4.6}{sdlHelper: }{section.4}% 24
-\BOOKMARK [3][-]{subsubsection.4.6.1}{Modo 1:}{subsection.4.6}% 25
-\BOOKMARK [2][-]{subsection.4.7}{Modo 2:}{section.4}% 26
-\BOOKMARK [2][-]{subsection.4.8}{Modo 3:}{section.4}% 27
-\BOOKMARK [1][-]{section.5}{An\341lisis de performance y experimentaci\363n}{}% 28
-\BOOKMARK [2][-]{subsection.5.1}{Optimizaci\363n del c\363digo encargado de la interpolaci\363n}{section.5}% 29
-\BOOKMARK [2][-]{subsection.5.2}{Optimizaciones en Assembler}{section.5}% 30
-\BOOKMARK [3][-]{subsubsection.5.2.1}{InterpolateASM}{subsection.5.2}% 31
-\BOOKMARK [3][-]{subsubsection.5.2.2}{Vec4Mat4ProductASM}{subsection.5.2}% 32
-\BOOKMARK [3][-]{subsubsection.5.2.3}{initDepthBufferASM}{subsection.5.2}% 33
+\BOOKMARK [1][-]{section.2}{Desarrollo}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{Librer\355a SDL}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{Features}{section.2}% 4
+\BOOKMARK [1][-]{section.3}{Implementaci\363n de estructuras}{}% 5
+\BOOKMARK [2][-]{subsection.3.1}{Manejo de memoria}{section.3}% 6
+\BOOKMARK [2][-]{subsection.3.2}{Otras estructuras}{section.3}% 7
+\BOOKMARK [1][-]{section.4}{C\363digo SDL}{}% 8
+\BOOKMARK [2][-]{subsection.4.1}{Inicializaci\363n, terminaci\363n y manejo de errores}{section.4}% 9
+\BOOKMARK [2][-]{subsection.4.2}{Manejo de ventana}{section.4}% 10
+\BOOKMARK [2][-]{subsection.4.3}{Ciclo principal y detecci\363n de eventos}{section.4}% 11
+\BOOKMARK [2][-]{subsection.4.4}{Renderizado de texto}{section.4}% 12
+\BOOKMARK [2][-]{subsection.4.5}{Timers}{section.4}% 13
+\BOOKMARK [2][-]{subsection.4.6}{Funciones putpixel y getpixel}{section.4}% 14
+\BOOKMARK [1][-]{section.5}{Conceptos matem\341ticos}{}% 15
+\BOOKMARK [2][-]{subsection.5.1}{Matriz del mundo \(World Matrix\)}{section.5}% 16
+\BOOKMARK [3][-]{subsubsection.5.1.1}{Matriz de traslaci\363n \(Translation Matrix\)}{subsection.5.1}% 17
+\BOOKMARK [3][-]{subsubsection.5.1.2}{Matriz de escala \(Scale Matrix\)}{subsection.5.1}% 18
+\BOOKMARK [3][-]{subsubsection.5.1.3}{Matriz de rotaci\363n \(Rotation Matrix\)}{subsection.5.1}% 19
+\BOOKMARK [2][-]{subsection.5.2}{Matriz de vista \(View Matrix\)}{section.5}% 20
+\BOOKMARK [2][-]{subsection.5.3}{Matriz de proyecci\363n \(Projection Matrix\)}{section.5}% 21
+\BOOKMARK [2][-]{subsection.5.4}{Interpolaci\363n}{section.5}% 22
+\BOOKMARK [2][-]{subsection.5.5}{mathHelper}{section.5}% 23
+\BOOKMARK [1][-]{section.6}{Carga y renderizado del modelo}{}% 24
+\BOOKMARK [2][-]{subsection.6.1}{Model Loader}{section.6}% 25
+\BOOKMARK [3][-]{subsubsection.6.1.1}{Modo 1}{subsection.6.1}% 26
+\BOOKMARK [3][-]{subsubsection.6.1.2}{Modo 2}{subsection.6.1}% 27
+\BOOKMARK [3][-]{subsubsection.6.1.3}{Modo 3}{subsection.6.1}% 28
+\BOOKMARK [2][-]{subsection.6.2}{Renderizado}{section.6}% 29
+\BOOKMARK [3][-]{subsubsection.6.2.1}{Modo 1}{subsection.6.2}% 30
+\BOOKMARK [3][-]{subsubsection.6.2.2}{Modo 2}{subsection.6.2}% 31
+\BOOKMARK [3][-]{subsubsection.6.2.3}{Modo 3}{subsection.6.2}% 32
+\BOOKMARK [1][-]{section.7}{An\341lisis de performance y experimentaci\363n}{}% 33
+\BOOKMARK [2][-]{subsection.7.1}{Optimizaci\363n del c\363digo encargado de la interpolaci\363n}{section.7}% 34
+\BOOKMARK [2][-]{subsection.7.2}{Optimizaciones en Assembler}{section.7}% 35
+\BOOKMARK [3][-]{subsubsection.7.2.1}{InterpolateASM}{subsection.7.2}% 36
+\BOOKMARK [3][-]{subsubsection.7.2.2}{Vec4Mat4ProductASM}{subsection.7.2}% 37
+\BOOKMARK [3][-]{subsubsection.7.2.3}{initDepthBufferASM}{subsection.7.2}% 38
+\BOOKMARK [1][-]{section.8}{Compilaci\363n y librerias adicionales}{}% 39
+\BOOKMARK [1][-]{section.9}{Conclusi\363n}{}% 40
+\BOOKMARK [1][-]{section.10}{Bibliografia}{}% 41
